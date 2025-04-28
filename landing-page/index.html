@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Shiksha - Empowering Education</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="landing-assets/images/favicon.png">
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="landing-css/styles.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Loader Animation -->
+    <div class="loader-container">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="logo">
+                <h1>E-<span>Shiksha</span></h1>
+            </div>
+            <div class="menu-toggle">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="#contact" class="nav-link">Contact Us</a></li>
+                <li><a href="/pages/login.html" class="nav-link login-btn">Login</a></li>
+                <li><a href="/pages/signup.html" class="nav-link signup-btn">Sign Up</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Welcome to <span>E-Shiksha</span></h1>
+                <p class="hero-description">Ace your competitive exams with AI-powered personalized study plans for GATE, JEE, CAT, GMAT and more.</p>
+                <div class="hero-buttons">
+                    <a href="/pages/signup.html" class="btn primary-btn">Start Preparing</a>
+                    <a href="#exams" class="btn secondary-btn">Explore Exams</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <!-- Lottie animation will be placed here -->
+                <div id="hero-lottie"></div>
+            </div>
+        </div>
+        <div class="hero-wave">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+                <path fill="#ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,149.3C960,160,1056,160,1152,138.7C1248,117,1344,75,1392,53.3L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Exams Section -->
+    <section id="exams" class="features-section">
+        <div class="section-title">
+            <h2>Prepare for Top Exams</h2>
+            <p>AI-powered study plans tailored for competitive exams</p>
+        </div>
+        <div class="features-container">
+            <div class="feature-card exam-card">
+                <div class="feature-icon">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                <h3>GATE</h3>
+                <p>Comprehensive preparation for Graduate Aptitude Test in Engineering with specialized focus on all branches.</p>
+                <div class="exam-topics">
+                    <span>Computer Science</span>
+                    <span>Electronics</span>
+                    <span>Electrical</span>
+                    <span>Mechanical</span>
+                    <span>Civil</span>
+                </div>
+            </div>
+            <div class="feature-card exam-card">
+                <div class="feature-icon">
+                    <i class="fas fa-atom"></i>
+                </div>
+                <h3>JEE</h3>
+                <p>Master the Joint Entrance Examination with our structured learning paths and practice tests.</p>
+                <div class="exam-topics">
+                    <span>Physics</span>
+                    <span>Chemistry</span>
+                    <span>Mathematics</span>
+                    <span>JEE Main</span>
+                    <span>JEE Advanced</span>
+                </div>
+            </div>
+            <div class="feature-card exam-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>CAT & GMAT</h3>
+                <p>Ace management entrance exams with personalized preparation for quantitative, verbal, and reasoning sections.</p>
+                <div class="exam-topics">
+                    <span>Quantitative Aptitude</span>
+                    <span>Verbal Ability</span>
+                    <span>Data Interpretation</span>
+                    <span>Logical Reasoning</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="section-title">
+            <h2>How E-Shiksha Works</h2>
+            <p>Our AI-powered approach to exam preparation</p>
+        </div>
+        <div class="about-container">
+            <div class="about-image">
+                <!-- Lottie animation will be placed here -->
+                <div id="about-lottie"></div>
+            </div>
+            <div class="about-content">
+                <h3>Personalized Learning Journey</h3>
+                <p>E-Shiksha uses advanced AI algorithms to analyze your learning style, strengths, and weaknesses to create a personalized study plan tailored specifically for your target exam.</p>
+
+                <div class="process-steps">
+                    <div class="process-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Upload Study Materials</h4>
+                            <p>Upload your notes, textbooks, or any study materials you have.</p>
+                        </div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Take Assessment Quiz</h4>
+                            <p>Complete a brief assessment to determine your current knowledge level.</p>
+                        </div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Get Personalized Plan</h4>
+                            <p>Receive a customized study plan with daily learning goals.</p>
+                        </div>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Track Progress</h4>
+                            <p>Monitor your improvement and adjust your plan as needed.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="pages/signup.html" class="btn primary-btn">Start Your Journey</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="section-title">
+            <h2>Contact Us</h2>
+            <p>Get in touch with our team</p>
+        </div>
+        <div class="contact-container">
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <p>123 Innovation Street, Tech City, TC 12345</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <p>+1 (555) 123-4567</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <p>info@e-shiksha.com</p>
+                </div>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="contact-form">
+                <form id="contactForm">
+                    <div class="form-group">
+                        <input type="text" id="name" name="name" placeholder="Your Name" required>
+                        <label for="name">Your Name</label>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="email" name="email" placeholder="Your Email" required>
+                        <label for="email">Your Email</label>
+                    </div>
+                    <div class="form-group">
+                        <select id="exam" name="exam" required>
+                            <option value="" disabled selected>Select Exam</option>
+                            <option value="GATE">GATE</option>
+                            <option value="JEE">JEE</option>
+                            <option value="CAT">CAT</option>
+                            <option value="GMAT">GMAT</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <label for="exam">Target Exam</label>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="message" name="message" placeholder="Your Query" required></textarea>
+                        <label for="message">Your Query</label>
+                    </div>
+                    <button type="submit" class="btn primary-btn">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-logo">
+                <h2>E-<span>Shiksha</span></h2>
+                <p>Empowering education through technology</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-link-group">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-link-group">
+                    <h3>Legal</h3>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2023 E-Shiksha. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqsz_mDEHarA-_HzSZNfO9y3LMbf8HSio",
+            authDomain: "education-58a96.firebaseapp.com",
+            projectId: "education-58a96",
+            storageBucket: "education-58a96.firebasestorage.app",
+            messagingSenderId: "86814013646",
+            appId: "1:86814013646:web:1613b7043c29b2f7b9389f",
+            measurementId: "G-K2Z953CCYG"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+
+        // Check if user is logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                console.log("User is signed in:", user.email);
+                // You can redirect to dashboard or update UI here
+            } else {
+                // User is signed out
+                console.log("User is signed out");
+            }
+        });
+    </script>
+
+    <!-- Custom JavaScript -->
+    <script src="landing-js/main.js"></script>
+</body>
+</html>

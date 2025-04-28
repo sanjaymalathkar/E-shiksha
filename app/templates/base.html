@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Educational Content Analysis System{% endblock %}</title>
+    <link rel="icon" href="/static/img/favicon.ico" type="image/x-icon">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    animation: {
+                        'gradient': 'gradient 8s linear infinite',
+                    },
+                    keyframes: {
+                        gradient: {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/logout-button.css">
+    <style>
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .gradient-bg {
+            background: linear-gradient(-45deg, #4f46e5, #7c3aed, #2563eb, #1d4ed8);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #fff;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .dark .gradient-bg {
+            background: linear-gradient(-45deg, #1e1b4b, #312e81, #1e40af, #1e3a8a);
+        }
+
+        .language-selector {
+            background: rgba(99, 102, 241, 0.1);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .language-selector:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .language-selector:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        }
+
+        .dark .language-selector {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .dark .language-selector:hover {
+            background: rgba(99, 102, 241, 0.3);
+        }
+
+        /* Global loader styles */
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .dark .loader-container {
+            background-color: rgba(17, 24, 39, 0.9);
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 5px solid rgba(99, 102, 241, 0.2);
+            border-radius: 50%;
+            border-top-color: #6366f1;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .loader-text {
+            margin-top: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-align: center;
+            color: #4f46e5;
+        }
+
+        .dark .loader-text {
+            color: #818cf8;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 8px;
+            background-color: rgba(99, 102, 241, 0.2);
+            border-radius: 4px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #6366f1;
+            width: 0%;
+            transition: width 2s ease;
+        }
+    </style>
+
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-xl font-bold hover:scale-105 transition-transform duration-300">
+                        <span class="text-indigo-200">E-</span>Shiksha
+                    </a>
+                    <div class="hidden md:flex space-x-6">
+                        <a href="/" class="nav-link" data-i18n="nav.dashboard">Dashboard</a>
+                        <a href="/planner" class="nav-link" data-i18n="nav.planner">Planner</a>
+                        <a href="/daily-report" class="nav-link" data-i18n="nav.daily_report">Report</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-indigo-700 transition-colors">
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                        <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </button>
+                    <div class="relative">
+                        <select id="language-selector" class="language-selector" onchange="window.location.href='/api/language/' + this.value">
+                            <option value="en" {% if language == 'en' %}selected{% endif %}>English</option>
+                            <option value="hi" {% if language == 'hi' %}selected{% endif %}>हिंदी</option>
+                            <option value="kn" {% if language == 'kn' %}selected{% endif %}>ಕನ್ನಡ</option>
+                        </select>
+                    </div>
+                    <a href="/logout" class="logout-btn">
+                        <span data-i18n="nav.logout">Logout</span>
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="md:hidden bg-indigo-500/90 backdrop-blur-sm text-white sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-2">
+            <div class="flex justify-between space-x-2 overflow-x-auto">
+                <a href="/" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.dashboard">Dashboard</a>
+                <a href="/test-viewer" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.test_viewer">Test Viewer</a>
+                <a href="/planner" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.planner">Planner</a>
+                <a href="/daily-report" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.daily_report">Report</a>
+                <a href="/logout" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.logout">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">E-Shiksha</h3>
+                    <p class="text-gray-400" data-i18n="footer.description">Empowering education through AI-driven content analysis and planning.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4" data-i18n="footer.quick_links">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white transition-colors" data-i18n="nav.dashboard">Dashboard</a></li>
+                        <li><a href="/test-viewer" class="text-gray-400 hover:text-white transition-colors" data-i18n="nav.test_viewer">Test Viewer</a></li>
+                        <li><a href="/planner" class="text-gray-400 hover:text-white transition-colors" data-i18n="nav.planner">Planner</a></li>
+                        <li><a href="/daily-report" class="text-gray-400 hover:text-white transition-colors" data-i18n="nav.daily_report">Report</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4" data-i18n="footer.support">Support</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors" data-i18n="footer.about">About</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors" data-i18n="footer.help">Help</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors" data-i18n="footer.privacy">Privacy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors" data-i18n="footer.terms">Terms</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p data-i18n="footer.copyright">&copy; 2025 E-Shiksha. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Common JavaScript -->
+    <script>
+        // Translation dictionary
+        const translations = {
+            en: {
+                nav: {
+                    dashboard: "Dashboard",
+                    planner: "Planner",
+                    daily_report: "Daily Report",
+                    test_viewer: "Test Viewer",
+                    logout: "Logout"
+                },
+                footer: {
+                    description: "Empowering education through AI-driven content analysis and planning.",
+                    quick_links: "Quick Links",
+                    support: "Support",
+                    about: "About",
+                    help: "Help",
+                    privacy: "Privacy",
+                    terms: "Terms",
+                    copyright: "© 2025 E-Shiksha. All rights reserved."
+                }
+            },
+            hi: {
+                nav: {
+                    dashboard: "डैशबोर्ड",
+                    planner: "योजनाकार",
+                    daily_report: "दैनिक रिपोर्ट",
+                    test_viewer: "टेस्ट व्यूअर",
+                    logout: "लॉग आउट"
+                },
+                footer: {
+                    description: "एआई-संचालित सामग्री विश्लेषण और योजना के माध्यम से शिक्षा को सशक्त बनाना।",
+                    quick_links: "त्वरित लिंक",
+                    support: "समर्थन",
+                    about: "के बारे में",
+                    help: "मदद",
+                    privacy: "गोपनीयता",
+                    terms: "नियम और शर्तें",
+                    copyright: "© 2025 ई-शिक्षा। सर्वाधिकार सुरक्षित।"
+                }
+            },
+            kn: {
+                nav: {
+                    dashboard: "ಡ್ಯಾಶ್ಬೋರ್ಡ್",
+                    planner: "ಯೋಜನಾಕಾರ",
+                    daily_report: "ದೈನಂದಿನ ವರದಿ",
+                    test_viewer: "ಪರೀಕ್ಷೆ ವೀಕ್ಷಕ",
+                    logout: "ಲಾಗ್ ಔಟ್"
+                },
+                footer: {
+                    description: "AI-ಚಾಲಿತ ವಿಷಯ ವಿಶ್ಲೇಷಣೆ ಮತ್ತು ಯೋಜನೆ ಮೂಲಕ ಶಿಕ್ಷಣವನ್ನು ಶಕ್ತಿಶಾಲಿ ಮಾಡುವುದು.",
+                    quick_links: "ತ್ವರಿತ ಲಿಂಕ್ಗಳು",
+                    support: "ಬೆಂಬಲ",
+                    about: "ಬಗ್ಗೆ",
+                    help: "ಸಹಾಯ",
+                    privacy: "ಗೌಪ್ಯತೆ",
+                    terms: "ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳು",
+                    copyright: "© 2025 ಇ-ಶಿಕ್ಷಾ. ಎಲ್ಲ ಹಕ್ಕುಗಳನ್ನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ."
+                }
+            }
+        };
+
+        // Function to translate text
+        function translateText() {
+            const language = localStorage.getItem('language') || 'en';
+            const elements = document.querySelectorAll('[data-i18n]');
+
+            elements.forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                const keys = key.split('.');
+                let translation = translations[language];
+
+                for (const k of keys) {
+                    translation = translation[k];
+                }
+
+                if (translation) {
+                    element.textContent = translation;
+                }
+            });
+        }
+
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const html = document.documentElement;
+
+        // Check for saved dark mode preference
+        if (localStorage.getItem('darkMode') === 'true' ||
+            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+        }
+
+        darkModeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            localStorage.setItem('darkMode', html.classList.contains('dark'));
+        });
+
+        // Language selector functionality
+        document.getElementById('language-selector').addEventListener('change', function() {
+            const language = this.value;
+            localStorage.setItem('language', language);
+            translateText();
+        });
+
+        // Set initial language and translate
+        const savedLanguage = localStorage.getItem('language') || 'en';
+        document.getElementById('language-selector').value = savedLanguage;
+        translateText();
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

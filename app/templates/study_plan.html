@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Personalized Study Plan - Educational Content Analysis System{% endblock %}
+
+{% block head %}
+<style>
+    .day-card {
+        transition: all 0.3s ease;
+    }
+    
+    .day-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .topic-tag {
+        transition: all 0.2s ease;
+    }
+    
+    .topic-tag:hover {
+        transform: translateY(-2px);
+    }
+    
+    .no-plan-message {
+        max-width: 500px;
+        margin: 0 auto;
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-2 text-gray-800 dark:text-white">Personalized Study Plan</h1>
+    
+    <div id="no-plan-message" class="no-plan-message hidden">
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-8 mb-6">
+            <svg class="w-16 h-16 text-yellow-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">No Study Plan Available</h2>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">
+                You need to complete a mock test first to generate a personalized study plan based on your IQ level and learning capacity.
+            </p>
+            <a href="/mock-test" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-colors duration-300">
+                Take Mock Test
+            </a>
+        </div>
+    </div>
+    
+    <div id="plan-container" class="hidden">
+        <!-- Plan summary -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p class="text-gray-600 dark:text-gray-400 mb-2" id="plan-description">
+                        Based on your mock test performance
+                    </p>
+                    <div class="flex flex-wrap gap-4 mb-4">
+                        <div class="bg-indigo-100 dark:bg-indigo-900/30 px-4 py-2 rounded-lg">
+                            <span class="font-medium text-indigo-800 dark:text-indigo-300">Learning Capacity:</span>
+                            <span id="learning-capacity" class="ml-1 text-indigo-700 dark:text-indigo-300">-/10</span>
+                        </div>
+                        <div class="bg-indigo-100 dark:bg-indigo-900/30 px-4 py-2 rounded-lg">
+                            <span class="font-medium text-indigo-800 dark:text-indigo-300">Topics Per Day:</span>
+                            <span id="topics-per-day" class="ml-1 text-indigo-700 dark:text-indigo-300">-</span>
+                        </div>
+                        <div class="bg-indigo-100 dark:bg-indigo-900/30 px-4 py-2 rounded-lg">
+                            <span class="font-medium text-indigo-800 dark:text-indigo-300">Total Days:</span>
+                            <span id="total-days" class="ml-1 text-indigo-700 dark:text-indigo-300">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <button id="print-plan-btn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        Print Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Study tips based on IQ level -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Study Tips Based on Your Learning Capacity</h2>
+            <div id="study-tips" class="prose dark:prose-invert max-w-none">
+                <!-- Study tips will be inserted here -->
+            </div>
+        </div>
+        
+        <!-- Daily plan -->
+        <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Daily Study Plan</h2>
+        <div id="daily-plan-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Day cards will be inserted here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Try to get the study plan from session storage
+        const studyPlanJson = sessionStorage.getItem('studyPlan');
+        
+        if (studyPlanJson) {
+            try {
+                const studyPlan = JSON.parse(studyPlanJson);
+                displayStudyPlan(studyPlan);
+            } catch (error) {
+                console.error('Error parsing study plan:', error);
+                showNoPlanMessage();
+            }
+        } else {
+            showNoPlanMessage();
+        }
+        
+        // Add event listener to print button
+        document.getElementById('print-plan-btn').addEventListener('click', function() {
+            window.print();
+        });
+    });
+    
+    // Function to show the "no plan" message
+    function showNoPlanMessage() {
+        document.getElementById('no-plan-message').classList.remove('hidden');
+        document.getElementById('plan-container').classList.add('hidden');
+    }
+    
+    // Function to display the study plan
+    function displayStudyPlan(plan) {
+        // Show the plan container
+        document.getElementById('plan-container').classList.remove('hidden');
+        document.getElementById('no-plan-message').classList.add('hidden');
+        
+        // Update plan summary
+        if (plan.metadata) {
+            document.getElementById('learning-capacity').textContent = `${plan.metadata.dlc_score}/10`;
+            document.getElementById('topics-per-day').textContent = plan.metadata.topics_per_day;
+            document.getElementById('total-days').textContent = plan.days ? plan.days.length : '-';
+            
+            if (plan.metadata.exam_type) {
+                document.getElementById('plan-description').textContent = 
+                    `Personalized study plan for ${plan.metadata.exam_type} based on your mock test performance`;
+            }
+        }
+        
+        // Display study tips based on learning capacity
+        displayStudyTips(plan.metadata ? plan.metadata.dlc_score : 5);
+        
+        // Display daily plan
+        const dailyPlanContainer = document.getElementById('daily-plan-container');
+        dailyPlanContainer.innerHTML = '';
+        
+        if (plan.days && plan.days.length > 0) {
+            plan.days.forEach((day, index) => {
+                const dayCard = document.createElement('div');
+                dayCard.className = 'day-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden';
+                
+                // Day header
+                const header = document.createElement('div');
+                header.className = 'bg-indigo-600 text-white p-4';
+                header.innerHTML = `<h3 class="text-lg font-bold">Day ${index + 1}</h3>`;
+                dayCard.appendChild(header);
+                
+                // Day content
+                const content = document.createElement('div');
+                content.className = 'p-4';
+                
+                // Topics
+                if (day.topics && day.topics.length > 0) {
+                    const topicsSection = document.createElement('div');
+                    topicsSection.className = 'mb-4';
+                    
+                    const topicsTitle = document.createElement('h4');
+                    topicsTitle.className = 'text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2';
+                    topicsTitle.textContent = 'Topics';
+                    topicsSection.appendChild(topicsTitle);
+                    
+                    const topicsContainer = document.createElement('div');
+                    topicsContainer.className = 'flex flex-wrap gap-2';
+                    
+                    day.topics.forEach(topic => {
+                        const topicTag = document.createElement('span');
+                        topicTag.className = 'topic-tag inline-block bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 text-sm px-2 py-1 rounded';
+                        topicTag.textContent = topic;
+                        topicsContainer.appendChild(topicTag);
+                    });
+                    
+                    topicsSection.appendChild(topicsContainer);
+                    content.appendChild(topicsSection);
+                }
+                
+                // Study activities
+                if (day.activities && day.activities.length > 0) {
+                    const activitiesSection = document.createElement('div');
+                    activitiesSection.className = 'mb-4';
+                    
+                    const activitiesTitle = document.createElement('h4');
+                    activitiesTitle.className = 'text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2';
+                    activitiesTitle.textContent = 'Activities';
+                    activitiesSection.appendChild(activitiesTitle);
+                    
+                    const activitiesList = document.createElement('ul');
+                    activitiesList.className = 'text-sm text-gray-700 dark:text-gray-300 space-y-1 pl-5 list-disc';
+                    
+                    day.activities.forEach(activity => {
+                        const activityItem = document.createElement('li');
+                        activityItem.textContent = activity;
+                        activitiesList.appendChild(activityItem);
+                    });
+                    
+                    activitiesSection.appendChild(activitiesList);
+                    content.appendChild(activitiesSection);
+                }
+                
+                // Study tip
+                if (day.tip) {
+                    const tipSection = document.createElement('div');
+                    tipSection.className = 'bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg text-sm';
+                    
+                    const tipTitle = document.createElement('span');
+                    tipTitle.className = 'font-semibold text-yellow-800 dark:text-yellow-300';
+                    tipTitle.textContent = 'Tip: ';
+                    
+                    tipSection.appendChild(tipTitle);
+                    tipSection.appendChild(document.createTextNode(day.tip));
+                    
+                    content.appendChild(tipSection);
+                }
+                
+                dayCard.appendChild(content);
+                dailyPlanContainer.appendChild(dayCard);
+            });
+        } else {
+            dailyPlanContainer.innerHTML = `
+                <div class="col-span-full bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg text-yellow-700 dark:text-yellow-300">
+                    <p>No daily plan available. Please regenerate your study plan.</p>
+                </div>
+            `;
+        }
+    }
+    
+    // Function to display study tips based on learning capacity
+    function displayStudyTips(dlcScore) {
+        const studyTipsContainer = document.getElementById('study-tips');
+        
+        let tips = '';
+        
+        if (dlcScore <= 3) {
+            // Low learning capacity
+            tips = `
+                <p>With your current learning capacity, it's important to focus on quality over quantity. Here are some tips to optimize your learning:</p>
+                <ul>
+                    <li><strong>Break down complex topics</strong> into smaller, manageable chunks.</li>
+                    <li><strong>Use spaced repetition</strong> to reinforce what you've learned before moving on to new material.</li>
+                    <li><strong>Create visual aids</strong> like mind maps or flashcards to help with retention.</li>
+                    <li><strong>Focus on one topic at a time</strong> and ensure you understand it thoroughly before moving on.</li>
+                    <li><strong>Take frequent breaks</strong> (every 25-30 minutes) to maintain focus and prevent mental fatigue.</li>
+                    <li><strong>Review material before bed</strong> to enhance memory consolidation during sleep.</li>
+                </ul>
+            `;
+        } else if (dlcScore <= 6) {
+            // Medium learning capacity
+            tips = `
+                <p>With your moderate learning capacity, you can balance depth and breadth in your studies. Here are some tips to optimize your learning:</p>
+                <ul>
+                    <li><strong>Use the Pomodoro technique</strong> (25 minutes of focused study followed by a 5-minute break).</li>
+                    <li><strong>Combine related topics</strong> to build connections between concepts.</li>
+                    <li><strong>Practice active recall</strong> by testing yourself on what you've learned.</li>
+                    <li><strong>Teach concepts to others</strong> (or explain them out loud) to reinforce your understanding.</li>
+                    <li><strong>Alternate between different types of learning activities</strong> to maintain engagement.</li>
+                    <li><strong>Create summary notes</strong> at the end of each study session to consolidate knowledge.</li>
+                </ul>
+            `;
+        } else {
+            // High learning capacity
+            tips = `
+                <p>With your high learning capacity, you can handle more complex and interconnected topics. Here are some tips to optimize your learning:</p>
+                <ul>
+                    <li><strong>Use interleaving</strong> to study multiple related topics in one session, which enhances long-term retention.</li>
+                    <li><strong>Look for connections between different subjects</strong> to develop a deeper understanding.</li>
+                    <li><strong>Challenge yourself with advanced problems</strong> that require applying concepts in new ways.</li>
+                    <li><strong>Create your own examples and applications</strong> for the concepts you're learning.</li>
+                    <li><strong>Engage in deliberate practice</strong> by focusing on areas where you need improvement.</li>
+                    <li><strong>Set ambitious but achievable goals</strong> for each study session to maintain motivation.</li>
+                    <li><strong>Explore additional resources</strong> beyond the core material to gain different perspectives.</li>
+                </ul>
+            `;
+        }
+        
+        studyTipsContainer.innerHTML = tips;
+    }
+</script>
+{% endblock %}

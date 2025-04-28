@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - E-Shiksha</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/landing-assets/images/favicon.png">
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="/landing-css/styles.css">
+    <link rel="stylesheet" href="/landing-css/auth.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Loader Animation -->
+    <div class="loader-container">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="logo">
+                <a href="/">
+                    <h1>E-<span>Shiksha</span></h1>
+                </a>
+            </div>
+            <div class="menu-toggle">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/#about" class="nav-link">About</a></li>
+                <li><a href="/#contact" class="nav-link">Contact Us</a></li>
+                <li><a href="/pages/login.html" class="nav-link login-btn active">Login</a></li>
+                <li><a href="/pages/signup.html" class="nav-link signup-btn">Sign Up</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Section -->
+    <section class="auth-section">
+        <div class="auth-container">
+            <div class="auth-form-container">
+                <div class="auth-form-header">
+                    <h2>Welcome Back</h2>
+                    <p>Log in to your account to continue</p>
+                </div>
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <input type="email" id="email" name="email" placeholder="Your Email" required>
+                        <label for="email">Your Email</label>
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="password" name="password" placeholder="Your Password" required>
+                        <label for="password">Your Password</label>
+                        <i class="fas fa-lock"></i>
+                        <i class="fas fa-eye toggle-password"></i>
+                    </div>
+                    <div class="form-options">
+                        <div class="remember-me">
+                            <input type="checkbox" id="remember" name="remember">
+                            <label for="remember">Remember me</label>
+                        </div>
+                        <a href="forgot-password.html" class="forgot-password">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="btn primary-btn auth-btn">
+                        <span>Login</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+                <div class="auth-divider">
+                    <span>OR</span>
+                </div>
+                <div class="social-auth">
+                    <button class="social-auth-btn google-btn">
+                        <i class="fab fa-google"></i>
+                        <span>Continue with Google</span>
+                    </button>
+                </div>
+                <div class="auth-redirect">
+                    <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+                </div>
+            </div>
+            <div class="auth-image">
+                <div id="login-lottie"></div>
+                <div class="auth-image-text">
+                    <h3>Experience the Future</h3>
+                    <p>Join thousands of students who trust E-Shiksha for their educational journey.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqsz_mDEHarA-_HzSZNfO9y3LMbf8HSio",
+            authDomain: "education-58a96.firebaseapp.com",
+            projectId: "education-58a96",
+            storageBucket: "education-58a96.firebasestorage.app",
+            messagingSenderId: "86814013646",
+            appId: "1:86814013646:web:1613b7043c29b2f7b9389f",
+            measurementId: "G-K2Z953CCYG"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const analytics = getAnalytics(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // Show loading
+                Swal.fire({
+                    title: 'Logging in...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Sign in with email and password
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Login Successful!',
+                    text: 'Redirecting to E-Shiksha application...',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Redirect to main app
+                    window.location.href = '/app';
+                });
+
+            } catch (error) {
+                // Error handling
+                let errorMessage = 'Failed to login. Please try again.';
+
+                if (error.code === 'auth/user-not-found') {
+                    errorMessage = 'No account found with this email.';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'Incorrect password.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid email format.';
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Login Failed',
+                    text: errorMessage
+                });
+
+                console.error('Login error:', error);
+            }
+        });
+
+        // Google Sign In
+        document.querySelector('.google-btn').addEventListener('click', async () => {
+            try {
+                await signInWithPopup(auth, googleProvider);
+                window.location.href = '/app';
+            } catch (error) {
+                console.error('Google sign in error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Google Sign In Failed',
+                    text: 'Failed to sign in with Google. Please try again.'
+                });
+            }
+        });
+
+
+
+        // Toggle password visibility
+        document.querySelector('.toggle-password').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    </script>
+
+    <!-- Custom JavaScript -->
+    <script src="/landing-js/auth.js"></script>
+</body>
+</html>

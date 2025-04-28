@@ -1,0 +1,1089 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - E-Shiksha{% endblock %}
+
+{% block head %}
+<style>
+    /* Base Styles */
+    .upload-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        transition: all 0.3s ease;
+        transform-style: preserve-3d;
+        perspective: 1000px;
+    }
+
+    .upload-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card {
+        transition: all 0.3s ease;
+        transform-style: preserve-3d;
+        perspective: 1000px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 3D Card Effect */
+    .card-3d {
+        transform-style: preserve-3d;
+        transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .card-3d:hover {
+        transform: translateZ(20px) rotateX(5deg) rotateY(5deg);
+    }
+
+    /* Floating Animation */
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    .float {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    /* Pulse Animation */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .pulse {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Glow Effect */
+    .glow {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .glow::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .glow:hover::after {
+        opacity: 1;
+    }
+
+    /* Badge Animation */
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .badge:hover {
+        transform: scale(1.1);
+    }
+
+    /* Exam Type Badges */
+    .exam-badge {
+        background-color: rgba(79, 70, 229, 0.1);
+        color: #4f46e5;
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .dark .exam-badge {
+        background-color: rgba(129, 140, 248, 0.1);
+        color: #818cf8;
+        border-color: rgba(129, 140, 248, 0.2);
+    }
+
+    /* Motivational Quote Animation */
+    .quote-container {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .quote-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.7s;
+    }
+
+    .quote-container:hover::before {
+        left: 100%;
+    }
+
+    /* File Input Styles */
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: block;
+        width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    .custom-file-input {
+        display: inline-block;
+        padding: 8px 16px;
+        background: #f3f4f6;
+        border: 2px dashed #d1d5db;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .custom-file-input:hover {
+        background: #e5e7eb;
+        border-color: #9ca3af;
+        transform: translateY(-2px);
+    }
+
+    .progress-bar {
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        transition: width 0.3s ease;
+    }
+
+    /* Loader Animation */
+    .loader-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .dark .loader-container {
+        background-color: rgba(31, 41, 55, 0.9);
+    }
+
+    .loader {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f4f6;
+        border-top: 5px solid #4f46e5;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+    }
+
+    .loader-text {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #4f46e5;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .dark .loader-text {
+        color: #818cf8;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Dark Mode Styles */
+    .dark .upload-card {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .dark .custom-file-input {
+        background: #374151;
+        border-color: #4b5563;
+    }
+
+    .dark .custom-file-input:hover {
+        background: #4b5563;
+        border-color: #6b7280;
+    }
+
+    /* Exam Icons */
+    .exam-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        background: rgba(79, 70, 229, 0.1);
+        color: #4f46e5;
+    }
+
+    .dark .exam-icon {
+        background: rgba(129, 140, 248, 0.1);
+        color: #818cf8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Motivational Quote -->
+<div class="mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md p-6 text-white quote-container card-3d" style="margin-bottom: 20px;">
+    <div class="flex items-start">
+        <div class="text-3xl mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            </svg>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold mb-2">Today's Motivation</h3>
+            <p id="motivational-quote" class="text-lg italic">"The harder you work for something, the greater you'll feel when you achieve it."</p>
+        </div>
+    </div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Upload Section -->
+    <div class="md:col-span-2 upload-card rounded-xl shadow-lg p-6 card-3d glow">
+        <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Upload Educational Content for GATE, JEE, CAT & GMAT</h2>
+        <div class="flex flex-wrap mb-4">
+            <span class="badge exam-badge float">GATE</span>
+            <span class="badge exam-badge float" style="animation-delay: 0.2s">JEE</span>
+            <span class="badge exam-badge float" style="animation-delay: 0.4s">CAT</span>
+            <span class="badge exam-badge float" style="animation-delay: 0.6s">GMAT</span>
+        </div>
+        <div class="mb-6">
+            <form id="upload-form" enctype="multipart/form-data" class="space-y-4">
+                <div class="mb-4">
+                    <label class="block text-gray-700 dark:text-gray-300 mb-2 font-medium">Select Multiple Files</label>
+                    <div class="file-input-wrapper w-full">
+                        <input type="file" id="file-input" name="files" multiple accept=".pdf,.jpg,.jpeg,.png,.webp"
+                               class="w-full">
+                        <div class="custom-file-input w-full text-center py-8">
+                            <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <p class="text-gray-600 dark:text-gray-400">Drag and drop files here or click to browse</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">Supported formats: PDF, JPG, PNG, WEBP</p>
+                        </div>
+                    </div>
+                    <div id="selected-files" class="mt-2 space-y-2"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 dark:text-gray-300 mb-2 font-medium">Exam Type</label>
+                        <select id="exam-type" name="exam_type"
+                                class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">-- Select Exam Type --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 dark:text-gray-300 mb-2 font-medium">Exam Date</label>
+                        <input type="date" id="exam-date" name="exam_date"
+                               class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mt-6">
+                    <button type="submit" id="upload-button"
+                            class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        Upload and Process
+                    </button>
+                    <div id="upload-status" class="text-gray-600 dark:text-gray-400"></div>
+                </div>
+
+                <div id="upload-progress" class="hidden">
+                    <div class="progress-bar">
+                        <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="results-container" class="hidden">
+            <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Processing Results</h3>
+            <div id="results-content" class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 max-h-96 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- Dashboard Summary -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 card-3d glow">
+        <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Exam Dashboard</h2>
+
+        <div id="exam-info" class="mb-6 hidden">
+            <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
+                <h3 class="text-lg font-semibold mb-2 text-indigo-800 dark:text-indigo-200" id="exam-name">Exam Name</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-3" id="exam-description">Exam description will appear here.</p>
+
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div class="bg-white dark:bg-gray-700 p-2 rounded-lg">
+                        <span class="text-gray-600 dark:text-gray-400">Preparation Time:</span>
+                        <span class="font-semibold text-gray-800 dark:text-white" id="exam-duration">6 months</span>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 p-2 rounded-lg">
+                        <span class="text-gray-600 dark:text-gray-400">Exam Date:</span>
+                        <span class="font-semibold text-gray-800 dark:text-white" id="selected-date">Not selected</span>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 p-2 rounded-lg">
+                        <span class="text-gray-600 dark:text-gray-400">Days Remaining:</span>
+                        <span class="font-semibold text-gray-800 dark:text-white" id="days-remaining">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="no-exam-selected" class="mb-6">
+            <div class="text-center py-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <p class="text-gray-500 dark:text-gray-400">Select an exam type to see information</p>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Quick Stats</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="stat-card bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg card-3d" style="transform-origin: center;">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div id="files-processed" class="text-3xl font-bold text-blue-700 dark:text-blue-400 pulse">0</div>
+                            <div class="text-sm text-blue-700 dark:text-blue-400">Files Processed</div>
+                        </div>
+                        <svg class="w-8 h-8 text-blue-400 float" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="stat-card bg-green-50 dark:bg-green-900/20 p-4 rounded-lg card-3d" style="transform-origin: center;">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div id="tests-generated" class="text-3xl font-bold text-green-700 dark:text-green-400 pulse">0</div>
+                            <div class="text-sm text-green-700 dark:text-green-400">Tests Generated</div>
+                        </div>
+                        <svg class="w-8 h-8 text-green-400 float" style="animation-delay: 0.2s" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="stat-card bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg card-3d" style="transform-origin: center;">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div id="questions-analyzed" class="text-3xl font-bold text-purple-700 dark:text-purple-400 pulse">0</div>
+                            <div class="text-sm text-purple-700 dark:text-purple-400">Questions Analyzed</div>
+                        </div>
+                        <svg class="w-8 h-8 text-purple-400 float" style="animation-delay: 0.4s" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="stat-card bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg card-3d" style="transform-origin: center;">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div id="topics-identified" class="text-3xl font-bold text-yellow-700 dark:text-yellow-400 pulse">0</div>
+                            <div class="text-sm text-yellow-700 dark:text-yellow-400">Topics Identified</div>
+                        </div>
+                        <svg class="w-8 h-8 text-yellow-400 float" style="animation-delay: 0.6s" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Question Distribution</h3>
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 card-3d">
+                <canvas id="question-chart" width="400" height="300" class="chart-animation"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Test Plans Section (will be shown after processing) -->
+<div id="test-plans-section" class="mt-6 hidden">
+    <h2 class="text-2xl font-bold mb-4">Generated Test Plans for Your Exam</h2>
+    <div class="flex flex-wrap mb-4">
+        <span class="badge exam-badge float">GATE</span>
+        <span class="badge exam-badge float" style="animation-delay: 0.2s">JEE</span>
+        <span class="badge exam-badge float" style="animation-delay: 0.4s">CAT</span>
+        <span class="badge exam-badge float" style="animation-delay: 0.6s">GMAT</span>
+    </div>
+    <div id="test-plans-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Test plans will be populated dynamically -->
+    </div>
+</div>
+
+<!-- Note: Daily study plans are now shown in the Planner section -->
+
+<!-- Recent Activity -->
+<div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 card-3d glow">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Your Learning Journey</h2>
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white dark:bg-gray-800">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Date
+                    </th>
+                    <th class="py-2 px-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Activity
+                    </th>
+                    <th class="py-2 px-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Details
+                    </th>
+                    <th class="py-2 px-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Status
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="activity-table-body">
+                <tr>
+                    <td class="py-2 px-4 border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-300" colspan="4">
+                        <div class="flex items-center justify-center py-4">
+                            <svg class="w-8 h-8 text-gray-400 dark:text-gray-600 mr-3 pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>No recent activity - Start your learning journey today!</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // File input handling
+    const fileInput = document.getElementById('file-input');
+    const selectedFilesContainer = document.getElementById('selected-files');
+    const customFileInput = document.querySelector('.custom-file-input');
+
+    // Make sure clicking on the custom file input triggers the real file input
+    customFileInput.addEventListener('click', function(e) {
+        // This is a backup in case the z-index and positioning doesn't work
+        // The file input should already capture the click due to its positioning
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function() {
+        selectedFilesContainer.innerHTML = '';
+        Array.from(this.files).forEach(file => {
+            const fileElement = document.createElement('div');
+            fileElement.className = 'flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg';
+            fileElement.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">${file.name}</span>
+                </div>
+                <span class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+            `;
+            selectedFilesContainer.appendChild(fileElement);
+        });
+    });
+
+    // Drag and drop handling
+    const dropZone = document.querySelector('.custom-file-input');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        dropZone.classList.add('border-indigo-500', 'bg-indigo-50');
+    }
+
+    function unhighlight(e) {
+        dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+    }
+
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        fileInput.dispatchEvent(new Event('change'));
+    }
+
+    // Progress bar handling
+    function updateProgress(percent) {
+        const progressBar = document.getElementById('progress-bar-fill');
+        progressBar.style.width = `${percent}%`;
+    }
+
+    // Chart initialization
+    const ctx = document.getElementById('question-chart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Objective', 'Subjective', 'Practical'],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: [
+                    'rgba(79, 70, 229, 0.8)',
+                    'rgba(124, 58, 237, 0.8)',
+                    'rgba(37, 99, 235, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(79, 70, 229, 1)',
+                    'rgba(124, 58, 237, 1)',
+                    'rgba(37, 99, 235, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: window.matchMedia('(prefers-color-scheme: dark)').matches ? '#fff' : '#000'
+                    }
+                }
+            }
+        }
+    });
+
+    // Dark mode chart update
+    document.addEventListener('darkModeChanged', (e) => {
+        chart.options.plugins.legend.labels.color = e.detail.darkMode ? '#fff' : '#000';
+        chart.update();
+    });
+
+    // Fetch exam types on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchExamTypes();
+        setDefaultExamDate();
+        updateMotivationalQuote();
+
+        // Add event listeners
+        document.getElementById('exam-type').addEventListener('change', updateExamInfo);
+        document.getElementById('exam-date').addEventListener('change', updateDaysRemaining);
+        document.getElementById('upload-form').addEventListener('submit', uploadFiles);
+    });
+
+    // Fetch exam types from API
+    async function fetchExamTypes() {
+        try {
+            const response = await fetch('/api/folder/exams');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const examTypes = await response.json();
+            populateExamTypes(examTypes);
+        } catch (error) {
+            console.error('Error fetching exam types:', error);
+        }
+    }
+
+    // Populate exam types dropdown
+    function populateExamTypes(examTypes) {
+        const examTypeSelect = document.getElementById('exam-type');
+
+        examTypes.forEach(exam => {
+            const option = document.createElement('option');
+            option.value = exam.id;
+            option.textContent = exam.name;
+            option.dataset.description = exam.description;
+            option.dataset.duration = exam.duration_months;
+            examTypeSelect.appendChild(option);
+        });
+    }
+
+    // Set default exam date (3 months from now)
+    function setDefaultExamDate() {
+        const examDateInput = document.getElementById('exam-date');
+        const today = new Date();
+        const threeMonthsLater = new Date(today);
+        threeMonthsLater.setMonth(today.getMonth() + 3);
+
+        const year = threeMonthsLater.getFullYear();
+        const month = String(threeMonthsLater.getMonth() + 1).padStart(2, '0');
+        const day = String(threeMonthsLater.getDate()).padStart(2, '0');
+
+        examDateInput.value = `${year}-${month}-${day}`;
+        updateDaysRemaining();
+    }
+
+    // Update exam information when exam type changes
+    function updateExamInfo() {
+        const examTypeSelect = document.getElementById('exam-type');
+        const selectedOption = examTypeSelect.options[examTypeSelect.selectedIndex];
+
+        const examInfo = document.getElementById('exam-info');
+        const noExamSelected = document.getElementById('no-exam-selected');
+
+        if (examTypeSelect.value) {
+            // Show exam info
+            examInfo.classList.remove('hidden');
+            noExamSelected.classList.add('hidden');
+
+            // Update exam details
+            document.getElementById('exam-name').textContent = selectedOption.textContent;
+            document.getElementById('exam-description').textContent = selectedOption.dataset.description;
+            document.getElementById('exam-duration').textContent = `${selectedOption.dataset.duration} months`;
+
+            updateDaysRemaining();
+        } else {
+            // Hide exam info
+            examInfo.classList.add('hidden');
+            noExamSelected.classList.remove('hidden');
+        }
+    }
+
+    // Update days remaining until exam
+    function updateDaysRemaining() {
+        const examDateInput = document.getElementById('exam-date');
+        const daysRemainingElement = document.getElementById('days-remaining');
+        const selectedDateElement = document.getElementById('selected-date');
+
+        if (examDateInput.value) {
+            const examDate = new Date(examDateInput.value);
+            const today = new Date();
+
+            // Calculate days difference
+            const diffTime = examDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // Format date for display
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            const formattedDate = examDate.toLocaleDateString(undefined, options);
+
+            // Update elements
+            selectedDateElement.textContent = formattedDate;
+
+            if (diffDays < 0) {
+                daysRemainingElement.textContent = 'Exam date is in the past';
+                daysRemainingElement.classList.add('text-red-600');
+            } else {
+                daysRemainingElement.textContent = `${diffDays} days`;
+                daysRemainingElement.classList.remove('text-red-600');
+            }
+        } else {
+            selectedDateElement.textContent = 'Not selected';
+            daysRemainingElement.textContent = '-';
+        }
+    }
+
+    // Upload files
+    async function uploadFiles(e) {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('file-input');
+        const examType = document.getElementById('exam-type').value;
+        const examDate = document.getElementById('exam-date').value;
+
+        if (fileInput.files.length === 0) {
+            alert('Please select at least one file to upload.');
+            return;
+        }
+
+        if (!examType) {
+            alert('Please select an exam type.');
+            return;
+        }
+
+        if (!examDate) {
+            alert('Please select an exam date.');
+            return;
+        }
+
+        // Show loading state
+        const uploadButton = document.getElementById('upload-button');
+        const uploadStatus = document.getElementById('upload-status');
+
+        uploadButton.disabled = true;
+        uploadButton.innerHTML = '<div class="loading"></div> Processing...';
+        uploadStatus.textContent = `Uploading ${fileInput.files.length} file(s)...`;
+
+        // Create form data
+        const formData = new FormData();
+        for (let i = 0; i < fileInput.files.length; i++) {
+            formData.append('files', fileInput.files[i]);
+        }
+        formData.append('exam_type', examType);
+        formData.append('exam_date', examDate);
+
+        try {
+            const response = await fetch('/api/folder/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Show transition loader with message
+            const transitionLoader = document.createElement('div');
+            transitionLoader.className = 'loader-container';
+            transitionLoader.innerHTML = `
+                <div class="loader"></div>
+                <div class="loader-text">Get Ready for Your Personalized Mock Test!</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+            `;
+            document.body.appendChild(transitionLoader);
+
+            // Animate progress bar
+            setTimeout(() => {
+                const progressFill = transitionLoader.querySelector('.progress-fill');
+                progressFill.style.width = '100%';
+            }, 100);
+
+            // Update dashboard stats in the background
+            updateDashboardStats(data.result);
+
+            // Update activity table in the background
+            updateActivityTable(data);
+
+            // Prepare topics parameter if available
+            let topicsParam = '';
+            if (data.result && data.result.topics && data.result.topics.length > 0) {
+                topicsParam = `?topics=${encodeURIComponent(JSON.stringify(data.result.topics))}`;
+            }
+
+            // Redirect to mock test page after animation
+            setTimeout(() => {
+                window.location.href = `/mock-test${topicsParam}`;
+            }, 2500);
+
+        } catch (error) {
+            console.error('Error:', error);
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Upload and Process';
+            uploadStatus.textContent = `Error: ${error.message}`;
+        }
+    }
+
+    // Display processing results
+    function displayResults(data) {
+        const resultsContainer = document.getElementById('results-container');
+        const resultsContent = document.getElementById('results-content');
+
+        resultsContainer.classList.remove('hidden');
+
+        if (data.status === 'success') {
+            const result = data.result;
+
+            let html = `
+                <div class="mb-4">
+                    <div class="text-green-600 font-semibold">${data.message}</div>
+                    <div class="text-sm text-gray-600">Processed ${result.processed_files} files</div>
+                </div>
+            `;
+
+            // Display test plans
+            if (result.test_plans && result.test_plans.length > 0) {
+                displayTestPlans(result.test_plans);
+            }
+
+            // Note: Daily content is now handled in the planner section
+
+            // Update motivational quote
+            if (result.motivational_quotes && result.motivational_quotes.length > 0) {
+                const randomQuote = result.motivational_quotes[Math.floor(Math.random() * result.motivational_quotes.length)];
+                document.getElementById('motivational-quote').textContent = `"${randomQuote}"`;
+            }
+
+            resultsContent.innerHTML = html;
+        } else {
+            resultsContent.innerHTML = `
+                <div class="text-red-600 font-semibold">${data.message}</div>
+                <div class="text-sm text-gray-600">${data.result ? JSON.stringify(data.result) : 'No details available'}</div>
+            `;
+        }
+    }
+
+    // Update dashboard stats
+    function updateDashboardStats(result) {
+        if (!result) return;
+
+        // Update files processed
+        document.getElementById('files-processed').textContent = result.processed_files || 0;
+
+        // Update tests generated
+        const testCount = result.test_plans ? result.test_plans.length : 0;
+        document.getElementById('tests-generated').textContent = testCount;
+
+        // Update questions analyzed (estimate based on test plans)
+        let questionCount = 0;
+        if (result.test_plans) {
+            result.test_plans.forEach(plan => {
+                if (plan.questions) {
+                    questionCount += Array.isArray(plan.questions) ? plan.questions.length : 10;
+                }
+            });
+        }
+        document.getElementById('questions-analyzed').textContent = questionCount;
+
+        // Update topics identified
+        let topicsCount = 0;
+        if (result.daily_content && result.daily_content.topics) {
+            topicsCount = result.daily_content.topics.length;
+        }
+        document.getElementById('topics-identified').textContent = topicsCount || 5; // Default to 5 if not available
+
+        // Update chart with distribution data
+        if (result.test_plans && result.test_plans.length > 0) {
+            const firstPlan = result.test_plans[0];
+            if (firstPlan.distribution) {
+                const distribution = firstPlan.distribution;
+                updateChart([
+                    distribution.objective?.marks || 30,
+                    distribution.subjective?.marks || 40,
+                    distribution.practical?.marks || 30
+                ]);
+            } else {
+                // Default distribution if not available
+                updateChart([30, 40, 30]);
+            }
+        } else {
+            // Default distribution if no test plans
+            updateChart([30, 40, 30]);
+        }
+    }
+
+    // Display test plans
+    function displayTestPlans(testPlans) {
+        const testPlansSection = document.getElementById('test-plans-section');
+        const testPlansContainer = document.getElementById('test-plans-container');
+
+        testPlansSection.classList.remove('hidden');
+
+        let html = '';
+
+        testPlans.forEach((plan, index) => {
+            html += `
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 card-3d glow" style="animation-delay: ${index * 0.1}s">
+                    <h3 class="text-lg font-semibold mb-2 text-gray-800 dark:text-white">${plan.title || `Test Plan ${index + 1}`}</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-3">${plan.description || 'Generated test plan'}</p>
+                    <div class="flex flex-wrap mb-3">
+                        <span class="badge exam-badge">${plan.exam_type || 'GATE'}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">${plan.questions ? `${Array.isArray(plan.questions) ? plan.questions.length : '10'} questions` : ''}</span>
+                        <button class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-1 px-3 rounded-lg transition-all duration-200 transform hover:scale-105 view-test-plan" data-index="${index}">
+                            View Plan
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        testPlansContainer.innerHTML = html;
+
+        // Add event listeners to view buttons
+        document.querySelectorAll('.view-test-plan').forEach(button => {
+            button.addEventListener('click', function() {
+                const index = this.getAttribute('data-index');
+                alert(`Viewing test plan ${parseInt(index) + 1}... (This would show the full test plan in a real app)`);
+            });
+        });
+    }
+
+    // Note: Daily content display has been moved to the planner page
+
+    // Update activity table
+    function updateActivityTable(data) {
+        const activityTableBody = document.getElementById('activity-table-body');
+
+        if (!data || !data.result) {
+            return;
+        }
+
+        const result = data.result;
+        const date = new Date().toLocaleString();
+        const statusClass = data.status === 'success' ? 'text-green-600' : 'text-red-600';
+
+        let html = `
+            <tr class="activity-row" style="opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease;">
+                <td class="py-2 px-4 border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-300">${date}</td>
+                <td class="py-2 px-4 border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-300">
+                    <div class="flex items-center">
+                        <span class="inline-block w-2 h-2 rounded-full bg-indigo-500 mr-2 pulse"></span>
+                        Folder Processing
+                    </div>
+                </td>
+                <td class="py-2 px-4 border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-300">
+                    <span class="badge exam-badge">${result.exam_type || 'GATE'}</span>
+                    <span class="ml-2">${result.processed_files} files</span>
+                </td>
+                <td class="py-2 px-4 border-b border-gray-200 dark:border-gray-700 ${statusClass}">
+                    <span class="px-2 py-1 rounded-full bg-opacity-10 ${data.status === 'success' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}">${data.status}</span>
+                </td>
+            </tr>
+        `;
+
+        // Add animation to show the new activity row
+        activityTableBody.innerHTML = html;
+        setTimeout(() => {
+            const activityRow = activityTableBody.querySelector('.activity-row');
+            if (activityRow) {
+                activityRow.style.opacity = '1';
+                activityRow.style.transform = 'translateY(0)';
+            }
+        }, 100);
+    }
+
+    // Update chart
+    function updateChart(data) {
+        chart.data.datasets[0].data = data;
+        chart.update();
+    }
+
+    // Update motivational quote
+    function updateMotivationalQuote() {
+        const quotes = [
+            "The harder you work for something, the greater you'll feel when you achieve it.",
+            "Success is the sum of small efforts, repeated day in and day out.",
+            "Don't wish it were easier; wish you were better.",
+            "The expert in anything was once a beginner.",
+            "The only way to do great work is to love what you do.",
+            "Believe you can and you're halfway there.",
+            "It always seems impossible until it's done.",
+            "Your time is limited, don't waste it living someone else's life.",
+            "The future belongs to those who believe in the beauty of their dreams.",
+            "The best way to predict the future is to create it."
+        ];
+
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        document.getElementById('motivational-quote').textContent = `"${randomQuote}"`;
+    }
+
+    // Add 3D animation effects
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add 3D tilt effect to cards
+        const cards = document.querySelectorAll('.card-3d');
+
+        cards.forEach(card => {
+            card.addEventListener('mousemove', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const xPercent = x / rect.width;
+                const yPercent = y / rect.height;
+
+                const maxRotate = 10; // Maximum rotation in degrees
+                const rotateX = (0.5 - yPercent) * maxRotate;
+                const rotateY = (xPercent - 0.5) * maxRotate;
+
+                this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+            });
+
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
+            });
+        });
+
+        // Add animation to chart
+        const chartAnimation = document.querySelector('.chart-animation');
+        if (chartAnimation) {
+            chartAnimation.style.opacity = '0';
+            chartAnimation.style.transform = 'scale(0.9)';
+            chartAnimation.style.transition = 'opacity 1s ease, transform 1s ease';
+
+            setTimeout(() => {
+                chartAnimation.style.opacity = '1';
+                chartAnimation.style.transform = 'scale(1)';
+            }, 500);
+        }
+
+        // Add animation to exam badges
+        const examBadges = document.querySelectorAll('.exam-badge');
+        examBadges.forEach((badge, index) => {
+            badge.style.opacity = '0';
+            badge.style.transform = 'translateY(20px)';
+            badge.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+
+            setTimeout(() => {
+                badge.style.opacity = '1';
+                badge.style.transform = 'translateY(0)';
+            }, 100 * index);
+        });
+
+        // Add animation to motivational quote
+        const quoteContainer = document.querySelector('.quote-container');
+        if (quoteContainer) {
+            quoteContainer.style.opacity = '0';
+            quoteContainer.style.transform = 'translateY(20px)';
+            quoteContainer.style.transition = 'opacity 1s ease, transform 1s ease';
+
+            setTimeout(() => {
+                quoteContainer.style.opacity = '1';
+                quoteContainer.style.transform = 'translateY(0)';
+            }, 300);
+        }
+    });
+</script>
+{% endblock %}

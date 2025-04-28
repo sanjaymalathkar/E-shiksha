@@ -1,0 +1,1128 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Content - E-Shiksha{% endblock %}
+
+{% block head %}
+<style>
+    .planner-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .planner-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .calendar-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .calendar-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .day-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(99, 102, 241, 0.1);
+    }
+
+    .day-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-button {
+        transition: all 0.3s ease;
+        color: #6366f1;
+    }
+
+    .nav-button:hover {
+        color: #4f46e5;
+        transform: scale(1.1);
+    }
+
+    .calendar-day {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .calendar-day:hover {
+        background-color: rgba(99, 102, 241, 0.1);
+    }
+
+    .calendar-day.selected {
+        background-color: rgba(99, 102, 241, 0.2);
+        border: 2px solid #6366f1;
+    }
+
+    .calendar-day.has-content {
+        background-color: rgba(99, 102, 241, 0.05);
+    }
+
+    .calendar-day.has-content:hover {
+        background-color: rgba(99, 102, 241, 0.15);
+    }
+
+    .topic-tag {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        transition: all 0.3s ease;
+    }
+
+    .topic-tag:hover {
+        background: rgba(99, 102, 241, 0.2);
+    }
+
+    .time-allocation-item {
+        transition: all 0.3s ease;
+    }
+
+    .time-allocation-item:hover {
+        transform: translateX(5px);
+    }
+
+    .dark .planner-card {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .dark .calendar-card {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .dark .day-card {
+        background: #1f2937;
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .dark .calendar-day.has-content {
+        background-color: rgba(99, 102, 241, 0.1);
+    }
+
+    .dark .calendar-day.has-content:hover {
+        background-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .dark .topic-tag {
+        background: rgba(99, 102, 241, 0.2);
+        color: #a5b4fc;
+    }
+
+    .dark .topic-tag:hover {
+        background: rgba(99, 102, 241, 0.3);
+    }
+
+    .loading-spinner {
+        border: 3px solid #f3f4f6;
+        border-top: 3px solid #6366f1;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .speech-button {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .speech-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .speech-button:active {
+        transform: translateY(0);
+    }
+
+    .speech-button.playing {
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    }
+
+    .dark .speech-button {
+        background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+    }
+
+    .dark .speech-button.playing {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    }
+
+    .speech-icon {
+        transition: all 0.3s ease;
+        position: absolute;
+        left: 0.5rem;
+    }
+
+    .speech-button.playing .play-icon {
+        display: none;
+    }
+
+    .speech-button:not(.playing) .stop-icon {
+        display: none;
+    }
+
+    .button-text {
+        margin-left: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .speech-button.playing .button-text {
+        color: #fff;
+    }
+
+    .pulse-animation {
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .content-generation-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        transition: all 0.3s ease;
+        min-height: 200px;
+    }
+
+    .content-generation-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .dark .content-generation-card {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .generate-button {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .generate-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .generate-button:active {
+        transform: translateY(0);
+    }
+
+    .dark .generate-button {
+        background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+    }
+
+    .dark .calendar-day.selected {
+        background-color: rgba(99, 102, 241, 0.3);
+        border-color: #818cf8;
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        transition: all 0.3s ease;
+        margin-top: 2rem;
+    }
+
+    .dark .summary-card {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .summary-point {
+        transition: all 0.3s ease;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+    }
+
+    .summary-point:hover {
+        background-color: rgba(99, 102, 241, 0.1);
+        transform: translateX(5px);
+    }
+
+    .dark .summary-point:hover {
+        background-color: rgba(99, 102, 241, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Daily Content Calendar -->
+    <div class="md:col-span-2 planner-card rounded-xl shadow-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Daily Content Calendar</h2>
+            <!-- Daily Report Summary -->
+            <div class="flex items-center space-x-4">
+                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md p-3 text-white">
+                    <div class="text-sm font-medium">Total Days</div>
+                    <div class="text-2xl font-bold" id="total-days">0</div>
+                </div>
+                <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg shadow-md p-3 text-white">
+                    <div class="text-sm font-medium">Total Topics</div>
+                    <div class="text-2xl font-bold" id="total-topics">0</div>
+                </div>
+                <button id="prev-month" class="nav-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <h3 id="current-month" class="text-xl font-semibold text-gray-700 dark:text-gray-300">Loading...</h3>
+                <button id="next-month" class="nav-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <div class="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                <div class="p-2">Sun</div>
+                <div class="p-2">Mon</div>
+                <div class="p-2">Tue</div>
+                <div class="p-2">Wed</div>
+                <div class="p-2">Thu</div>
+                <div class="p-2">Fri</div>
+                <div class="p-2">Sat</div>
+            </div>
+
+            <div class="calendar-card rounded-lg overflow-hidden">
+            <table class="w-full border-collapse">
+                    <tbody id="calendar-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <!-- Calendar will be populated here -->
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <div id="day-details" class="day-card rounded-lg p-6 bg-white dark:bg-gray-800">
+            <div id="day-content-container" class="space-y-4">
+                <!-- Content will be populated when a date is selected -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side Container -->
+    <div class="flex flex-col space-y-6">
+        <!-- Read Content Section -->
+        <div class="planner-card rounded-xl shadow-lg p-6" style="height: 100px;">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Read Content</h2>
+                <button id="speech-button" class="speech-button">
+                    <svg class="speech-icon play-icon h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                    <svg class="speech-icon stop-icon h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                    </svg>
+                    <span class="button-text">Read Content</span>
+                </button>
+            </div>
+            <div id="latest-content-container" class="space-y-4" style="height: 300px;">
+            <!-- Latest content will be populated here -->
+            </div>
+        </div>
+
+        <!-- Day 1 Summary Section -->
+        <div class="summary-card rounded-xl shadow-lg p-6 bg-white dark:bg-gray-800">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Day 1 Summary</h2>
+                <span class="text-sm text-gray-600 dark:text-gray-400">GATE CSE Preparation</span>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Topics Section -->
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">Topics</h3>
+                    <div class="space-y-2">
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Introduction to Hadoop (2 hours)
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Big Data Store Model (1.5 hours)
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Big Data Programming Model (2 hours)
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Hadoop and its Ecosystem (2.5 hours)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Concepts Section -->
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">Key Concepts</h3>
+                    <div class="space-y-2">
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Understanding Big Data challenges and solutions
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Hadoop Distributed File System (HDFS)
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • MapReduce programming paradigm
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • YARN architecture and resource management
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Core components of Hadoop ecosystem
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Data processing and storage patterns
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Distributed computing principles
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Fault tolerance mechanisms
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Study Tips Section -->
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">Study Tips</h3>
+                    <div class="space-y-2">
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Focus on understanding the fundamental concepts of distributed computing
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Create diagrams to visualize HDFS architecture
+                        </div>
+                        <div class="summary-point text-gray-600 dark:text-gray-400">
+                            • Practice writing simple MapReduce examples
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Content Summary Section -->
+        <div class="summary-card rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">All Content Summary</h2>
+                <button id="toggle-all-content" class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 rounded-full text-sm hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors">
+                    Show All
+                </button>
+            </div>
+
+            <div id="all-content-container" class="space-y-6 hidden">
+                <!-- Content will be populated here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let dailyContent = null;
+    let currentMonth = new Date();
+    let selectedDate = null;
+
+    async function fetchDailyContent() {
+        try {
+            const response = await fetch('/api/daily-content');
+            if (!response.ok) {
+                throw new Error('Failed to fetch daily content');
+            }
+            const result = await response.json();
+            if (result.status === 'success') {
+                dailyContent = result.data;
+                updateCalendar();
+                populateAllContent();
+                updateTotalStats();
+                // Show today's content by default if available
+                const today = new Date().toISOString().split('T')[0];
+                if (dailyContent?.daily_plans?.[today]) {
+                    showDayContent(new Date());
+                }
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Error fetching daily content:', error);
+            document.getElementById('day-content-container').innerHTML =
+                '<div class="text-red-500">Error loading daily content. Please try again later.</div>';
+        }
+    }
+
+    function updateCalendar() {
+        // Update month display
+        document.getElementById('current-month').textContent =
+            currentMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+
+        // Clear previous calendar
+        const calendarBody = document.getElementById('calendar-body');
+        calendarBody.innerHTML = '';
+
+        // Get first day and number of days in month
+        const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+        const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+
+        let currentRow = document.createElement('tr');
+        currentRow.className = 'h-24';
+
+        // Add empty cells for days before first of month
+        for (let i = 0; i < firstDay.getDay(); i++) {
+            const cell = document.createElement('td');
+            cell.className = 'border p-2 text-center align-top';
+            currentRow.appendChild(cell);
+        }
+
+        // Add days of month
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            if (currentRow.children.length === 7) {
+                calendarBody.appendChild(currentRow);
+                currentRow = document.createElement('tr');
+                currentRow.className = 'h-24';
+            }
+
+            const cell = document.createElement('td');
+            const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+            const dateString = date.toISOString().split('T')[0];
+
+            // Check if this date has content
+            const hasContent = dailyContent &&
+                             dailyContent.daily_plans &&
+                             Object.values(dailyContent.daily_plans).some(plan => plan.date === dateString);
+
+            cell.className = `calendar-day border p-2 text-center align-top relative ${hasContent ? 'has-content' : ''}`;
+
+            // Add selected class if this is the selected date
+            if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
+                cell.classList.add('selected');
+            }
+
+            if (hasContent) {
+                cell.innerHTML = `
+                    <div class="flex flex-col h-full">
+                        <div class="text-lg font-medium text-gray-800 dark:text-white">${day}</div>
+                        <div class="text-xs text-indigo-600 dark:text-indigo-400 mt-1">Daily Content</div>
+                    </div>
+                `;
+                cell.setAttribute('data-date', dateString);
+                cell.onclick = () => {
+                    // Remove selected class from previously selected date
+                    const previouslySelected = document.querySelector('.calendar-day.selected');
+                    if (previouslySelected) {
+                        previouslySelected.classList.remove('selected');
+                    }
+                    // Add selected class to clicked date
+                    cell.classList.add('selected');
+                    selectedDate = date;
+                    showDayContent(date);
+                };
+            } else {
+                cell.innerHTML = `<div class="text-lg text-gray-800 dark:text-white">${day}</div>`;
+            }
+
+            currentRow.appendChild(cell);
+        }
+
+        // Add empty cells for days after last of month
+        while (currentRow.children.length < 7) {
+            const cell = document.createElement('td');
+            cell.className = 'border p-2 text-center align-top';
+            currentRow.appendChild(cell);
+        }
+
+        // Append the last row
+        if (currentRow.children.length > 0) {
+            calendarBody.appendChild(currentRow);
+        }
+    }
+
+    function showDayContent(date) {
+        if (!dailyContent || !dailyContent.daily_plans) {
+            document.getElementById('day-content-container').innerHTML =
+                '<div class="text-gray-500 dark:text-gray-400">No content available</div>';
+            return;
+        }
+
+        const dateStr = date.toISOString().split('T')[0];
+        const plan = Object.values(dailyContent.daily_plans).find(p => p.date === dateStr);
+
+        if (!plan) {
+            document.getElementById('day-content-container').innerHTML =
+                '<div class="text-gray-500 dark:text-gray-400">No content available for this date</div>';
+            return;
+        }
+
+        try {
+            const jsonStr = plan.content.split('```json\n')[1].split('\n```')[0];
+            const planContent = JSON.parse(jsonStr);
+
+            // Update the main content container with date-specific information
+            let contentHtml = `
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg mb-4">
+                    <h3 class="text-lg font-semibold mb-2 text-indigo-800 dark:text-indigo-300">
+                        ${date.toLocaleDateString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </h3>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="text-indigo-700 dark:text-indigo-400">
+                            <span class="font-medium">Exam Type:</span> ${dailyContent.exam_type}
+                        </div>
+                        <div class="text-indigo-700 dark:text-indigo-400">
+                            <span class="font-medium">Days Until Exam:</span> ${dailyContent.days_until_exam}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Update the summary card with the selected date's content
+            const summaryCard = document.querySelector('.summary-card');
+            if (summaryCard) {
+                let summaryHtml = `
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
+                            Day ${plan.day_number || ''} Summary
+                        </h2>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">
+                            ${date.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                    </div>
+
+                    <div class="space-y-6">`;
+
+                // Add date-specific content
+                Object.entries(planContent).forEach(([day, dayData]) => {
+                    // Add Topics section with animation
+                    summaryHtml += `
+                        <div class="transform transition-all duration-300 hover:scale-102">
+                            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Topics</h3>
+                            <div class="grid gap-2">
+                                ${dayData.topics.map((topic, index) => `
+                                    <div class="summary-point text-gray-600 dark:text-gray-400 transform transition-all duration-300">
+                                        ${index + 1}. ${topic}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>`;
+
+                        // Add Time Allocation section with progress bars
+                        summaryHtml += `
+                            <div class="transform transition-all duration-300 hover:scale-102">
+                                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Time Allocation</h3>
+                                <div class="grid gap-3">
+                                    ${Object.entries(dayData.time_allocation).map(([topic, hours]) => {
+                                        const totalHours = Object.values(dayData.time_allocation).reduce((a, b) => a + parseFloat(b), 0);
+                                        const percentage = (hours / totalHours) * 100;
+                                        return `
+                                            <div class="summary-point text-gray-600 dark:text-gray-400">
+                                                <div class="flex justify-between mb-1">
+                                                    <span>${topic}</span>
+                                                    <span>${hours} hours</span>
+                                                </div>
+                                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                                    <div class="bg-indigo-500 h-2 rounded-full transition-all duration-500"
+                                                        style="width: ${percentage}%">
+                                                    </div>
+                                                </div>
+                                            </div>`;
+                                    }).join('')}
+                                </div>
+                            </div>`;
+
+                            // Add Key Concepts section with interactive elements
+                            summaryHtml += `
+                                <div class="transform transition-all duration-300 hover:scale-102">
+                                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Key Concepts</h3>
+                                    <div class="grid gap-2">
+                                        ${dayData.key_concepts.map((concept, index) => `
+                                            <div class="summary-point text-gray-600 dark:text-gray-400 flex items-center group">
+                                                <span class="w-6 h-6 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-2 text-xs text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-800 transition-colors">
+                                                    ${index + 1}
+                                                </span>
+                                                ${concept}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>`;
+
+                                // Add Practice Items section if available
+                                if (dayData.practice_items && dayData.practice_items.length > 0) {
+                                    summaryHtml += `
+                                        <div class="transform transition-all duration-300 hover:scale-102">
+                                            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Practice Items</h3>
+                                            <div class="grid gap-2">
+                                                ${dayData.practice_items.map((item, index) => `
+                                                    <div class="summary-point text-gray-600 dark:text-gray-400 flex items-center">
+                                                        <span class="w-6 h-6 flex items-center justify-center bg-green-100 dark:bg-green-900 rounded-full mr-2 text-xs text-green-600 dark:text-green-400">
+                                                            P${index + 1}
+                                                        </span>
+                                                        ${item}
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>`;
+                                }
+                            });
+
+                            summaryHtml += `</div>`;
+                            summaryCard.innerHTML = summaryHtml;
+                        }
+
+                        // Update the main content area with detailed information
+            Object.entries(planContent).forEach(([day, dayData]) => {
+                contentHtml += `
+                                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-102">
+                                    <h4 class="font-semibold text-lg mb-3 text-gray-800 dark:text-white flex items-center">
+                                        <span class="w-8 h-8 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-2 text-indigo-600 dark:text-indigo-400">
+                                            ${plan.day_number || ''}
+                                        </span>
+                                        ${day}
+                                    </h4>
+
+                        <div class="mb-4">
+                                        <div class="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">Topics:</div>
+                            <div class="flex flex-wrap gap-2">
+                                ${dayData.topics.map(topic =>
+                                                `<span class="topic-tag text-xs px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors cursor-pointer">
+                                                    ${topic}
+                                                </span>`
+                                ).join('')}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                                        <div class="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">Time Allocation:</div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                ${Object.entries(dayData.time_allocation).map(([topic, hours]) =>
+                                                `<div class="time-allocation-item flex items-center text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-2 rounded-lg">
+                                        <div class="w-2 h-2 bg-indigo-400 rounded-full mr-2"></div>
+                                                    <span class="flex-1">${topic}</span>
+                                                    <span class="font-medium">${hours} hours</span>
+                                    </div>`
+                                ).join('')}
+                            </div>
+                        </div>
+
+                        <div>
+                                        <div class="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">Key Concepts:</div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            ${dayData.key_concepts.map((concept, index) =>
+                                                `<div class="flex items-center text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-2 rounded-lg">
+                                                    <span class="w-5 h-5 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-2 text-xs text-indigo-600 dark:text-indigo-400">
+                                                        ${index + 1}
+                                                    </span>
+                                                    ${concept}
+                                                </div>`
+                                ).join('')}
+                                        </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('day-content-container').innerHTML = contentHtml;
+
+                        // Add animation to the new content
+                        const elements = document.querySelectorAll('.transform');
+                        elements.forEach((element, index) => {
+                            element.style.opacity = '0';
+                            element.style.transform = 'translateY(20px)';
+                            setTimeout(() => {
+                                element.style.opacity = '1';
+                                element.style.transform = 'translateY(0)';
+                            }, index * 100);
+                        });
+
+        } catch (e) {
+            console.error('Error parsing plan content:', e);
+            document.getElementById('day-content-container').innerHTML = `
+                            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 p-4 rounded">
+                                Error displaying content for this date
+                </div>
+            `;
+        }
+    }
+
+    // Text-to-speech functionality
+    let speechSynthesis = window.speechSynthesis;
+    let isSpeaking = false;
+    let currentUtterance = null;
+
+    function getContentText() {
+        const container = document.getElementById('day-content-container');
+        if (!container) return '';
+
+        // Get all text content from the container
+        let text = '';
+        const elements = container.querySelectorAll('h3, h4, div, span, li');
+
+        elements.forEach(element => {
+            if (element.tagName === 'H3' || element.tagName === 'H4') {
+                text += element.textContent + '. ';
+            } else if (element.tagName === 'LI') {
+                text += element.textContent + '. ';
+            } else if (element.tagName === 'DIV' && element.classList.contains('time-allocation-item')) {
+                text += element.textContent + '. ';
+            } else if (element.tagName === 'SPAN' && element.classList.contains('topic-tag')) {
+                text += element.textContent + '. ';
+            }
+        });
+
+        return text.trim();
+    }
+
+    function speakContent() {
+        const text = getContentText();
+        if (!text) {
+            alert('No content available to read');
+            return;
+        }
+
+        const speechButton = document.getElementById('speech-button');
+        const buttonText = speechButton.querySelector('.button-text');
+
+        if (isSpeaking) {
+            speechSynthesis.cancel();
+            isSpeaking = false;
+            speechButton.classList.remove('playing', 'pulse-animation');
+            buttonText.textContent = 'Read Content';
+            return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+
+        utterance.onstart = () => {
+            isSpeaking = true;
+            speechButton.classList.add('playing', 'pulse-animation');
+            buttonText.textContent = 'Stop Reading';
+        };
+
+        utterance.onend = () => {
+            isSpeaking = false;
+            speechButton.classList.remove('playing', 'pulse-animation');
+            buttonText.textContent = 'Read Content';
+        };
+
+        utterance.onerror = (event) => {
+            console.error('Speech synthesis error:', event);
+            isSpeaking = false;
+            speechButton.classList.remove('playing', 'pulse-animation');
+            buttonText.textContent = 'Read Content';
+        };
+
+        currentUtterance = utterance;
+        speechSynthesis.speak(utterance);
+    }
+
+    // Add event listener for speech button
+    document.getElementById('speech-button').addEventListener('click', speakContent);
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchDailyContent();
+    });
+
+    // Navigation handlers
+    document.getElementById('prev-month').onclick = () => {
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1);
+        updateCalendar();
+    };
+
+    document.getElementById('next-month').onclick = () => {
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
+        updateCalendar();
+    };
+
+    // Content Generation Functionality
+    const generateButton = document.getElementById('generate-content-button');
+    const generatedContent = document.getElementById('generated-content');
+    const generationLoading = document.getElementById('generation-loading');
+    const selectedTopic = document.getElementById('selected-topic');
+    const contentText = document.getElementById('content-text');
+
+    async function generateContent() {
+        const selectedDate = document.querySelector('.calendar-day.selected');
+        if (!selectedDate) {
+            alert('Please select a date first');
+            return;
+        }
+
+        const topics = selectedDate.querySelectorAll('.topic-tag');
+        if (topics.length === 0) {
+            alert('No topics available for the selected date');
+            return;
+        }
+
+        // Randomly select a topic
+        const randomTopic = topics[Math.floor(Math.random() * topics.length)].textContent;
+        selectedTopic.textContent = randomTopic;
+
+        // Show loading state
+        generatedContent.classList.add('hidden');
+        generationLoading.classList.remove('hidden');
+
+        try {
+            // Call your backend API to generate content using Google's API
+            const response = await fetch('/api/generate-content', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    topic: randomTopic,
+                    language: localStorage.getItem('language') || 'en'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate content');
+            }
+
+            const data = await response.json();
+
+            // Display generated content
+            contentText.innerHTML = data.content;
+            generatedContent.classList.remove('hidden');
+        } catch (error) {
+            console.error('Error generating content:', error);
+            alert('Failed to generate content. Please try again.');
+        } finally {
+            generationLoading.classList.add('hidden');
+        }
+    }
+
+    generateButton.addEventListener('click', generateContent);
+
+    // Add translations for content generation
+    const contentTranslations = {
+        en: {
+            planner: {
+                content_generation: "Content Generation",
+                generate_content: "Generate Content",
+                selected_topic: "Selected Topic",
+                generated_content: "Generated Content",
+                generating: "Generating content..."
+            }
+        },
+        hi: {
+            planner: {
+                content_generation: "सामग्री निर्माण",
+                generate_content: "सामग्री बनाएं",
+                selected_topic: "चयनित विषय",
+                generated_content: "उत्पन्न सामग्री",
+                generating: "सामग्री बनाई जा रही है..."
+            }
+        },
+        kn: {
+            planner: {
+                content_generation: "ವಿಷಯ ಉತ್ಪಾದನೆ",
+                generate_content: "ವಿಷಯವನ್ನು ರಚಿಸಿ",
+                selected_topic: "ಆಯ್ಕೆಮಾಡಿದ ವಿಷಯ",
+                generated_content: "ರಚಿಸಿದ ವಿಷಯ",
+                generating: "ವಿಷಯವನ್ನು ರಚಿಸಲಾಗುತ್ತಿದೆ..."
+            }
+        }
+    };
+
+    // Merge content translations with existing translations
+    Object.assign(translations.en, contentTranslations.en);
+    Object.assign(translations.hi, contentTranslations.hi);
+    Object.assign(translations.kn, contentTranslations.kn);
+
+    // Add new function to populate all content
+    function populateAllContent() {
+        if (!dailyContent || !dailyContent.daily_plans) {
+            return;
+        }
+
+        const container = document.getElementById('all-content-container');
+        const toggleButton = document.getElementById('toggle-all-content');
+
+        let allContentHtml = '';
+
+        // Sort plans by date
+        const sortedPlans = Object.values(dailyContent.daily_plans).sort((a, b) => {
+            return new Date(a.date) - new Date(b.date);
+        });
+
+        sortedPlans.forEach(plan => {
+            try {
+                const jsonStr = plan.content.split('```json\n')[1].split('\n```')[0];
+                const planContent = JSON.parse(jsonStr);
+                const date = new Date(plan.date);
+
+                Object.entries(planContent).forEach(([day, dayData]) => {
+                    allContentHtml += `
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-102 mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold text-gray-800 dark:text-white flex items-center">
+                                    <span class="w-8 h-8 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-2 text-indigo-600 dark:text-indigo-400">
+                                        ${plan.day_number || ''}
+                                    </span>
+                                    ${date.toLocaleDateString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                </h3>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">${dailyContent.exam_type}</span>
+                            </div>
+
+                            <!-- Topics Section -->
+                            <div class="mb-6">
+                                <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Topics</h4>
+                                <div class="grid gap-2">
+                                    ${dayData.topics.map((topic, index) => `
+                                        <div class="flex items-center p-2 bg-gray-50 dark:bg-gray-900 rounded-lg transform transition-all duration-300 hover:translate-x-2">
+                                            <span class="w-6 h-6 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-3 text-xs text-indigo-600 dark:text-indigo-400">
+                                                ${index + 1}
+                                            </span>
+                                            <span class="text-gray-700 dark:text-gray-300">${topic}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <!-- Time Allocation Section -->
+                            <div class="mb-6">
+                                <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Time Allocation</h4>
+                                <div class="grid gap-3">
+                                    ${Object.entries(dayData.time_allocation).map(([topic, hours]) => {
+                                        const totalHours = Object.values(dayData.time_allocation).reduce((a, b) => a + parseFloat(b), 0);
+                                        const percentage = (hours / totalHours) * 100;
+                                        return `
+                                            <div class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                                                <div class="flex justify-between mb-2">
+                                                    <span class="text-gray-700 dark:text-gray-300">${topic}</span>
+                                                    <span class="text-indigo-600 dark:text-indigo-400 font-medium">${hours} hours</span>
+                                                </div>
+                                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                                    <div class="bg-indigo-500 h-2 rounded-full transition-all duration-500"
+                                                        style="width: ${percentage}%">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+
+                            <!-- Key Concepts Section -->
+                            <div class="mb-6">
+                                <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Key Concepts</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    ${dayData.key_concepts.map((concept, index) => `
+                                        <div class="flex items-center p-2 bg-gray-50 dark:bg-gray-900 rounded-lg transform transition-all duration-300 hover:translate-x-2">
+                                            <span class="w-6 h-6 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-3 text-xs text-indigo-600 dark:text-indigo-400">
+                                                ${index + 1}
+                                            </span>
+                                            <span class="text-gray-700 dark:text-gray-300">${concept}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            ${dayData.practice_items && dayData.practice_items.length > 0 ? `
+                                <!-- Practice Items Section -->
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Practice Items</h4>
+                                    <div class="grid gap-2">
+                                        ${dayData.practice_items.map((item, index) => `
+                                            <div class="flex items-center p-2 bg-gray-50 dark:bg-gray-900 rounded-lg transform transition-all duration-300 hover:translate-x-2">
+                                                <span class="w-6 h-6 flex items-center justify-center bg-green-100 dark:bg-green-900 rounded-full mr-3 text-xs text-green-600 dark:text-green-400">
+                                                    P${index + 1}
+                                                </span>
+                                                <span class="text-gray-700 dark:text-gray-300">${item}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error('Error parsing plan content:', e);
+            }
+        });
+
+        container.innerHTML = allContentHtml;
+
+        // Add toggle functionality
+        toggleButton.addEventListener('click', () => {
+            const isHidden = container.classList.contains('hidden');
+            container.classList.toggle('hidden');
+            toggleButton.textContent = isHidden ? 'Hide All' : 'Show All';
+
+            if (!isHidden) {
+                container.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // Animate elements when showing
+            if (isHidden) {
+                const elements = container.querySelectorAll('.transform');
+                elements.forEach((element, index) => {
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        element.style.opacity = '1';
+                        element.style.transform = 'translateY(0)';
+                    }, index * 100);
+                });
+            }
+        });
+    }
+
+    function updateTotalStats() {
+        if (!dailyContent || !dailyContent.daily_plans) return;
+
+        const totalDays = Object.keys(dailyContent.daily_plans).length;
+        let uniqueTopics = new Set();
+
+        Object.values(dailyContent.daily_plans).forEach(plan => {
+            try {
+                const jsonStr = plan.content.split('```json\n')[1].split('\n```')[0];
+                const planContent = JSON.parse(jsonStr);
+
+                Object.values(planContent).forEach(dayData => {
+                    dayData.topics.forEach(topic => uniqueTopics.add(topic));
+                });
+            } catch (e) {
+                console.error('Error parsing plan content:', e);
+            }
+        });
+
+        document.getElementById('total-days').textContent = totalDays;
+        document.getElementById('total-topics').textContent = uniqueTopics.size;
+    }
+</script>
+{% endblock %}

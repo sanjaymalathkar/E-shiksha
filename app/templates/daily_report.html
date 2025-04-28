@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Report - Educational Content Analysis System{% endblock %}
+
+{% block head %}
+<style>
+    .report-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .dark .report-card {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .progress-bar {
+        transition: width 1s ease-in-out;
+    }
+
+    .stat-card {
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .topic-item {
+        transition: all 0.3s ease;
+    }
+
+    .topic-item:hover {
+        transform: translateX(5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <div class="flex items-center space-x-4">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md p-3 text-white">
+            <div class="text-sm font-medium">Day</div>
+            <div class="text-2xl font-bold" id="total-days">1</div>
+        </div>
+        <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg shadow-md p-3 text-white">
+            <div class="text-sm font-medium">Total Topics</div>
+            <div class="text-2xl font-bold" id="total-topics">67</div>
+        </div>
+   
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function fetchDailyReport() {
+    try {
+        const response = await fetch('/api/daily-report');
+        if (!response.ok) {
+            throw new Error('Failed to fetch daily report');
+        }
+        const result = await response.json();
+        if (result.status === 'success') {
+            displayReport(result.data);
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('Error fetching daily report:', error);
+        document.getElementById('daily-reports-container').innerHTML = `
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 p-4 rounded">
+                Error loading daily report. Please try again later.
+            </div>
+        `;
+    }
+}
+
+function displayReport(data) {
+    // Update exam info
+    document.getElementById('exam-type').textContent = data.exam_info.exam_type;
+    document.getElementById('exam-date').textContent = `Exam Date: ${data.exam_info.exam_date}`;
+    document.getElementById('days-until-exam').textContent = 
+        `${data.exam_info.days_until_exam} days until exam`;
+
+    // Update overall statistics
+    document.getElementById('total-days').textContent = data.overall_statistics.total_days;
+    document.getElementById('total-topics').textContent = data.overall_statistics.total_topics;
+    document.getElementById('total-hours').textContent = 
+        data.overall_statistics.total_study_hours.toFixed(1);
+    document.getElementById('avg-hours').textContent = 
+        data.overall_statistics.average_daily_hours.toFixed(1);
+
+    // Generate daily reports
+    const container = document.getElementById('daily-reports-container');
+    container.innerHTML = data.daily_reports.map(report => `
+        <div class="report-card rounded-xl shadow-lg p-6 transform transition-all duration-300 hover:scale-102">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Day ${report.day_number}</h2>
+                <span class="text-gray-600 dark:text-gray-400">${report.formatted_date}</span>
+            </div>
+
+            <!-- Topics Section -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Topics & Time Allocation</h3>
+                <div class="space-y-4">
+                    ${report.topics_data.map(topic => `
+                        <div class="topic-item">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-700 dark:text-gray-300">${topic.topic}</span>
+                                <span class="text-indigo-600 dark:text-indigo-400">${topic.hours} hours</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div class="progress-bar bg-indigo-500 h-2 rounded-full" 
+                                    style="width: ${topic.percentage}%">
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Key Concepts Section -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Key Concepts</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    ${report.key_concepts.map((concept, index) => `
+                        <div class="flex items-center p-2 bg-gray-50 dark:bg-gray-900 rounded-lg topic-item">
+                            <span class="w-6 h-6 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-3 text-xs text-indigo-600 dark:text-indigo-400">
+                                ${index + 1}
+                            </span>
+                            <span class="text-gray-700 dark:text-gray-300">${concept}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            ${report.practice_items.length > 0 ? `
+                <!-- Practice Items Section -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Practice Items</h3>
+                    <div class="grid gap-2">
+                        ${report.practice_items.map((item, index) => `
+                            <div class="flex items-center p-2 bg-gray-50 dark:bg-gray-900 rounded-lg topic-item">
+                                <span class="w-6 h-6 flex items-center justify-center bg-green-100 dark:bg-green-900 rounded-full mr-3 text-xs text-green-600 dark:text-green-400">
+                                    P${index + 1}
+                                </span>
+                                <span class="text-gray-700 dark:text-gray-300">${item}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+
+            <!-- Completion Status -->
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Daily Progress</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                            ${report.completion_status.topics_covered}
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Topics</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                            ${report.completion_status.concepts_mastered}
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Concepts</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                            ${report.completion_status.practice_completed}
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Practice</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                            ${report.completion_status.total_study_hours}
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Hours</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    // Animate progress bars
+    setTimeout(() => {
+        document.querySelectorAll('.progress-bar').forEach(bar => {
+            bar.style.width = bar.style.width;
+        });
+    }, 100);
+}
+
+// Fetch report when page loads
+document.addEventListener('DOMContentLoaded', fetchDailyReport);
+</script>
+{% endblock %}
