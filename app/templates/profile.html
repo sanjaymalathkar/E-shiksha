@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - E-Shiksha{% endblock %}
+
+{% block head %}
+<style>
+    .profile-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 1.5rem;
+        background-color: #6366f1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .profile-info h1 {
+        margin-bottom: 0.5rem;
+    }
+    
+    .profile-info p {
+        margin-bottom: 0.25rem;
+        color: #6b7280;
+    }
+    
+    .file-card {
+        transition: all 0.3s ease;
+    }
+    
+    .file-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .file-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 0.5rem;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-area:hover {
+        border-color: #6366f1;
+    }
+    
+    .upload-icon {
+        font-size: 3rem;
+        color: #6366f1;
+        margin-bottom: 1rem;
+    }
+    
+    .loading-spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: #6366f1;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .hidden {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-avatar" id="profile-avatar">
+            <!-- Will be filled by JS -->
+        </div>
+        <div class="profile-info">
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white" id="profile-name">Loading...</h1>
+            <p class="text-gray-600 dark:text-gray-400" id="profile-email">Loading...</p>
+            <p class="text-gray-600 dark:text-gray-400">Files uploaded: <span id="files-count">0</span></p>
+        </div>
+    </div>
+    
+    <!-- Upload Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6">
+        <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Upload Files</h2>
+        <div class="upload-area" id="upload-area">
+            <div class="upload-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+            </div>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">Drag and drop files here, or click to select files</p>
+            <input type="file" id="file-input" class="hidden" multiple>
+            <button id="select-files-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200">
+                Select Files
+            </button>
+        </div>
+        <div id="upload-progress" class="mt-4 hidden">
+            <div class="loading-spinner mb-2"></div>
+            <p id="upload-status" class="text-center text-gray-600 dark:text-gray-400">Uploading...</p>
+        </div>
+    </div>
+    
+    <!-- Files Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+        <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">My Uploads</h2>
+        <div id="files-loading" class="text-center py-8">
+            <div class="loading-spinner mb-2"></div>
+            <p class="text-gray-600 dark:text-gray-400">Loading your files...</p>
+        </div>
+        <div id="files-empty" class="text-center py-8 hidden">
+            <p class="text-gray-600 dark:text-gray-400">You haven't uploaded any files yet.</p>
+        </div>
+        <div id="files-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 hidden">
+            <!-- Files will be added here by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Firebase Auth
+        initFirebaseAuth();
+        
+        // Initialize file upload
+        initFileUpload();
+    });
+    
+    // Initialize Firebase Auth
+    function initFirebaseAuth() {
+        // Check if Firebase is already loaded from the landing page
+        if (typeof firebase === 'undefined') {
+            console.error('Firebase SDK not loaded');
+            return;
+        }
+        
+        // Get auth instance
+        const auth = firebase.auth();
+        
+        // Check auth state
+        auth.onAuthStateChanged(function(user) {
+            if (user) {
+                // User is signed in
+                updateProfileUI(user);
+                loadUserFiles(user);
+            } else {
+                // User is signed out, redirect to login
+                window.location.href = '/pages/login.html';
+            }
+        });
+    }
+    
+    // Update profile UI with user info
+    function updateProfileUI(user) {
+        const profileName = document.getElementById('profile-name');
+        const profileEmail = document.getElementById('profile-email');
+        const profileAvatar = document.getElementById('profile-avatar');
+        
+        // Set name and email
+        profileName.textContent = user.displayName || 'User';
+        profileEmail.textContent = user.email || '';
+        
+        // Set avatar (either image or initials)
+        if (user.photoURL) {
+            profileAvatar.innerHTML = `<img src="${user.photoURL}" alt="${user.displayName || 'User'}" class="w-full h-full rounded-full">`;
+        } else {
+            const initials = getInitials(user.displayName || user.email || 'User');
+            profileAvatar.textContent = initials;
+        }
+    }
+    
+    // Get initials from name
+    function getInitials(name) {
+        return name
+            .split(' ')
+            .map(part => part.charAt(0))
+            .join('')
+            .toUpperCase()
+            .substring(0, 2);
+    }
+    
+    // Initialize file upload functionality
+    function initFileUpload() {
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const selectFilesBtn = document.getElementById('select-files-btn');
+        const uploadProgress = document.getElementById('upload-progress');
+        const uploadStatus = document.getElementById('upload-status');
+        
+        // Open file dialog when clicking the select button
+        selectFilesBtn.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
+        // Handle drag and drop
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('border-indigo-500');
+        });
+        
+        uploadArea.addEventListener('dragleave', function() {
+            uploadArea.classList.remove('border-indigo-500');
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('border-indigo-500');
+            
+            if (e.dataTransfer.files.length > 0) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+        
+        // Handle file selection
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files.length > 0) {
+                handleFiles(fileInput.files);
+            }
+        });
+        
+        // Handle selected files
+        async function handleFiles(files) {
+            // Show upload progress
+            uploadProgress.classList.remove('hidden');
+            uploadArea.classList.add('hidden');
+            
+            // Get current user
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                showError('You must be logged in to upload files');
+                return;
+            }
+            
+            // Get ID token
+            try {
+                const idToken = await user.getIdToken();
+                
+                // Upload each file
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    uploadStatus.textContent = `Uploading ${i + 1} of ${files.length}: ${file.name}`;
+                    
+                    try {
+                        await uploadFile(file, idToken);
+                    } catch (error) {
+                        console.error('Error uploading file:', error);
+                        showError(`Error uploading ${file.name}: ${error.message}`);
+                    }
+                }
+                
+                // Refresh file list
+                loadUserFiles(user);
+                
+                // Reset UI
+                uploadProgress.classList.add('hidden');
+                uploadArea.classList.remove('hidden');
+                fileInput.value = '';
+                
+                // Show success message
+                showSuccess(`Successfully uploaded ${files.length} file(s)`);
+                
+            } catch (error) {
+                console.error('Error getting ID token:', error);
+                showError('Authentication error. Please try logging in again.');
+                
+                // Reset UI
+                uploadProgress.classList.add('hidden');
+                uploadArea.classList.remove('hidden');
+            }
+        }
+        
+        // Upload a single file
+        async function uploadFile(file, idToken) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('description', '');
+            
+            const response = await fetch('/api/user-files/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: formData
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Upload failed');
+            }
+            
+            return await response.json();
+        }
+    }
+    
+    // Load user files
+    async function loadUserFiles(user) {
+        const filesContainer = document.getElementById('files-container');
+        const filesLoading = document.getElementById('files-loading');
+        const filesEmpty = document.getElementById('files-empty');
+        const filesCount = document.getElementById('files-count');
+        
+        // Show loading
+        filesLoading.classList.remove('hidden');
+        filesContainer.classList.add('hidden');
+        filesEmpty.classList.add('hidden');
+        
+        try {
+            // Get ID token
+            const idToken = await user.getIdToken();
+            
+            // Fetch files
+            const response = await fetch('/api/user-files/list', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${idToken}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to load files');
+            }
+            
+            const data = await response.json();
+            
+            // Update files count
+            filesCount.textContent = data.count;
+            
+            // Check if there are files
+            if (data.count === 0) {
+                filesLoading.classList.add('hidden');
+                filesEmpty.classList.remove('hidden');
+                return;
+            }
+            
+            // Render files
+            filesContainer.innerHTML = '';
+            
+            data.files.forEach(file => {
+                const fileCard = createFileCard(file);
+                filesContainer.appendChild(fileCard);
+            });
+            
+            // Show files container
+            filesLoading.classList.add('hidden');
+            filesContainer.classList.remove('hidden');
+            
+        } catch (error) {
+            console.error('Error loading files:', error);
+            showError('Failed to load your files. Please try again.');
+            
+            filesLoading.classList.add('hidden');
+        }
+    }
+    
+    // Create a file card element
+    function createFileCard(file) {
+        const fileCard = document.createElement('div');
+        fileCard.className = 'file-card bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex flex-col items-center';
+        
+        // Determine file icon based on content type
+        let iconClass = 'fas fa-file';
+        if (file.content_type.startsWith('image/')) {
+            iconClass = 'fas fa-file-image';
+        } else if (file.content_type.startsWith('video/')) {
+            iconClass = 'fas fa-file-video';
+        } else if (file.content_type.startsWith('audio/')) {
+            iconClass = 'fas fa-file-audio';
+        } else if (file.content_type.includes('pdf')) {
+            iconClass = 'fas fa-file-pdf';
+        } else if (file.content_type.includes('word') || file.content_type.includes('document')) {
+            iconClass = 'fas fa-file-word';
+        } else if (file.content_type.includes('excel') || file.content_type.includes('spreadsheet')) {
+            iconClass = 'fas fa-file-excel';
+        } else if (file.content_type.includes('powerpoint') || file.content_type.includes('presentation')) {
+            iconClass = 'fas fa-file-powerpoint';
+        } else if (file.content_type.includes('zip') || file.content_type.includes('compressed')) {
+            iconClass = 'fas fa-file-archive';
+        } else if (file.content_type.includes('text')) {
+            iconClass = 'fas fa-file-alt';
+        }
+        
+        // Format file size
+        const fileSize = formatFileSize(file.size);
+        
+        // Format upload date
+        const uploadDate = new Date(file.upload_date).toLocaleDateString();
+        
+        fileCard.innerHTML = `
+            <div class="file-icon text-indigo-600 dark:text-indigo-400">
+                <i class="${iconClass}"></i>
+            </div>
+            <h3 class="text-gray-800 dark:text-white font-medium text-center mb-1 truncate w-full" title="${file.filename}">${file.filename}</h3>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mb-2">${fileSize} • ${uploadDate}</p>
+            <div class="flex space-x-2 mt-auto">
+                <a href="/api/user-files/download/${file.file_id}" class="download-btn bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900 dark:hover:bg-indigo-800 text-indigo-600 dark:text-indigo-400 p-2 rounded-full" title="Download">
+                    <i class="fas fa-download"></i>
+                </a>
+                <button class="delete-btn bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 text-red-600 dark:text-red-400 p-2 rounded-full" title="Delete" data-file-id="${file.file_id}">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        `;
+        
+        // Add delete event listener
+        const deleteBtn = fileCard.querySelector('.delete-btn');
+        deleteBtn.addEventListener('click', function() {
+            const fileId = this.getAttribute('data-file-id');
+            confirmDeleteFile(fileId, file.filename);
+        });
+        
+        return fileCard;
+    }
+    
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Confirm file deletion
+    async function confirmDeleteFile(fileId, fileName) {
+        if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
+            try {
+                // Get current user
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    showError('You must be logged in to delete files');
+                    return;
+                }
+                
+                // Get ID token
+                const idToken = await user.getIdToken();
+                
+                // Delete file
+                const response = await fetch(`/api/user-files/${fileId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to delete file');
+                }
+                
+                // Refresh file list
+                loadUserFiles(user);
+                
+                // Show success message
+                showSuccess(`Successfully deleted "${fileName}"`);
+                
+            } catch (error) {
+                console.error('Error deleting file:', error);
+                showError('Failed to delete file. Please try again.');
+            }
+        }
+    }
+    
+    // Show error message
+    function showError(message) {
+        alert(message); // Simple alert for now, can be replaced with a nicer UI component
+    }
+    
+    // Show success message
+    function showSuccess(message) {
+        alert(message); // Simple alert for now, can be replaced with a nicer UI component
+    }
+</script>
+{% endblock %}

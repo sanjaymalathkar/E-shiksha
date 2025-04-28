@@ -211,16 +211,20 @@ def store_document_chunks(
 
         # Process each chunk
         chunk_ids = []
-        for i, chunk_text in enumerate(chunks):
+        for i, chunk_content in enumerate(chunks):
+            if not chunk_content:
+                logger.warning(f"Empty chunk found at index {i}, skipping")
+                continue
+
             # Generate embedding
-            embedding = get_embedding(chunk_text)
+            embedding = get_embedding(chunk_content)
 
             # Create chunk metadata
             chunk_metadata = {
                 "chunk_index": i,
                 "total_chunks": len(chunks),
-                "char_start": text.find(chunk_text),
-                "char_end": text.find(chunk_text) + len(chunk_text)
+                "char_start": text.find(chunk_content) if chunk_content in text else -1,
+                "char_end": text.find(chunk_content) + len(chunk_content) if chunk_content in text else -1
             }
 
             # Add document metadata if provided
@@ -232,7 +236,7 @@ def store_document_chunks(
                 file_id=file_id,
                 file_name=file_name,
                 chunk_index=i,
-                content=chunk_text,
+                content=chunk_content,
                 chunk_metadata=json.dumps(chunk_metadata),
                 embedding_data=json.dumps(embedding)
             )

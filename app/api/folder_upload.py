@@ -31,11 +31,11 @@ async def process_folder_path(
     try:
         # Get folder path
         folder_path = folder_request.folder_path
-        
+
         # Check if folder exists
         if not os.path.isdir(folder_path):
             raise HTTPException(status_code=400, detail=f"Folder not found: {folder_path}")
-        
+
         # Process folder
         result = await process_folder(
             folder_path=folder_path,
@@ -43,7 +43,7 @@ async def process_folder_path(
             exam_type=folder_request.exam_type,
             exam_date=folder_request.exam_date
         )
-        
+
         return FolderProcessResponse(
             status="success",
             message=f"Successfully processed folder: {folder_path}",
@@ -67,14 +67,21 @@ async def upload_folder(
         # Create a temporary folder for uploaded files
         temp_folder = os.path.join("data", "temp", f"upload_{os.urandom(4).hex()}")
         os.makedirs(temp_folder, exist_ok=True)
-        
-        # Save uploaded files
-        for file in files:
+
+        # Log the start of processing
+        logger.info(f"Starting to process {len(files)} files for exam type: {exam_type}")
+
+        # Save uploaded files with progress logging
+        for i, file in enumerate(files):
             file_path = os.path.join(temp_folder, file.filename)
+            logger.info(f"Saving file {i+1}/{len(files)}: {file.filename}")
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
-        
+
+        logger.info(f"All files saved to {temp_folder}, starting content analysis")
+
         # Process the folder (extract content only, do NOT generate study plan)
+        # This is the most time-consuming part
         result = await process_folder(
             folder_path=temp_folder,
             recursive=False,
@@ -150,5 +157,5 @@ async def get_exam_types():
             "duration_months": 3
         }
     ]
-    
+
     return exam_types

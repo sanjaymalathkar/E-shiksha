@@ -8,26 +8,26 @@
     <div class="md:col-span-2 bg-white rounded-lg shadow-md p-6">
         <h2 class="text-2xl font-bold mb-4">Upload Folder</h2>
         <div class="mb-6">
-            <form id="upload-form" enctype="multipart/form-data">
+            <form id="upload-form" action="/api/folder/upload" method="post" enctype="multipart/form-data">
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Select Multiple Files (PDF or Images)</label>
-                    <input type="file" id="file-input" name="files" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" 
-                           class="w-full p-2 border border-gray-300 rounded">
+                    <input type="file" id="file-input" name="files" multiple accept=".pdf,.jpg,.jpeg,.png,.webp"
+                           class="w-full p-2 border border-gray-300 rounded" required>
                 </div>
-                
+
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Exam Type</label>
-                    <select id="exam-type" name="exam_type" class="w-full p-2 border border-gray-300 rounded">
+                    <select id="exam-type" name="exam_type" class="w-full p-2 border border-gray-300 rounded" required>
                         <option value="">-- Select Exam Type --</option>
                         <!-- Exam types will be populated dynamically -->
                     </select>
                 </div>
-                
+
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">Exam Date</label>
-                    <input type="date" id="exam-date" name="exam_date" class="w-full p-2 border border-gray-300 rounded">
+                    <input type="date" id="exam-date" name="exam_date" class="w-full p-2 border border-gray-300 rounded" required>
                 </div>
-                
+
                 <div class="flex justify-between items-center">
                     <button type="submit" id="upload-button" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
                         Upload and Process
@@ -36,7 +36,7 @@
                 </div>
             </form>
         </div>
-        
+
         <div id="results-container" class="hidden">
             <h3 class="text-xl font-bold mb-2">Processing Results</h3>
             <div id="results-content" class="border border-gray-200 rounded p-4 bg-gray-50 max-h-96 overflow-y-auto"></div>
@@ -59,17 +59,17 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Exam Information -->
     <div class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-2xl font-bold mb-4">Exam Information</h2>
-        
+
         <div id="exam-info" class="hidden">
             <div class="mb-4">
                 <h3 class="text-lg font-semibold mb-2" id="exam-name">Exam Name</h3>
                 <p class="text-gray-600" id="exam-description">Exam description will appear here.</p>
             </div>
-            
+
             <div class="mb-4">
                 <div class="flex justify-between">
                     <span class="text-gray-600">Preparation Time:</span>
@@ -85,7 +85,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="no-exam-selected" class="text-center py-8">
             <div class="text-gray-400 text-5xl mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -137,32 +137,61 @@
         fetchExamTypes();
         setDefaultExamDate();
         updateMotivationalQuote();
-        
+
         // Add event listeners
         document.getElementById('exam-type').addEventListener('change', updateExamInfo);
         document.getElementById('exam-date').addEventListener('change', updateDaysRemaining);
         document.getElementById('upload-form').addEventListener('submit', uploadFiles);
     });
-    
+
     // Fetch exam types from API
     async function fetchExamTypes() {
         try {
+            const examTypeSelect = document.getElementById('exam-type');
+            examTypeSelect.innerHTML = '<option value="">-- Select Exam Type --</option>';
+
+            // Show loading indicator in the dropdown
+            const loadingOption = document.createElement('option');
+            loadingOption.disabled = true;
+            loadingOption.textContent = 'Loading exam types...';
+            examTypeSelect.appendChild(loadingOption);
+
             const response = await fetch('/api/folder/exams');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const examTypes = await response.json();
+
+            // Remove loading indicator
+            examTypeSelect.removeChild(loadingOption);
+
+            // Populate dropdown
             populateExamTypes(examTypes);
+
+            // Trigger change event to update UI if a default is selected
+            const changeEvent = new Event('change');
+            examTypeSelect.dispatchEvent(changeEvent);
+
         } catch (error) {
             console.error('Error fetching exam types:', error);
+            const examTypeSelect = document.getElementById('exam-type');
+            examTypeSelect.innerHTML = '<option value="">-- Error Loading Exam Types --</option>';
         }
     }
-    
+
     // Populate exam types dropdown
     function populateExamTypes(examTypes) {
         const examTypeSelect = document.getElementById('exam-type');
-        
+
+        if (examTypes.length === 0) {
+            const noExamsOption = document.createElement('option');
+            noExamsOption.disabled = true;
+            noExamsOption.textContent = 'No exam types available';
+            examTypeSelect.appendChild(noExamsOption);
+            return;
+        }
+
         examTypes.forEach(exam => {
             const option = document.createElement('option');
             option.value = exam.id;
@@ -172,40 +201,66 @@
             examTypeSelect.appendChild(option);
         });
     }
-    
+
     // Set default exam date (3 months from now)
     function setDefaultExamDate() {
         const examDateInput = document.getElementById('exam-date');
         const today = new Date();
+
+        // Set min date to today
+        const minYear = today.getFullYear();
+        const minMonth = String(today.getMonth() + 1).padStart(2, '0');
+        const minDay = String(today.getDate()).padStart(2, '0');
+        examDateInput.min = `${minYear}-${minMonth}-${minDay}`;
+
+        // Set default date to 3 months from now
         const threeMonthsLater = new Date(today);
         threeMonthsLater.setMonth(today.getMonth() + 3);
-        
+
         const year = threeMonthsLater.getFullYear();
         const month = String(threeMonthsLater.getMonth() + 1).padStart(2, '0');
         const day = String(threeMonthsLater.getDate()).padStart(2, '0');
-        
+
         examDateInput.value = `${year}-${month}-${day}`;
-        updateDaysRemaining();
+
+        // Trigger change event to update UI
+        const changeEvent = new Event('change');
+        examDateInput.dispatchEvent(changeEvent);
     }
-    
+
     // Update exam information when exam type changes
     function updateExamInfo() {
         const examTypeSelect = document.getElementById('exam-type');
+
+        // Check if there's a selected option
+        if (examTypeSelect.selectedIndex === -1) {
+            return; // No option selected
+        }
+
         const selectedOption = examTypeSelect.options[examTypeSelect.selectedIndex];
-        
+
         const examInfo = document.getElementById('exam-info');
         const noExamSelected = document.getElementById('no-exam-selected');
-        
+
+        // Check if elements exist to prevent errors
+        if (!examInfo || !noExamSelected) {
+            return;
+        }
+
         if (examTypeSelect.value) {
             // Show exam info
             examInfo.classList.remove('hidden');
             noExamSelected.classList.add('hidden');
-            
-            // Update exam details
-            document.getElementById('exam-name').textContent = selectedOption.textContent;
-            document.getElementById('exam-description').textContent = selectedOption.dataset.description;
-            document.getElementById('exam-duration').textContent = `${selectedOption.dataset.duration} months`;
-            
+
+            // Update exam details safely
+            const examName = document.getElementById('exam-name');
+            const examDescription = document.getElementById('exam-description');
+            const examDuration = document.getElementById('exam-duration');
+
+            if (examName) examName.textContent = selectedOption.textContent;
+            if (examDescription) examDescription.textContent = selectedOption.dataset.description || 'No description available';
+            if (examDuration) examDuration.textContent = `${selectedOption.dataset.duration || '3'} months`;
+
             updateDaysRemaining();
         } else {
             // Hide exam info
@@ -213,100 +268,117 @@
             noExamSelected.classList.remove('hidden');
         }
     }
-    
+
     // Update days remaining until exam
     function updateDaysRemaining() {
         const examDateInput = document.getElementById('exam-date');
         const daysRemainingElement = document.getElementById('days-remaining');
         const selectedDateElement = document.getElementById('selected-date');
-        
-        if (examDateInput.value) {
-            const examDate = new Date(examDateInput.value);
-            const today = new Date();
-            
-            // Calculate days difference
-            const diffTime = examDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            // Format date for display
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            const formattedDate = examDate.toLocaleDateString(undefined, options);
-            
-            // Update elements
-            selectedDateElement.textContent = formattedDate;
-            
-            if (diffDays < 0) {
-                daysRemainingElement.textContent = 'Exam date is in the past';
-                daysRemainingElement.classList.add('text-red-600');
-            } else {
-                daysRemainingElement.textContent = `${diffDays} days`;
-                daysRemainingElement.classList.remove('text-red-600');
+
+        // Check if elements exist to prevent errors
+        if (!daysRemainingElement || !selectedDateElement) {
+            return;
+        }
+
+        if (examDateInput && examDateInput.value) {
+            try {
+                const examDate = new Date(examDateInput.value);
+                const today = new Date();
+
+                // Calculate days difference
+                const diffTime = examDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                // Format date for display
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = examDate.toLocaleDateString(undefined, options);
+
+                // Update elements
+                selectedDateElement.textContent = formattedDate;
+
+                if (diffDays < 0) {
+                    daysRemainingElement.textContent = 'Exam date is in the past';
+                    daysRemainingElement.classList.add('text-red-600');
+                } else {
+                    daysRemainingElement.textContent = `${diffDays} days`;
+                    daysRemainingElement.classList.remove('text-red-600');
+                }
+            } catch (error) {
+                console.error('Error calculating days remaining:', error);
+                selectedDateElement.textContent = 'Invalid date';
+                daysRemainingElement.textContent = 'Error';
             }
         } else {
             selectedDateElement.textContent = 'Not selected';
             daysRemainingElement.textContent = '-';
         }
     }
-    
+
     // Upload files
     async function uploadFiles(e) {
         e.preventDefault();
-        
+
+        const form = document.getElementById('upload-form');
         const fileInput = document.getElementById('file-input');
         const examType = document.getElementById('exam-type').value;
         const examDate = document.getElementById('exam-date').value;
-        
+
+        // Form validation
+        if (!form.checkValidity()) {
+            // Trigger browser's built-in validation UI
+            form.reportValidity();
+            return;
+        }
+
+        // Additional validation
         if (fileInput.files.length === 0) {
             alert('Please select at least one file to upload.');
             return;
         }
-        
+
         if (!examType) {
             alert('Please select an exam type.');
+            document.getElementById('exam-type').focus();
             return;
         }
-        
+
         if (!examDate) {
             alert('Please select an exam date.');
+            document.getElementById('exam-date').focus();
             return;
         }
-        
+
         // Show loading state
         const uploadButton = document.getElementById('upload-button');
         const uploadStatus = document.getElementById('upload-status');
-        
+
         uploadButton.disabled = true;
         uploadButton.innerHTML = '<div class="loading"></div> Processing...';
         uploadStatus.textContent = `Uploading ${fileInput.files.length} file(s)...`;
-        
+
         // Create form data
-        const formData = new FormData();
-        for (let i = 0; i < fileInput.files.length; i++) {
-            formData.append('files', fileInput.files[i]);
-        }
-        formData.append('exam_type', examType);
-        formData.append('exam_date', examDate);
-        
+        const formData = new FormData(form);
+
         try {
             const response = await fetch('/api/folder/upload', {
                 method: 'POST',
                 body: formData
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
-            
+
             // Show results
             displayResults(data);
-            
+
             // Reset form state
             uploadButton.disabled = false;
             uploadButton.textContent = 'Upload and Process';
             uploadStatus.textContent = `Successfully processed ${fileInput.files.length} file(s)`;
-            
+
         } catch (error) {
             console.error('Error:', error);
             uploadButton.disabled = false;
@@ -314,7 +386,7 @@
             uploadStatus.textContent = `Error: ${error.message}`;
         }
     }
-    
+
     // Display processing results
     async function displayResults(data) {
         const resultsContainer = document.getElementById('results-container');
@@ -322,11 +394,11 @@
         const mockTestLoader = document.getElementById('mock-test-loader');
         const mockTestSection = document.getElementById('mock-test-section');
         const dailyContentSection = document.getElementById('daily-content-section');
-        
+
         resultsContainer.classList.remove('hidden');
         // Hide study plan section initially
         if (dailyContentSection) dailyContentSection.classList.add('hidden');
-        
+
         if (data.status === 'success') {
             const result = data.result;
             // Save extracted topics for mock test
@@ -357,16 +429,16 @@
             `;
         }
     }
-    
+
     // Display test plans
     function displayTestPlans(testPlans) {
         const testPlansSection = document.getElementById('test-plans-section');
         const testPlansContainer = document.getElementById('test-plans-container');
-        
+
         testPlansSection.classList.remove('hidden');
-        
+
         let html = '';
-        
+
         testPlans.forEach((plan, index) => {
             html += `
                 <div class="bg-white rounded-lg shadow-md p-4 hover-card">
@@ -381,9 +453,9 @@
                 </div>
             `;
         });
-        
+
         testPlansContainer.innerHTML = html;
-        
+
         // Add event listeners to view buttons
         document.querySelectorAll('.view-test-plan').forEach(button => {
             button.addEventListener('click', function() {
@@ -392,23 +464,23 @@
             });
         });
     }
-    
+
     // Display daily content
     function displayDailyContent(dailyContent) {
         const dailyContentSection = document.getElementById('daily-content-section');
         const dailyContentContainer = document.getElementById('daily-content-container');
-        
+
         dailyContentSection.classList.remove('hidden');
-        
+
         let html = '';
-        
+
         if (typeof dailyContent === 'object' && dailyContent.plan) {
             // If it's a simple object with a plan property
             html = `<div class="whitespace-pre-line">${dailyContent.plan}</div>`;
         } else if (Array.isArray(dailyContent)) {
             // If it's an array of daily plans
             html = '<div class="space-y-4">';
-            
+
             dailyContent.forEach((day, index) => {
                 html += `
                     <div class="border-b pb-4 ${index > 0 ? 'pt-4' : ''}">
@@ -417,15 +489,15 @@
                     </div>
                 `;
             });
-            
+
             html += '</div>';
         } else if (typeof dailyContent === 'object') {
             // If it's a complex object with daily plans
             html = '<div class="space-y-4">';
-            
+
             // Try to find days property
             const days = dailyContent.days || dailyContent.daily_plans || Object.keys(dailyContent).filter(key => key.includes('day') || key.includes('Day'));
-            
+
             if (days && days.length > 0) {
                 days.forEach((day, index) => {
                     const dayContent = dailyContent[day] || day;
@@ -440,16 +512,16 @@
                 // Fallback to displaying the whole object
                 html = `<pre class="text-sm overflow-x-auto">${JSON.stringify(dailyContent, null, 2)}</pre>`;
             }
-            
+
             html += '</div>';
         } else {
             // Fallback for any other format
             html = `<div class="whitespace-pre-line">${dailyContent}</div>`;
         }
-        
+
         dailyContentContainer.innerHTML = html;
     }
-    
+
     // Update motivational quote
     function updateMotivationalQuote() {
         const quotes = [
@@ -464,7 +536,7 @@
             "The future belongs to those who believe in the beauty of their dreams.",
             "The best way to predict the future is to create it."
         ];
-        
+
         const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
         document.getElementById('motivational-quote').textContent = `"${randomQuote}"`;
     }

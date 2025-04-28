@@ -26,3 +26,6 @@ icalendar==5.0.11
 typer<0.10.0,>=0.3.0
 anyio<4.0.0,>=3.7.1
 websockets==11.0.3
+pymongo==4.6.1
+firebase-admin==6.2.0
+certifi==2023.11.17

@@ -81,13 +81,13 @@ async def process_folder(
         logger.info(f"Found {len(valid_files)} valid files to process")
 
         # Process files in batches
-        BATCH_SIZE = 2  # Process two files at a time
+        BATCH_SIZE = 5  # Process five files at a time for better throughput
         all_results = []
 
         for i in range(0, len(valid_files), BATCH_SIZE):
             batch_files = valid_files[i:i + BATCH_SIZE]
 
-            logger.info(f"Processing batch {i//BATCH_SIZE + 1} with {len(batch_files)} files...")
+            logger.info(f"Processing batch {i//BATCH_SIZE + 1} of {(len(valid_files) + BATCH_SIZE - 1) // BATCH_SIZE} with {len(batch_files)} files...")
 
             # Prepare batch payloads
             batch_payloads = []
@@ -190,9 +190,15 @@ async def process_folder(
             json.dump(all_results, f, ensure_ascii=False, indent=2)
 
         # Generate test plans and study materials based on extracted content
-        test_plans = await generate_test_plans(all_results, exam_type, exam_date)
-        daily_content = await generate_daily_content(all_results, exam_type, exam_date)
-        motivational_quotes = await get_motivational_quotes()
+        # Use asyncio.gather to run these tasks concurrently
+        test_plans_task = asyncio.create_task(generate_test_plans(all_results, exam_type, exam_date))
+        daily_content_task = asyncio.create_task(generate_daily_content(all_results, exam_type, exam_date))
+        quotes_task = asyncio.create_task(get_motivational_quotes())
+
+        # Wait for all tasks to complete
+        test_plans, daily_content, motivational_quotes = await asyncio.gather(
+            test_plans_task, daily_content_task, quotes_task
+        )
 
         # Combine all results
         final_result = {

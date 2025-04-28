@@ -8,14 +8,7 @@
     .upload-card {
         background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
         border: 1px solid rgba(99, 102, 241, 0.1);
-        transition: all 0.3s ease;
-        transform-style: preserve-3d;
-        perspective: 1000px;
-    }
-
-    .upload-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
 
     .stat-card {
@@ -267,7 +260,7 @@
 
 {% block content %}
 <!-- Motivational Quote -->
-<div class="mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md p-6 text-white quote-container card-3d" style="margin-bottom: 20px;">
+<div class="mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-md p-6 text-white quote-container" style="margin-bottom: 20px;">
     <div class="flex items-start">
         <div class="text-3xl mr-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -282,21 +275,21 @@
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <!-- Upload Section -->
-    <div class="md:col-span-2 upload-card rounded-xl shadow-lg p-6 card-3d glow">
+    <div class="md:col-span-2 upload-card rounded-xl shadow-lg p-6">
         <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Upload Educational Content for GATE, JEE, CAT & GMAT</h2>
         <div class="flex flex-wrap mb-4">
-            <span class="badge exam-badge float">GATE</span>
-            <span class="badge exam-badge float" style="animation-delay: 0.2s">JEE</span>
-            <span class="badge exam-badge float" style="animation-delay: 0.4s">CAT</span>
-            <span class="badge exam-badge float" style="animation-delay: 0.6s">GMAT</span>
+            <span class="badge exam-badge">GATE</span>
+            <span class="badge exam-badge">JEE</span>
+            <span class="badge exam-badge">CAT</span>
+            <span class="badge exam-badge">GMAT</span>
         </div>
         <div class="mb-6">
-            <form id="upload-form" enctype="multipart/form-data" class="space-y-4">
+            <form id="upload-form" action="/api/folder/upload" method="post" enctype="multipart/form-data" class="space-y-4">
                 <div class="mb-4">
                     <label class="block text-gray-700 dark:text-gray-300 mb-2 font-medium">Select Multiple Files</label>
                     <div class="file-input-wrapper w-full">
                         <input type="file" id="file-input" name="files" multiple accept=".pdf,.jpg,.jpeg,.png,.webp"
-                               class="w-full">
+                               class="w-full" required>
                         <div class="custom-file-input w-full text-center py-8">
                             <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
@@ -312,7 +305,8 @@
                     <div>
                         <label class="block text-gray-700 dark:text-gray-300 mb-2 font-medium">Exam Type</label>
                         <select id="exam-type" name="exam_type"
-                                class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                required>
                             <option value="">-- Select Exam Type --</option>
                         </select>
                     </div>
@@ -320,7 +314,22 @@
                     <div>
                         <label class="block text-gray-700 dark:text-gray-300 mb-2 font-medium">Exam Date</label>
                         <input type="date" id="exam-date" name="exam_date"
-                               class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                               class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                               required onclick="this.showPicker()">
+                        <!-- Fallback for browsers that don't support date input -->
+                        <div id="date-fallback" class="hidden mt-2">
+                            <div class="grid grid-cols-3 gap-2">
+                                <select id="date-day" class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                    <!-- Days will be populated by JS -->
+                                </select>
+                                <select id="date-month" class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                    <!-- Months will be populated by JS -->
+                                </select>
+                                <select id="date-year" class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                    <!-- Years will be populated by JS -->
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -336,8 +345,12 @@
                 </div>
 
                 <div id="upload-progress" class="hidden">
+                    <div class="mt-2 mb-1 text-sm text-gray-600 dark:text-gray-400" id="progress-status">Preparing files...</div>
                     <div class="progress-bar">
                         <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500 dark:text-gray-500" id="progress-details">
+                        This may take a few minutes depending on file size and complexity.
                     </div>
                 </div>
             </form>
@@ -350,7 +363,7 @@
     </div>
 
     <!-- Dashboard Summary -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 card-3d glow">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Exam Dashboard</h2>
 
         <div id="exam-info" class="mb-6 hidden">
@@ -387,46 +400,46 @@
         <div class="mb-6">
             <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Quick Stats</h3>
             <div class="grid grid-cols-2 gap-4">
-                <div class="stat-card bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg card-3d" style="transform-origin: center;">
+                <div class="stat-card bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg" style="transform-origin: center;">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div id="files-processed" class="text-3xl font-bold text-blue-700 dark:text-blue-400 pulse">0</div>
+                            <div id="files-processed" class="text-3xl font-bold text-blue-700 dark:text-blue-400">0</div>
                             <div class="text-sm text-blue-700 dark:text-blue-400">Files Processed</div>
                         </div>
-                        <svg class="w-8 h-8 text-blue-400 float" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </div>
                 </div>
-                <div class="stat-card bg-green-50 dark:bg-green-900/20 p-4 rounded-lg card-3d" style="transform-origin: center;">
+                <div class="stat-card bg-green-50 dark:bg-green-900/20 p-4 rounded-lg" style="transform-origin: center;">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div id="tests-generated" class="text-3xl font-bold text-green-700 dark:text-green-400 pulse">0</div>
+                            <div id="tests-generated" class="text-3xl font-bold text-green-700 dark:text-green-400">0</div>
                             <div class="text-sm text-green-700 dark:text-green-400">Tests Generated</div>
                         </div>
-                        <svg class="w-8 h-8 text-green-400 float" style="animation-delay: 0.2s" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
                     </div>
                 </div>
-                <div class="stat-card bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg card-3d" style="transform-origin: center;">
+                <div class="stat-card bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg" style="transform-origin: center;">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div id="questions-analyzed" class="text-3xl font-bold text-purple-700 dark:text-purple-400 pulse">0</div>
+                            <div id="questions-analyzed" class="text-3xl font-bold text-purple-700 dark:text-purple-400">0</div>
                             <div class="text-sm text-purple-700 dark:text-purple-400">Questions Analyzed</div>
                         </div>
-                        <svg class="w-8 h-8 text-purple-400 float" style="animation-delay: 0.4s" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
                 </div>
-                <div class="stat-card bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg card-3d" style="transform-origin: center;">
+                <div class="stat-card bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg" style="transform-origin: center;">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div id="topics-identified" class="text-3xl font-bold text-yellow-700 dark:text-yellow-400 pulse">0</div>
+                            <div id="topics-identified" class="text-3xl font-bold text-yellow-700 dark:text-yellow-400">0</div>
                             <div class="text-sm text-yellow-700 dark:text-yellow-400">Topics Identified</div>
                         </div>
-                        <svg class="w-8 h-8 text-yellow-400 float" style="animation-delay: 0.6s" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                         </svg>
                     </div>
@@ -436,7 +449,7 @@
 
         <div>
             <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Question Distribution</h3>
-            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 card-3d">
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                 <canvas id="question-chart" width="400" height="300" class="chart-animation"></canvas>
             </div>
         </div>
@@ -462,7 +475,7 @@
 <!-- Note: Daily study plans are now shown in the Planner section -->
 
 <!-- Recent Activity -->
-<div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 card-3d glow">
+<div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
     <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Your Learning Journey</h2>
     <div class="overflow-x-auto">
         <table class="min-w-full bg-white dark:bg-gray-800">
@@ -622,23 +635,87 @@
         updateMotivationalQuote();
 
         // Add event listeners
-        document.getElementById('exam-type').addEventListener('change', updateExamInfo);
-        document.getElementById('exam-date').addEventListener('change', updateDaysRemaining);
-        document.getElementById('upload-form').addEventListener('submit', uploadFiles);
+        const examTypeSelect = document.getElementById('exam-type');
+        const examDateInput = document.getElementById('exam-date');
+        const uploadForm = document.getElementById('upload-form');
+
+        if (examTypeSelect) {
+            examTypeSelect.addEventListener('change', updateExamInfo);
+            // Force a change event to update the UI
+            setTimeout(() => {
+                examTypeSelect.dispatchEvent(new Event('change'));
+            }, 100);
+        }
+
+        if (examDateInput) {
+            examDateInput.addEventListener('change', updateDaysRemaining);
+            examDateInput.addEventListener('input', updateDaysRemaining);
+            examDateInput.addEventListener('focus', function() {
+                // Try to show the date picker when focused
+                try {
+                    this.showPicker();
+                } catch (e) {
+                    console.log('Date picker not supported in this browser');
+                }
+            });
+
+            // Force a change event to update the UI
+            setTimeout(() => {
+                examDateInput.dispatchEvent(new Event('change'));
+            }, 100);
+        }
+
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', uploadFiles);
+        }
     });
 
     // Fetch exam types from API
     async function fetchExamTypes() {
         try {
+            const examTypeSelect = document.getElementById('exam-type');
+            examTypeSelect.innerHTML = '<option value="">-- Select Exam Type --</option>';
+
+            // Show loading indicator in the dropdown
+            const loadingOption = document.createElement('option');
+            loadingOption.disabled = true;
+            loadingOption.textContent = 'Loading exam types...';
+            examTypeSelect.appendChild(loadingOption);
+
             const response = await fetch('/api/folder/exams');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const examTypes = await response.json();
+
+            // Remove loading indicator
+            examTypeSelect.removeChild(loadingOption);
+
+            // Populate dropdown
             populateExamTypes(examTypes);
+
+            // Trigger change event to update UI if a default is selected
+            const changeEvent = new Event('change');
+            examTypeSelect.dispatchEvent(changeEvent);
+
         } catch (error) {
             console.error('Error fetching exam types:', error);
+            const examTypeSelect = document.getElementById('exam-type');
+            examTypeSelect.innerHTML = '<option value="">-- Error Loading Exam Types --</option>';
+
+            // Add a retry option
+            const retryOption = document.createElement('option');
+            retryOption.value = "retry";
+            retryOption.textContent = "Click to retry loading exam types";
+            examTypeSelect.appendChild(retryOption);
+
+            // Add event listener for retry
+            examTypeSelect.addEventListener('change', function(e) {
+                if (e.target.value === 'retry') {
+                    fetchExamTypes();
+                }
+            });
         }
     }
 
@@ -646,12 +723,20 @@
     function populateExamTypes(examTypes) {
         const examTypeSelect = document.getElementById('exam-type');
 
+        if (!examTypes || examTypes.length === 0) {
+            const noExamsOption = document.createElement('option');
+            noExamsOption.disabled = true;
+            noExamsOption.textContent = 'No exam types available';
+            examTypeSelect.appendChild(noExamsOption);
+            return;
+        }
+
         examTypes.forEach(exam => {
             const option = document.createElement('option');
             option.value = exam.id;
             option.textContent = exam.name;
-            option.dataset.description = exam.description;
-            option.dataset.duration = exam.duration_months;
+            option.dataset.description = exam.description || '';
+            option.dataset.duration = exam.duration_months || '3';
             examTypeSelect.appendChild(option);
         });
     }
@@ -659,7 +744,17 @@
     // Set default exam date (3 months from now)
     function setDefaultExamDate() {
         const examDateInput = document.getElementById('exam-date');
+        if (!examDateInput) return;
+
         const today = new Date();
+
+        // Set min date to today
+        const minYear = today.getFullYear();
+        const minMonth = String(today.getMonth() + 1).padStart(2, '0');
+        const minDay = String(today.getDate()).padStart(2, '0');
+        examDateInput.min = `${minYear}-${minMonth}-${minDay}`;
+
+        // Set default date to 3 months from now
         const threeMonthsLater = new Date(today);
         threeMonthsLater.setMonth(today.getMonth() + 3);
 
@@ -668,26 +763,118 @@
         const day = String(threeMonthsLater.getDate()).padStart(2, '0');
 
         examDateInput.value = `${year}-${month}-${day}`;
-        updateDaysRemaining();
+
+        // Trigger change event to update UI
+        const changeEvent = new Event('change');
+        examDateInput.dispatchEvent(changeEvent);
+
+        // Setup fallback date selectors for browsers with poor date input support
+        setupDateFallback(threeMonthsLater);
+    }
+
+    // Setup fallback date selectors
+    function setupDateFallback(defaultDate) {
+        const dateFallback = document.getElementById('date-fallback');
+        const examDateInput = document.getElementById('exam-date');
+        const daySelect = document.getElementById('date-day');
+        const monthSelect = document.getElementById('date-month');
+        const yearSelect = document.getElementById('date-year');
+
+        // Check if date input is supported properly
+        const isDateInputSupported = function() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'date');
+            const notADateValue = 'not-a-date';
+            input.setAttribute('value', notADateValue);
+            return input.value !== notADateValue;
+        };
+
+        // If date input is not supported, show fallback
+        if (!isDateInputSupported()) {
+            dateFallback.classList.remove('hidden');
+
+            // Populate days
+            daySelect.innerHTML = '';
+            for (let i = 1; i <= 31; i++) {
+                const option = document.createElement('option');
+                option.value = String(i).padStart(2, '0');
+                option.textContent = i;
+                daySelect.appendChild(option);
+            }
+
+            // Populate months
+            monthSelect.innerHTML = '';
+            const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+            months.forEach((month, index) => {
+                const option = document.createElement('option');
+                option.value = String(index + 1).padStart(2, '0');
+                option.textContent = month;
+                monthSelect.appendChild(option);
+            });
+
+            // Populate years
+            yearSelect.innerHTML = '';
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear; i <= currentYear + 5; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                yearSelect.appendChild(option);
+            }
+
+            // Set default values
+            daySelect.value = String(defaultDate.getDate()).padStart(2, '0');
+            monthSelect.value = String(defaultDate.getMonth() + 1).padStart(2, '0');
+            yearSelect.value = defaultDate.getFullYear();
+
+            // Add event listeners to update the hidden date input
+            [daySelect, monthSelect, yearSelect].forEach(select => {
+                select.addEventListener('change', function() {
+                    const year = yearSelect.value;
+                    const month = monthSelect.value;
+                    const day = daySelect.value;
+                    examDateInput.value = `${year}-${month}-${day}`;
+
+                    // Trigger change event
+                    examDateInput.dispatchEvent(new Event('change'));
+                });
+            });
+        }
     }
 
     // Update exam information when exam type changes
     function updateExamInfo() {
         const examTypeSelect = document.getElementById('exam-type');
+
+        // Check if there's a selected option
+        if (examTypeSelect.selectedIndex === -1) {
+            return; // No option selected
+        }
+
         const selectedOption = examTypeSelect.options[examTypeSelect.selectedIndex];
 
         const examInfo = document.getElementById('exam-info');
         const noExamSelected = document.getElementById('no-exam-selected');
+
+        // Check if elements exist to prevent errors
+        if (!examInfo || !noExamSelected) {
+            return;
+        }
 
         if (examTypeSelect.value) {
             // Show exam info
             examInfo.classList.remove('hidden');
             noExamSelected.classList.add('hidden');
 
-            // Update exam details
-            document.getElementById('exam-name').textContent = selectedOption.textContent;
-            document.getElementById('exam-description').textContent = selectedOption.dataset.description;
-            document.getElementById('exam-duration').textContent = `${selectedOption.dataset.duration} months`;
+            // Update exam details safely
+            const examName = document.getElementById('exam-name');
+            const examDescription = document.getElementById('exam-description');
+            const examDuration = document.getElementById('exam-duration');
+
+            if (examName) examName.textContent = selectedOption.textContent;
+            if (examDescription) examDescription.textContent = selectedOption.dataset.description || 'No description available';
+            if (examDuration) examDuration.textContent = `${selectedOption.dataset.duration || '3'} months`;
 
             updateDaysRemaining();
         } else {
@@ -703,27 +890,56 @@
         const daysRemainingElement = document.getElementById('days-remaining');
         const selectedDateElement = document.getElementById('selected-date');
 
-        if (examDateInput.value) {
-            const examDate = new Date(examDateInput.value);
-            const today = new Date();
+        // Check if elements exist
+        if (!daysRemainingElement || !selectedDateElement) {
+            return;
+        }
 
-            // Calculate days difference
-            const diffTime = examDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (examDateInput && examDateInput.value) {
+            try {
+                // Parse the date value
+                const dateParts = examDateInput.value.split('-');
+                if (dateParts.length !== 3) {
+                    throw new Error('Invalid date format');
+                }
 
-            // Format date for display
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            const formattedDate = examDate.toLocaleDateString(undefined, options);
+                // Create date object (using year, month-1, day)
+                const examDate = new Date(
+                    parseInt(dateParts[0]),
+                    parseInt(dateParts[1]) - 1,
+                    parseInt(dateParts[2])
+                );
 
-            // Update elements
-            selectedDateElement.textContent = formattedDate;
+                // Validate the date
+                if (isNaN(examDate.getTime())) {
+                    throw new Error('Invalid date');
+                }
 
-            if (diffDays < 0) {
-                daysRemainingElement.textContent = 'Exam date is in the past';
-                daysRemainingElement.classList.add('text-red-600');
-            } else {
-                daysRemainingElement.textContent = `${diffDays} days`;
-                daysRemainingElement.classList.remove('text-red-600');
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset time part for accurate day calculation
+
+                // Calculate days difference
+                const diffTime = examDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                // Format date for display
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = examDate.toLocaleDateString(undefined, options);
+
+                // Update elements
+                selectedDateElement.textContent = formattedDate;
+
+                if (diffDays < 0) {
+                    daysRemainingElement.textContent = 'Exam date is in the past';
+                    daysRemainingElement.classList.add('text-red-600');
+                } else {
+                    daysRemainingElement.textContent = `${diffDays} days`;
+                    daysRemainingElement.classList.remove('text-red-600');
+                }
+            } catch (error) {
+                console.error('Error calculating days remaining:', error);
+                selectedDateElement.textContent = 'Invalid date';
+                daysRemainingElement.textContent = 'Error';
             }
         } else {
             selectedDateElement.textContent = 'Not selected';
@@ -735,40 +951,85 @@
     async function uploadFiles(e) {
         e.preventDefault();
 
+        const form = document.getElementById('upload-form');
         const fileInput = document.getElementById('file-input');
-        const examType = document.getElementById('exam-type').value;
-        const examDate = document.getElementById('exam-date').value;
+        const examTypeSelect = document.getElementById('exam-type');
+        const examDateInput = document.getElementById('exam-date');
 
+        // Form validation
+        if (!form.checkValidity()) {
+            // Trigger browser's built-in validation UI
+            form.reportValidity();
+            return;
+        }
+
+        const examType = examTypeSelect.value;
+        const examDate = examDateInput.value;
+
+        // Additional validation
         if (fileInput.files.length === 0) {
             alert('Please select at least one file to upload.');
+            fileInput.focus();
             return;
         }
 
         if (!examType) {
             alert('Please select an exam type.');
+            examTypeSelect.focus();
             return;
         }
 
         if (!examDate) {
             alert('Please select an exam date.');
+            examDateInput.focus();
             return;
         }
 
         // Show loading state
         const uploadButton = document.getElementById('upload-button');
         const uploadStatus = document.getElementById('upload-status');
+        const uploadProgress = document.getElementById('upload-progress');
 
         uploadButton.disabled = true;
         uploadButton.innerHTML = '<div class="loading"></div> Processing...';
         uploadStatus.textContent = `Uploading ${fileInput.files.length} file(s)...`;
+        uploadProgress.classList.remove('hidden');
 
-        // Create form data
-        const formData = new FormData();
-        for (let i = 0; i < fileInput.files.length; i++) {
-            formData.append('files', fileInput.files[i]);
-        }
-        formData.append('exam_type', examType);
-        formData.append('exam_date', examDate);
+        // Update progress bar and status
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const progressStatus = document.getElementById('progress-status');
+        const progressDetails = document.getElementById('progress-details');
+
+        progressBarFill.style.width = '10%'; // Initial progress
+        progressStatus.textContent = 'Uploading files...';
+
+        // Set up progress animation
+        let progress = 10;
+        const progressInterval = setInterval(() => {
+            // Slowly increase progress to simulate activity
+            if (progress < 90) {
+                progress += 1;
+                progressBarFill.style.width = `${progress}%`;
+
+                // Update status messages based on progress
+                if (progress === 20) {
+                    progressStatus.textContent = 'Processing files...';
+                    progressDetails.textContent = 'Extracting text from documents...';
+                } else if (progress === 40) {
+                    progressStatus.textContent = 'Analyzing content...';
+                    progressDetails.textContent = 'Identifying key topics and concepts...';
+                } else if (progress === 60) {
+                    progressStatus.textContent = 'Generating test plans...';
+                    progressDetails.textContent = 'Creating personalized test plans based on your content...';
+                } else if (progress === 80) {
+                    progressStatus.textContent = 'Finalizing...';
+                    progressDetails.textContent = 'Almost done! Preparing your results...';
+                }
+            }
+        }, 1000);
+
+        // Create form data from the form element
+        const formData = new FormData(form);
 
         try {
             const response = await fetch('/api/folder/upload', {
@@ -781,6 +1042,14 @@
             }
 
             const data = await response.json();
+
+            // Clear the progress interval
+            clearInterval(progressInterval);
+
+            // Set progress to 100%
+            progressBarFill.style.width = '100%';
+            progressStatus.textContent = 'Complete!';
+            progressDetails.textContent = 'Redirecting to your personalized mock test...';
 
             // Show transition loader with message
             const transitionLoader = document.createElement('div');
@@ -819,9 +1088,17 @@
 
         } catch (error) {
             console.error('Error:', error);
+
+            // Clear the progress interval
+            clearInterval(progressInterval);
+
+            // Reset UI
             uploadButton.disabled = false;
             uploadButton.textContent = 'Upload and Process';
             uploadStatus.textContent = `Error: ${error.message}`;
+            progressStatus.textContent = 'Processing failed';
+            progressDetails.textContent = 'Please try again or contact support if the issue persists.';
+            progressBarFill.style.width = '0%';
         }
     }
 
@@ -1020,69 +1297,24 @@
         document.getElementById('motivational-quote').textContent = `"${randomQuote}"`;
     }
 
-    // Add 3D animation effects
+    // Initialize UI elements
     document.addEventListener('DOMContentLoaded', function() {
-        // Add 3D tilt effect to cards
-        const cards = document.querySelectorAll('.card-3d');
-
-        cards.forEach(card => {
-            card.addEventListener('mousemove', function(e) {
-                const rect = this.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                const xPercent = x / rect.width;
-                const yPercent = y / rect.height;
-
-                const maxRotate = 10; // Maximum rotation in degrees
-                const rotateX = (0.5 - yPercent) * maxRotate;
-                const rotateY = (xPercent - 0.5) * maxRotate;
-
-                this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
-            });
-
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
-            });
-        });
-
-        // Add animation to chart
+        // Make sure chart is visible
         const chartAnimation = document.querySelector('.chart-animation');
         if (chartAnimation) {
-            chartAnimation.style.opacity = '0';
-            chartAnimation.style.transform = 'scale(0.9)';
-            chartAnimation.style.transition = 'opacity 1s ease, transform 1s ease';
-
-            setTimeout(() => {
-                chartAnimation.style.opacity = '1';
-                chartAnimation.style.transform = 'scale(1)';
-            }, 500);
+            chartAnimation.style.opacity = '1';
         }
 
-        // Add animation to exam badges
+        // Make sure badges are visible
         const examBadges = document.querySelectorAll('.exam-badge');
-        examBadges.forEach((badge, index) => {
-            badge.style.opacity = '0';
-            badge.style.transform = 'translateY(20px)';
-            badge.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-
-            setTimeout(() => {
-                badge.style.opacity = '1';
-                badge.style.transform = 'translateY(0)';
-            }, 100 * index);
+        examBadges.forEach((badge) => {
+            badge.style.opacity = '1';
         });
 
-        // Add animation to motivational quote
+        // Make sure quote is visible
         const quoteContainer = document.querySelector('.quote-container');
         if (quoteContainer) {
-            quoteContainer.style.opacity = '0';
-            quoteContainer.style.transform = 'translateY(20px)';
-            quoteContainer.style.transition = 'opacity 1s ease, transform 1s ease';
-
-            setTimeout(() => {
-                quoteContainer.style.opacity = '1';
-                quoteContainer.style.transform = 'translateY(0)';
-            }, 300);
+            quoteContainer.style.opacity = '1';
         }
     });
 </script>

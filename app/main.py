@@ -67,6 +67,7 @@ from app.api.mock_test import router as mock_test_router
 from app.api.planner_local import router as planner_local_router
 from app.api.study_plan import router as study_plan_router
 from app.api.workflow import router as workflow_router
+from app.api.user_files import router as user_files_router
 
 # Include routers
 app.include_router(upload_router)
@@ -79,6 +80,7 @@ app.include_router(maintenance_router)
 app.include_router(language_router)
 app.include_router(study_plan_router)
 app.include_router(workflow_router)
+app.include_router(user_files_router)
 
 # Middleware to add language context to all templates
 @app.middleware("http")
@@ -135,6 +137,12 @@ async def mock_test(request: Request):
 async def study_plan(request: Request):
     language = get_language(request)
     return templates.TemplateResponse("study_plan.html", {"request": request, "language": language})
+
+@app.get("/profile")
+async def profile(request: Request):
+    """Serve the user profile page"""
+    language = get_language(request)
+    return templates.TemplateResponse("profile.html", {"request": request, "language": language})
 
 # Logout route
 @app.get("/logout")
