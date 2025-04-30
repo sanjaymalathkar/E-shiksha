@@ -14,7 +14,7 @@ from app.core.embeddings import store_document_chunks, search_similar_chunks
 from app.core.database import get_db
 
 # Import cleanup utilities
-from app.core.utils.cleanup import clean_temp_folder, clean_all_temp_files
+from app.core.utils.cleanup import clean_temp_folder, schedule_file_deletion, clean_all_temp_files
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -211,12 +211,24 @@ async def process_folder(
             "motivational_quotes": motivational_quotes
         }
 
-        # Clean up temporary files
+        # Schedule files for deletion after 10 minutes
         try:
+            # Schedule all processed files for deletion after 10 minutes
+            files_to_delete = []
+            for file_path in valid_files:
+                if os.path.exists(file_path):
+                    files_to_delete.append(file_path)
+
+            if files_to_delete:
+                schedule_file_deletion(files_to_delete, delay_minutes=10)
+                logger.info(f"Scheduled {len(files_to_delete)} files for deletion after 10 minutes")
+
+            # Also clean up any older temporary files
             files_deleted, bytes_freed = clean_temp_folder(max_age_hours=1)  # Clean files older than 1 hour
-            logger.info(f"Cleaned up {files_deleted} temporary files, freed {bytes_freed/1024:.2f} KB")
+            if files_deleted > 0:
+                logger.info(f"Cleaned up {files_deleted} older temporary files, freed {bytes_freed/1024:.2f} KB")
         except Exception as cleanup_error:
-            logger.warning(f"Error cleaning temporary files: {str(cleanup_error)}")
+            logger.warning(f"Error in file cleanup: {str(cleanup_error)}")
 
         return final_result
     except Exception as e:

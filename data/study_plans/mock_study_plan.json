@@ -1,0 +1,41 @@
+{
+  "user_id": "demo-user-123",
+  "plan": {
+    "metadata": {
+      "subject": "Mathematics",
+      "level": "Advanced",
+      "duration_days": 30,
+      "created_at": "2023-06-01T00:00:00Z"
+    },
+    "days": [
+      {
+        "date": "2023-06-01",
+        "topics": [
+          "Linear Algebra Fundamentals",
+          "Matrix Operations",
+          "Systems of Linear Equations"
+        ],
+        "activities": [
+          "Solve 5 practice problems on matrix multiplication",
+          "Watch video lecture on Gaussian elimination",
+          "Complete quiz on linear systems"
+        ],
+        "tip": "Focus on understanding the geometric interpretation of matrices."
+      },
+      {
+        "date": "2023-06-02",
+        "topics": [
+          "Vector Spaces",
+          "Linear Transformations",
+          "Eigenvalues and Eigenvectors"
+        ],
+        "activities": [
+          "Prove 3 properties of vector spaces",
+          "Compute eigenvalues for 3x3 matrices",
+          "Visualize linear transformations using online tools"
+        ],
+        "tip": "Eigenvalues are crucial for understanding how transformations stretch or compress space."
+      }
+    ]
+  }
+}

@@ -265,3 +265,6 @@ def get_daily_report():
             'status': 'error',
             'message': f'Error reading JSON file: {str(e)}'
         }), 500
+
+
+       

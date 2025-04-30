@@ -1,0 +1,542 @@
+[
+  {
+    "question": "Which of the following is a prime number?",
+    "options": ["15", "21", "31", "49"],
+    "answer": 2,
+    "exam": "JEE"
+  },
+  {
+    "question": "Who is known as the Father of the Indian Constitution?",
+    "options": ["Mahatma Gandhi", "B. R. Ambedkar", "Jawaharlal Nehru", "Sardar Patel"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "What is the value of √144?",
+    "options": ["10", "12", "14", "16"],
+    "answer": 1,
+    "exam": "JEE"
+  },
+  {
+    "question": "The process of cell division in somatic cells is called?",
+    "options": ["Meiosis", "Mitosis", "Fusion", "Binary Fission"],
+    "answer": 1,
+    "exam": "NEET"
+  },
+  {
+    "question": "Which is NOT a type of market structure?",
+    "options": ["Perfect Competition", "Monopoly", "Oligopoly", "Photosynthesis"],
+    "answer": 3,
+    "exam": "CAT"
+  },
+  {
+    "question": "Who wrote the epic Mahabharata?",
+    "options": ["Valmiki", "Vyasa", "Tulsidas", "Kalidasa"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Which gas is most abundant in the Earth's atmosphere?",
+    "options": ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"],
+    "answer": 1,
+    "exam": "NEET"
+  },
+  {
+    "question": "If x = 2, what is the value of 2x^2 + 3x + 1?",
+    "options": ["15", "17", "13", "11"],
+    "answer": 0,
+    "exam": "JEE"
+  },
+  {
+    "question": "Which of the following is NOT a fundamental right in India?",
+    "options": ["Right to Equality", "Right to Property", "Right to Freedom", "Right against Exploitation"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "The powerhouse of the cell is?",
+    "options": ["Nucleus", "Mitochondria", "Ribosome", "Chloroplast"],
+    "answer": 1,
+    "exam": "NEET"
+  },
+  {
+    "question": "Which of the following is a non-renewable resource?",
+    "options": ["Solar Energy", "Wind Energy", "Coal", "Hydroelectric Energy"],
+    "answer": 2,
+    "exam": "CAT"
+  },
+  {
+    "question": "Who is the author of 'Discovery of India'?",
+    "options": ["Rabindranath Tagore", "Jawaharlal Nehru", "Sarojini Naidu", "Subhash Chandra Bose"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "The chemical formula for table salt is?",
+    "options": ["NaCl", "KCl", "Na2CO3", "CaCl2"],
+    "answer": 0,
+    "exam": "NEET"
+  },
+  {
+    "question": "If a good has perfectly inelastic demand, its demand curve will be?",
+    "options": ["Horizontal", "Vertical", "Upward Sloping", "Downward Sloping"],
+    "answer": 1,
+    "exam": "CAT"
+  },
+  {
+    "question": "Which is the largest planet in our solar system?",
+    "options": ["Earth", "Mars", "Jupiter", "Saturn"],
+    "answer": 2,
+    "exam": "NEET"
+  },
+  {
+    "question": "The sum of the angles of a triangle is?",
+    "options": ["90°", "180°", "270°", "360°"],
+    "answer": 1,
+    "exam": "JEE"
+  },
+  {
+    "question": "Which of the following is not a programming language?",
+    "options": ["Python", "Java", "HTML", "React"],
+    "answer": 3,
+    "exam": "CAT"
+  },
+  {
+    "question": "Where is the headquarters of the United Nations?",
+    "options": ["Geneva", "New York", "Paris", "London"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Who discovered Penicillin?",
+    "options": ["Marie Curie", "Alexander Fleming", "Isaac Newton", "Albert Einstein"],
+    "answer": 1,
+    "exam": "NEET"
+  },
+  {
+    "question": "What is the next number in the series: 2, 4, 8, 16, ?",
+    "options": ["18", "20", "24", "32"],
+    "answer": 3,
+    "exam": "JEE"
+  },
+  {
+    "question": "A body of mass 2 kg is thrown upwards with a velocity of 20 m/s. What is the kinetic energy at the highest point?",
+    "options": ["0 J", "200 J", "400 J", "800 J"],
+    "answer": 0,
+    "exam": "JEE"
+  },
+  {
+    "question": "Which of the following elements has the highest electronegativity?",
+    "options": ["Oxygen", "Nitrogen", "Fluorine", "Chlorine"],
+    "answer": 2,
+    "exam": "JEE"
+  },
+  {
+    "question": "If a² + b² = 25 and a + b = 7, what is the value of ab?",
+    "options": ["10", "12", "15", "24"],
+    "answer": 1,
+    "exam": "JEE"
+  },
+  {
+    "question": "The value of ∫(1/x) dx from 1 to e is:",
+    "options": ["0", "1", "e", "ln(e)"],
+    "answer": 1,
+    "exam": "JEE"
+  },
+  {
+    "question": "Which of the following is the SI unit of electric current?",
+    "options": ["Volt", "Watt", "Ampere", "Coulomb"],
+    "answer": 2,
+    "exam": "JEE"
+  },
+  {
+    "question": "A particle moves in a circle of radius 20 cm with constant speed and time period 4 s. What is the acceleration of the particle?",
+    "options": ["5 cm/s²", "10 cm/s²", "π² cm/s²", "4π² cm/s²"],
+    "answer": 3,
+    "exam": "JEE"
+  },
+  {
+    "question": "Which of the following is the correct electronic configuration of Fe²⁺?",
+    "options": ["[Ar] 3d⁶ 4s²", "[Ar] 3d⁶ 4s⁰", "[Ar] 3d⁴ 4s²", "[Ar] 3d⁸ 4s⁰"],
+    "answer": 1,
+    "exam": "JEE"
+  },
+  {
+    "question": "If f(x) = x³ - 3x² + 4x - 5, then f'(2) is equal to:",
+    "options": ["3", "5", "7", "9"],
+    "answer": 2,
+    "exam": "JEE"
+  },
+  {
+    "question": "The Quit India Movement was launched by Mahatma Gandhi in:",
+    "options": ["1940", "1942", "1945", "1947"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Which of the following rivers does NOT flow into the Arabian Sea?",
+    "options": ["Narmada", "Tapti", "Mahanadi", "Sabarmati"],
+    "answer": 2,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Which Article of the Indian Constitution abolishes untouchability?",
+    "options": ["Article 14", "Article 15", "Article 17", "Article 21"],
+    "answer": 2,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Which of the following is NOT a function of the Reserve Bank of India?",
+    "options": ["Banker to the Government", "Issuer of currency", "Formulation of fiscal policy", "Lender of last resort"],
+    "answer": 2,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Which of the following is NOT a greenhouse gas?",
+    "options": ["Carbon dioxide", "Methane", "Nitrogen", "Water vapor"],
+    "answer": 2,
+    "exam": "UPSC"
+  },
+  {
+    "question": "The Battle of Plassey was fought in which year?",
+    "options": ["1757", "1764", "1775", "1784"],
+    "answer": 0,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Which of the following is NOT a function of the liver?",
+    "options": ["Detoxification", "Production of insulin", "Synthesis of bile", "Storage of glycogen"],
+    "answer": 1,
+    "exam": "NEET"
+  },
+  {
+    "question": "The image formed by a plane mirror is:",
+    "options": ["Real and erect", "Real and inverted", "Virtual and erect", "Virtual and inverted"],
+    "answer": 2,
+    "exam": "NEET"
+  },
+  {
+    "question": "Which of the following is an example of a saturated hydrocarbon?",
+    "options": ["Benzene", "Ethene", "Ethyne", "Ethane"],
+    "answer": 3,
+    "exam": "NEET"
+  },
+  {
+    "question": "Which of the following is the site of protein synthesis in a cell?",
+    "options": ["Nucleus", "Mitochondria", "Ribosome", "Golgi apparatus"],
+    "answer": 2,
+    "exam": "NEET"
+  },
+  {
+    "question": "The main function of the kidney is:",
+    "options": ["Digestion", "Respiration", "Excretion", "Circulation"],
+    "answer": 2,
+    "exam": "NEET"
+  },
+  {
+    "question": "Which of the following is NOT a part of the human digestive system?",
+    "options": ["Esophagus", "Pancreas", "Trachea", "Small intestine"],
+    "answer": 2,
+    "exam": "NEET"
+  },
+  {
+    "question": "The hormone insulin is produced by which organ?",
+    "options": ["Liver", "Pancreas", "Kidney", "Thyroid"],
+    "answer": 1,
+    "exam": "NEET"
+  },
+  {
+    "question": "Which of the following is NOT a vector quantity?",
+    "options": ["Velocity", "Force", "Displacement", "Temperature"],
+    "answer": 3,
+    "exam": "NEET"
+  },
+  {
+    "question": "Choose the word that is most nearly OPPOSITE in meaning to 'FRUGAL':",
+    "options": ["Economical", "Extravagant", "Prudent", "Thrifty"],
+    "answer": 1,
+    "exam": "CAT"
+  },
+  {
+    "question": "If the average of five consecutive integers is 20, what is the largest of these integers?",
+    "options": ["18", "20", "22", "24"],
+    "answer": 2,
+    "exam": "CAT"
+  },
+  {
+    "question": "If all Zips are Zaps, and some Zaps are Zops, which of the following must be true?",
+    "options": ["All Zips are Zops", "Some Zips are Zops", "No Zips are Zops", "Some Zops are not Zips"],
+    "answer": 3,
+    "exam": "CAT"
+  },
+  {
+    "question": "If a company's revenue increased by 20% and its expenses increased by 10% compared to last year, what can we conclude about its profit?",
+    "options": ["Profit increased by 10%", "Profit increased by more than 10%", "Profit increased by less than 10%", "Cannot be determined without knowing the initial values"],
+    "answer": 3,
+    "exam": "CAT"
+  },
+  {
+    "question": "Choose the word that best completes the analogy: Book is to Author as Painting is to:",
+    "options": ["Canvas", "Gallery", "Artist", "Brush"],
+    "answer": 2,
+    "exam": "CAT"
+  },
+  {
+    "question": "If the ratio of boys to girls in a class is 3:2, and there are 30 students in total, how many girls are there?",
+    "options": ["10", "12", "15", "18"],
+    "answer": 1,
+    "exam": "CAT"
+  },
+  {
+    "question": "Which of the following is NOT a valid statistical measure of central tendency?",
+    "options": ["Mean", "Median", "Mode", "Range"],
+    "answer": 3,
+    "exam": "CAT"
+  },
+  {
+    "question": "If a train travels at 60 km/h, how long will it take to cover a distance of 150 km?",
+    "options": ["2 hours", "2.5 hours", "3 hours", "3.5 hours"],
+    "answer": 1,
+    "exam": "CAT"
+  },
+  {
+    "question": "In a certain code, COMPUTER is written as RFUVQNPC. How will PRINTER be written in that code?",
+    "options": ["QSJOUFQ", "SFUOJSQ", "QSJOUFS", "SFEOJSQ"],
+    "answer": 2,
+    "exam": "CAT"
+  },
+  {
+    "question": "A shopkeeper gives a discount of 10% on the marked price and still makes a profit of 20%. If the cost price is Rs. 100, what is the marked price?",
+    "options": ["Rs. 120", "Rs. 133.33", "Rs. 140", "Rs. 150"],
+    "answer": 1,
+    "exam": "CAT"
+  },
+  {
+    "question": "Which of the following is a characteristic of a perfectly competitive market?",
+    "options": ["Few sellers", "Product differentiation", "Price discrimination", "Free entry and exit"],
+    "answer": 3,
+    "exam": "CAT"
+  },
+  {
+    "question": "The Preamble to the Indian Constitution was adopted on:",
+    "options": ["26th January 1950", "26th November 1949", "15th August 1947", "30th January 1948"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Who among the following was NOT a member of the Constituent Assembly?",
+    "options": ["B.R. Ambedkar", "Jawaharlal Nehru", "Sardar Patel", "Mahatma Gandhi"],
+    "answer": 3,
+    "exam": "UPSC"
+  },
+  {
+    "question": "The concept of Fundamental Rights in the Indian Constitution was borrowed from:",
+    "options": ["UK", "USA", "Canada", "Australia"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Which of the following is NOT a classical dance form of India?",
+    "options": ["Bharatanatyam", "Kathakali", "Garba", "Odissi"],
+    "answer": 2,
+    "exam": "UPSC"
+  },
+  {
+    "question": "The Indus Valley Civilization was discovered in the year:",
+    "options": ["1901", "1921", "1931", "1941"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Which of the following is a primary function of the World Trade Organization (WTO)?",
+    "options": ["Providing loans to developing countries", "Regulating international trade", "Maintaining exchange rates", "Fighting global poverty"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "The 'Green Revolution' in India is associated with:",
+    "options": ["Forestry", "Fisheries", "Agriculture", "Poultry"],
+    "answer": 2,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Which of the following is NOT a member of BRICS?",
+    "options": ["Brazil", "Russia", "Indonesia", "South Africa"],
+    "answer": 2,
+    "exam": "UPSC"
+  },
+  {
+    "question": "The first Law Minister of independent India was:",
+    "options": ["Sardar Patel", "B.R. Ambedkar", "C. Rajagopalachari", "Rafi Ahmed Kidwai"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Which of the following is NOT a permanent member of the UN Security Council?",
+    "options": ["USA", "Russia", "China", "India"],
+    "answer": 3,
+    "exam": "UPSC"
+  },
+  {
+    "question": "The first woman to become the Prime Minister of India was:",
+    "options": ["Sarojini Naidu", "Indira Gandhi", "Sucheta Kripalani", "Vijaya Lakshmi Pandit"],
+    "answer": 1,
+    "exam": "UPSC"
+  },
+  {
+    "question": "Which of the following is NOT a property of metals?",
+    "options": ["Good conductors of heat", "Good conductors of electricity", "High melting points", "Poor ductility"],
+    "answer": 3,
+    "exam": "JEE"
+  },
+  {
+    "question": "The pH of a neutral solution at 25°C is:",
+    "options": ["0", "7", "14", "1"],
+    "answer": 1,
+    "exam": "JEE"
+  },
+  {
+    "question": "Which of the following is NOT a state of matter?",
+    "options": ["Solid", "Liquid", "Gas", "Energy"],
+    "answer": 3,
+    "exam": "JEE"
+  },
+  {
+    "question": "The SI unit of pressure is:",
+    "options": ["Newton", "Pascal", "Joule", "Watt"],
+    "answer": 1,
+    "exam": "JEE"
+  },
+  {
+    "question": "Which of the following is a vector quantity?",
+    "options": ["Mass", "Temperature", "Time", "Velocity"],
+    "answer": 3,
+    "exam": "JEE"
+  },
+  {
+    "question": "The process of conversion of solid directly to gas is called:",
+    "options": ["Evaporation", "Sublimation", "Condensation", "Deposition"],
+    "answer": 1,
+    "exam": "JEE"
+  },
+  {
+    "question": "Which of the following is NOT a type of chemical bond?",
+    "options": ["Ionic bond", "Covalent bond", "Metallic bond", "Gravitational bond"],
+    "answer": 3,
+    "exam": "JEE"
+  },
+  {
+    "question": "The number of significant figures in 0.0120 is:",
+    "options": ["2", "3", "4", "5"],
+    "answer": 1,
+    "exam": "JEE"
+  },
+  {
+    "question": "Which of the following is NOT a unit of energy?",
+    "options": ["Joule", "Calorie", "Electron volt", "Ampere"],
+    "answer": 3,
+    "exam": "JEE"
+  },
+  {
+    "question": "The process by which plants make their food is called:",
+    "options": ["Respiration", "Photosynthesis", "Transpiration", "Digestion"],
+    "answer": 1,
+    "exam": "NEET"
+  },
+  {
+    "question": "Which of the following is NOT a part of the human respiratory system?",
+    "options": ["Trachea", "Bronchi", "Alveoli", "Nephron"],
+    "answer": 3,
+    "exam": "NEET"
+  },
+  {
+    "question": "The human heart has how many chambers?",
+    "options": ["2", "3", "4", "5"],
+    "answer": 2,
+    "exam": "NEET"
+  },
+  {
+    "question": "Which of the following is NOT a function of the skeletal system?",
+    "options": ["Support", "Protection", "Movement", "Digestion"],
+    "answer": 3,
+    "exam": "NEET"
+  },
+  {
+    "question": "The largest organ in the human body is:",
+    "options": ["Heart", "Liver", "Skin", "Brain"],
+    "answer": 2,
+    "exam": "NEET"
+  },
+  {
+    "question": "Which of the following is NOT a type of blood cell?",
+    "options": ["Red blood cells", "White blood cells", "Platelets", "Neurons"],
+    "answer": 3,
+    "exam": "NEET"
+  },
+  {
+    "question": "The process of breakdown of food into simpler substances is called:",
+    "options": ["Respiration", "Digestion", "Excretion", "Reproduction"],
+    "answer": 1,
+    "exam": "NEET"
+  },
+  {
+    "question": "Which of the following is NOT a part of the central nervous system?",
+    "options": ["Brain", "Spinal cord", "Nerves", "Cerebellum"],
+    "answer": 2,
+    "exam": "NEET"
+  },
+  {
+    "question": "The normal body temperature of a healthy human being is:",
+    "options": ["36.5°C", "37.0°C", "38.0°C", "39.0°C"],
+    "answer": 1,
+    "exam": "NEET"
+  },
+  {
+    "question": "Which of the following is NOT a type of market segmentation?",
+    "options": ["Demographic", "Geographic", "Psychographic", "Photographic"],
+    "answer": 3,
+    "exam": "CAT"
+  },
+  {
+    "question": "In a certain code, COMPUTER is written as RFUVQNPC. How will PRINTER be written in that code?",
+    "options": ["QSJOUFQ", "SFUOJSQ", "QSJOUFS", "SFEOJSQ"],
+    "answer": 2,
+    "exam": "CAT"
+  },
+  {
+    "question": "If a shopkeeper gives a discount of 10% on the marked price and still makes a profit of 20%, what is the marked price if the cost price is Rs. 100?",
+    "options": ["Rs. 120", "Rs. 133.33", "Rs. 140", "Rs. 150"],
+    "answer": 1,
+    "exam": "CAT"
+  },
+  {
+    "question": "Which of the following is NOT a valid statistical measure of dispersion?",
+    "options": ["Range", "Variance", "Standard deviation", "Mean"],
+    "answer": 3,
+    "exam": "CAT"
+  },
+  {
+    "question": "If 3 men can do a piece of work in 6 days, how many days will 9 men take to do the same work?",
+    "options": ["1 day", "2 days", "3 days", "4 days"],
+    "answer": 1,
+    "exam": "CAT"
+  },
+  {
+    "question": "Which of the following is NOT a type of probability sampling?",
+    "options": ["Simple random sampling", "Stratified sampling", "Cluster sampling", "Convenience sampling"],
+    "answer": 3,
+    "exam": "CAT"
+  },
+  {
+    "question": "If a train travels at 60 km/h, how long will it take to cover a distance of 150 km?",
+    "options": ["2 hours", "2.5 hours", "3 hours", "3.5 hours"],
+    "answer": 1,
+    "exam": "CAT"
+  },
+  {
+    "question": "Which of the following is NOT a characteristic of a monopoly market?",
+    "options": ["Single seller", "No close substitutes", "Price maker", "Free entry and exit"],
+    "answer": 3,
+    "exam": "CAT"
+  }
+]

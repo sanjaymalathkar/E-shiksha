@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Email Testing</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, button {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #4F46E5;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #4338CA;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #D1FAE5;
+            border: 1px solid #10B981;
+        }
+        .error {
+            background-color: #FEE2E2;
+            border: 1px solid #EF4444;
+        }
+        .preview {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .topic {
+            background-color: #EEF2FF;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .tip {
+            background-color: #FFFBEB;
+            padding: 15px;
+            margin-top: 20px;
+            border-left: 4px solid #F59E0B;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Daily Email Testing</h1>
+
+        <div class="card">
+            <h2>Send Daily Email to User</h2>
+            <div class="form-group">
+                <label for="user-id">User ID:</label>
+                <input type="text" id="user-id" placeholder="Firebase UID">
+            </div>
+            <button id="send-to-user">Send Email</button>
+            <button id="preview-email">Preview Email</button>
+            <div id="user-result" class="result" style="display: none;"></div>
+            <div id="preview-content" class="preview" style="display: none;"></div>
+        </div>
+
+        <div class="card">
+            <h2>Send Daily Emails to All Users</h2>
+            <p>This will send daily topic emails to all users with study plans.</p>
+            <button id="send-to-all">Send to All</button>
+            <div id="all-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Send to user
+            document.getElementById('send-to-user').addEventListener('click', async function() {
+                const userId = document.getElementById('user-id').value.trim();
+                if (!userId) {
+                    showResult('user-result', 'Please enter a User ID', false);
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/daily-email/send-to-user', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ user_id: userId })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showResult('user-result', data.message, true);
+                    } else {
+                        showResult('user-result', `Error: ${data.detail || 'Failed to send email'}`, false);
+                    }
+                } catch (error) {
+                    showResult('user-result', `Error: ${error.message}`, false);
+                }
+            });
+
+            // Preview email
+            document.getElementById('preview-email').addEventListener('click', async function() {
+                const userId = document.getElementById('user-id').value.trim();
+                if (!userId) {
+                    showResult('user-result', 'Please enter a User ID', false);
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/daily-email/preview/${userId}`);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showPreview(data.today_plan);
+                    } else {
+                        showResult('user-result', `Error: ${data.detail || 'Failed to preview email'}`, false);
+                        document.getElementById('preview-content').style.display = 'none';
+                    }
+                } catch (error) {
+                    showResult('user-result', `Error: ${error.message}`, false);
+                    document.getElementById('preview-content').style.display = 'none';
+                }
+            });
+
+            // Send to all
+            document.getElementById('send-to-all').addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/api/daily-email/send-all', {
+                        method: 'POST'
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showResult('all-result', `${data.message}`, true);
+                    } else {
+                        showResult('all-result', `Error: ${data.detail || 'Failed to send emails'}`, false);
+                    }
+                } catch (error) {
+                    showResult('all-result', `Error: ${error.message}`, false);
+                }
+            });
+
+            // Helper functions
+            function showResult(elementId, message, isSuccess) {
+                const element = document.getElementById(elementId);
+                element.textContent = message;
+                element.className = isSuccess ? 'result success' : 'result error';
+                element.style.display = 'block';
+            }
+
+            function showPreview(todayPlan) {
+                const previewElement = document.getElementById('preview-content');
+
+                // Clear previous content
+                previewElement.innerHTML = '';
+
+                // Create preview content
+                const topics = todayPlan.topics || [];
+                const activities = todayPlan.activities || [];
+                const tip = todayPlan.tip || '';
+
+                // Add topics
+                const topicsTitle = document.createElement('h3');
+                topicsTitle.textContent = "Today's Topics";
+                previewElement.appendChild(topicsTitle);
+
+                topics.forEach(topic => {
+                    const topicElement = document.createElement('div');
+                    topicElement.className = 'topic';
+                    topicElement.textContent = topic;
+                    previewElement.appendChild(topicElement);
+                });
+
+                // Add activities if available
+                if (activities.length > 0) {
+                    const activitiesTitle = document.createElement('h3');
+                    activitiesTitle.textContent = 'Recommended Activities';
+                    previewElement.appendChild(activitiesTitle);
+
+                    const activitiesList = document.createElement('ul');
+                    activities.forEach(activity => {
+                        const activityItem = document.createElement('li');
+                        activityItem.textContent = activity;
+                        activitiesList.appendChild(activityItem);
+                    });
+                    previewElement.appendChild(activitiesList);
+                }
+
+                // Add tip if available
+                if (tip) {
+                    const tipElement = document.createElement('div');
+                    tipElement.className = 'tip';
+
+                    const tipTitle = document.createElement('strong');
+                    tipTitle.textContent = 'Tip for Today: ';
+
+                    tipElement.appendChild(tipTitle);
+                    tipElement.appendChild(document.createTextNode(tip));
+
+                    previewElement.appendChild(tipElement);
+                }
+
+                // Show the preview
+                previewElement.style.display = 'block';
+
+                // Hide any previous error messages
+                document.getElementById('user-result').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

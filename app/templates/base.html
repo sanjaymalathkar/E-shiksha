@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="{{ language|default('en') }}" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Educational Content Analysis System{% endblock %}</title>
+    <title>{% block title %}E-Shiksha{% endblock %}</title>
     <link rel="icon" href="/static/img/favicon.ico" type="image/x-icon">
 
     <!-- Tailwind CSS -->
@@ -42,6 +42,10 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/css/main.css">
     <link rel="stylesheet" href="/static/css/logout-button.css">
+
+    <!-- i18n Script -->
+    <script src="/static/js/i18n.js"></script>
+
     <style>
         .loading {
             display: inline-block;
@@ -187,7 +191,7 @@
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
     <!-- Navigation -->
-    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+    <nav class="gradient-bg text-cyan-200 shadow-lg sticky top-0 z-50">
         <div class="container mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-4">
@@ -198,7 +202,8 @@
                         <a href="/app" class="nav-link" data-i18n="nav.dashboard">Dashboard</a>
                         <a href="/planner" class="nav-link" data-i18n="nav.planner">Planner</a>
                         <a href="/daily-report" class="nav-link" data-i18n="nav.daily_report">Report</a>
-                        <a href="/mock-test" class="nav-link" data-i18n="nav.mock_test">Mock Test</a>
+                        <a href="/mock-test" class="nav-link" data-i18n="nav.mock_test">Create Test</a>
+                        <a href="/attendance" class="nav-link" data-i18n="nav.attendance">Attendance</a>
                         <a href="/profile" class="nav-link" data-i18n="nav.profile">Profile</a>
                     </div>
                 </div>
@@ -212,10 +217,10 @@
                         </svg>
                     </button>
                     <div class="relative">
-                        <select id="language-selector" class="language-selector" onchange="window.location.href='/api/language/' + this.value">
-                            <option value="en" {% if language == 'en' %}selected{% endif %}>English</option>
-                            <option value="hi" {% if language == 'hi' %}selected{% endif %}>हिंदी</option>
-                            <option value="kn" {% if language == 'kn' %}selected{% endif %}>ಕನ್ನಡ</option>
+                        <select id="language-selector" class="language-selector">
+                            <option value="en" data-i18n="languages.english">English</option>
+                            <option value="hi" data-i18n="languages.hindi">हिंदी</option>
+                            <option value="kn" data-i18n="languages.kannada">ಕನ್ನಡ</option>
                         </select>
                     </div>
                     <a href="/logout" class="logout-btn">
@@ -234,7 +239,8 @@
                 <a href="/app" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.dashboard">Dashboard</a>
                 <a href="/planner" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.planner">Planner</a>
                 <a href="/daily-report" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.daily_report">Report</a>
-                <a href="/mock-test" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.mock_test">Mock Test</a>
+                <a href="/mock-test" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.mock_test">Create Test</a>
+                <a href="/attendance" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.attendance">Attendance</a>
                 <a href="/profile" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.profile">Profile</a>
                 <a href="/logout" class="text-center flex-1 py-2 hover:bg-indigo-600/50 rounded-lg transition-colors whitespace-nowrap" data-i18n="nav.logout">Logout</a>
             </div>
@@ -281,93 +287,6 @@
 
     <!-- Common JavaScript -->
     <script>
-        // Translation dictionary
-        const translations = {
-            en: {
-                nav: {
-                    dashboard: "Dashboard",
-                    planner: "Planner",
-                    daily_report: "Daily Report",
-                    mock_test: "Mock Test",
-                    test_viewer: "Test Viewer",
-                    profile: "Profile",
-                    logout: "Logout"
-                },
-                footer: {
-                    description: "Empowering education through AI-driven content analysis and planning.",
-                    quick_links: "Quick Links",
-                    support: "Support",
-                    about: "About",
-                    help: "Help",
-                    privacy: "Privacy",
-                    terms: "Terms",
-                    copyright: "© 2025 E-Shiksha. All rights reserved."
-                }
-            },
-            hi: {
-                nav: {
-                    dashboard: "डैशबोर्ड",
-                    planner: "योजनाकार",
-                    daily_report: "दैनिक रिपोर्ट",
-                    mock_test: "मॉक टेस्ट",
-                    test_viewer: "टेस्ट व्यूअर",
-                    profile: "प्रोफाइल",
-                    logout: "लॉग आउट"
-                },
-                footer: {
-                    description: "एआई-संचालित सामग्री विश्लेषण और योजना के माध्यम से शिक्षा को सशक्त बनाना।",
-                    quick_links: "त्वरित लिंक",
-                    support: "समर्थन",
-                    about: "के बारे में",
-                    help: "मदद",
-                    privacy: "गोपनीयता",
-                    terms: "नियम और शर्तें",
-                    copyright: "© 2025 ई-शिक्षा। सर्वाधिकार सुरक्षित।"
-                }
-            },
-            kn: {
-                nav: {
-                    dashboard: "ಡ್ಯಾಶ್ಬೋರ್ಡ್",
-                    planner: "ಯೋಜನಾಕಾರ",
-                    daily_report: "ದೈನಂದಿನ ವರದಿ",
-                    mock_test: "ಮಾಕ್ ಟೆಸ್ಟ್",
-                    test_viewer: "ಪರೀಕ್ಷೆ ವೀಕ್ಷಕ",
-                    profile: "ಪ್ರೊಫೈಲ್",
-                    logout: "ಲಾಗ್ ಔಟ್"
-                },
-                footer: {
-                    description: "AI-ಚಾಲಿತ ವಿಷಯ ವಿಶ್ಲೇಷಣೆ ಮತ್ತು ಯೋಜನೆ ಮೂಲಕ ಶಿಕ್ಷಣವನ್ನು ಶಕ್ತಿಶಾಲಿ ಮಾಡುವುದು.",
-                    quick_links: "ತ್ವರಿತ ಲಿಂಕ್ಗಳು",
-                    support: "ಬೆಂಬಲ",
-                    about: "ಬಗ್ಗೆ",
-                    help: "ಸಹಾಯ",
-                    privacy: "ಗೌಪ್ಯತೆ",
-                    terms: "ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳು",
-                    copyright: "© 2025 ಇ-ಶಿಕ್ಷಾ. ಎಲ್ಲ ಹಕ್ಕುಗಳನ್ನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ."
-                }
-            }
-        };
-
-        // Function to translate text
-        function translateText() {
-            const language = localStorage.getItem('language') || 'en';
-            const elements = document.querySelectorAll('[data-i18n]');
-
-            elements.forEach(element => {
-                const key = element.getAttribute('data-i18n');
-                const keys = key.split('.');
-                let translation = translations[language];
-
-                for (const k of keys) {
-                    translation = translation[k];
-                }
-
-                if (translation) {
-                    element.textContent = translation;
-                }
-            });
-        }
-
         // Dark mode toggle
         const darkModeToggle = document.getElementById('dark-mode-toggle');
         const html = document.documentElement;
@@ -384,16 +303,23 @@
         });
 
         // Language selector functionality
-        document.getElementById('language-selector').addEventListener('change', function() {
-            const language = this.value;
-            localStorage.setItem('language', language);
-            translateText();
-        });
+        document.addEventListener('DOMContentLoaded', () => {
+            const languageSelector = document.getElementById('language-selector');
 
-        // Set initial language and translate
-        const savedLanguage = localStorage.getItem('language') || 'en';
-        document.getElementById('language-selector').value = savedLanguage;
-        translateText();
+            if (languageSelector) {
+                // Set initial value
+                const currentLanguage = localStorage.getItem('language') || 'en';
+                languageSelector.value = currentLanguage;
+
+                // Add change event listener
+                languageSelector.addEventListener('change', (e) => {
+                    const newLanguage = e.target.value;
+                    if (window.i18n && typeof window.i18n.changeLanguage === 'function') {
+                        window.i18n.changeLanguage(newLanguage);
+                    }
+                });
+            }
+        });
     </script>
     {% block scripts %}{% endblock %}
 </body>

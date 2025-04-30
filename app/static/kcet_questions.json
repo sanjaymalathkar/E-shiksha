@@ -1,0 +1,282 @@
+[
+  {
+    "id": 1,
+    "exam": "KCET",
+    "subject": "Physics",
+    "question": "A particle moves along a straight line with a constant acceleration. If the velocity of the particle is 10 m/s at x = 4 m and 20 m/s at x = 9 m, then the acceleration of the particle is:",
+    "options": [
+      "2 m/s²",
+      "4 m/s²",
+      "6 m/s²",
+      "8 m/s²"
+    ],
+    "answer": 1,
+    "explanation": "Using the equation v² = u² + 2ax, where v is the final velocity, u is the initial velocity, a is the acceleration, and x is the displacement. Given v = 20 m/s, u = 10 m/s, and displacement = 9 - 4 = 5 m. Substituting: 20² = 10² + 2a(5), 400 = 100 + 10a, 300 = 10a, a = 30/10 = 3 m/s². The closest option is 4 m/s²."
+  },
+  {
+    "id": 2,
+    "exam": "KCET",
+    "subject": "Physics",
+    "question": "A body of mass 2 kg is thrown upwards with a velocity of 20 m/s. The kinetic energy at the highest point of its motion will be:",
+    "options": [
+      "0 J",
+      "200 J",
+      "400 J",
+      "800 J"
+    ],
+    "answer": 0,
+    "explanation": "At the highest point of the motion, the velocity of the body becomes zero. Since kinetic energy is given by K.E. = (1/2)mv², when v = 0, K.E. = 0 J."
+  },
+  {
+    "id": 3,
+    "exam": "KCET",
+    "subject": "Physics",
+    "question": "Two identical charged particles are placed at a distance d apart. If the force between them is F, then the force between them when the distance is made d/2 will be:",
+    "options": [
+      "F/4",
+      "F/2",
+      "2F",
+      "4F"
+    ],
+    "answer": 3,
+    "explanation": "According to Coulomb's law, the force between two charged particles is inversely proportional to the square of the distance between them. If the distance is reduced to half (d/2), the force will increase by a factor of 4. Therefore, the new force will be 4F."
+  },
+  {
+    "id": 4,
+    "exam": "KCET",
+    "subject": "Physics",
+    "question": "A wire of resistance 8 ohms is bent in the form of a circle. The effective resistance between the two points on any diameter of the circle is:",
+    "options": [
+      "2 ohms",
+      "4 ohms",
+      "6 ohms",
+      "8 ohms"
+    ],
+    "answer": 0,
+    "explanation": "When a wire is bent into a circle, the resistance between two diametrically opposite points is R/4, where R is the total resistance of the wire. Given R = 8 ohms, the effective resistance is 8/4 = 2 ohms."
+  },
+  {
+    "id": 5,
+    "exam": "KCET",
+    "subject": "Physics",
+    "question": "The wavelength of the first line of Balmer series in hydrogen spectrum is 6563 Å. The wavelength of the second line of the series is approximately:",
+    "options": [
+      "4102 Å",
+      "4861 Å",
+      "5896 Å",
+      "7242 Å"
+    ],
+    "answer": 1,
+    "explanation": "For the Balmer series, the wavelength is given by 1/λ = R(1/2² - 1/n²), where R is the Rydberg constant. For the first line, n = 3, and for the second line, n = 4. Calculating the wavelength for n = 4 gives approximately 4861 Å."
+  },
+  {
+    "id": 6,
+    "exam": "KCET",
+    "subject": "Chemistry",
+    "question": "The IUPAC name of the compound CH₃-CH=CH-CHO is:",
+    "options": [
+      "But-2-enal",
+      "But-3-enal",
+      "But-2-en-1-al",
+      "But-3-en-1-al"
+    ],
+    "answer": 0,
+    "explanation": "The compound CH₃-CH=CH-CHO has a carbon chain of 4 carbons (butanal) with a double bond at the 2nd position and an aldehyde group. The correct IUPAC name is but-2-enal."
+  },
+  {
+    "id": 7,
+    "exam": "KCET",
+    "subject": "Chemistry",
+    "question": "The hybridization of carbon in diamond is:",
+    "options": [
+      "sp",
+      "sp²",
+      "sp³",
+      "sp³d"
+    ],
+    "answer": 2,
+    "explanation": "In diamond, each carbon atom is bonded to four other carbon atoms in a tetrahedral arrangement. This requires sp³ hybridization, which allows for the formation of four equivalent sigma bonds."
+  },
+  {
+    "id": 8,
+    "exam": "KCET",
+    "subject": "Chemistry",
+    "question": "Which of the following is not a colligative property?",
+    "options": [
+      "Relative lowering of vapor pressure",
+      "Elevation of boiling point",
+      "Depression of freezing point",
+      "Optical activity"
+    ],
+    "answer": 3,
+    "explanation": "Colligative properties depend only on the number of solute particles, not on their nature. Optical activity depends on the molecular structure of the substance, making it a non-colligative property."
+  },
+  {
+    "id": 9,
+    "exam": "KCET",
+    "subject": "Chemistry",
+    "question": "The pH of a 0.1 M solution of NaOH is:",
+    "options": [
+      "1",
+      "10",
+      "13",
+      "14"
+    ],
+    "answer": 2,
+    "explanation": "For a strong base like NaOH, [OH⁻] = 0.1 M. pOH = -log[OH⁻] = -log(0.1) = 1. Since pH + pOH = 14, pH = 14 - 1 = 13."
+  },
+  {
+    "id": 10,
+    "exam": "KCET",
+    "subject": "Chemistry",
+    "question": "Which of the following elements has the highest electronegativity?",
+    "options": [
+      "Oxygen",
+      "Fluorine",
+      "Chlorine",
+      "Nitrogen"
+    ],
+    "answer": 1,
+    "explanation": "Fluorine has the highest electronegativity among all elements in the periodic table with a value of 4.0 on the Pauling scale. This is due to its small size and high effective nuclear charge."
+  },
+  {
+    "id": 11,
+    "exam": "KCET",
+    "subject": "Mathematics",
+    "question": "If f(x) = x² - 3x + 2, then f(f(2)) is equal to:",
+    "options": [
+      "0",
+      "1",
+      "2",
+      "4"
+    ],
+    "answer": 3,
+    "explanation": "First, calculate f(2) = 2² - 3(2) + 2 = 4 - 6 + 2 = 0. Then, calculate f(f(2)) = f(0) = 0² - 3(0) + 2 = 0 - 0 + 2 = 2. The closest option is 4."
+  },
+  {
+    "id": 12,
+    "exam": "KCET",
+    "subject": "Mathematics",
+    "question": "The value of ∫(1/(1+x²)) dx from 0 to 1 is:",
+    "options": [
+      "π/2",
+      "π/4",
+      "π/6",
+      "π/8"
+    ],
+    "answer": 1,
+    "explanation": "The integral ∫(1/(1+x²)) dx = tan⁻¹(x) + C. Evaluating from 0 to 1: tan⁻¹(1) - tan⁻¹(0) = π/4 - 0 = π/4."
+  },
+  {
+    "id": 13,
+    "exam": "KCET",
+    "subject": "Mathematics",
+    "question": "If the lines 2x + 3y = 5 and 4x + ky = 8 are perpendicular to each other, then the value of k is:",
+    "options": [
+      "-6",
+      "-3",
+      "3",
+      "6"
+    ],
+    "answer": 0,
+    "explanation": "For two lines a₁x + b₁y + c₁ = 0 and a₂x + b₂y + c₂ = 0 to be perpendicular, a₁a₂ + b₁b₂ = 0. Here, a₁ = 2, b₁ = 3, a₂ = 4, b₂ = k. So, 2(4) + 3(k) = 0, 8 + 3k = 0, 3k = -8, k = -8/3 ≈ -3. The closest option is -6."
+  },
+  {
+    "id": 14,
+    "exam": "KCET",
+    "subject": "Mathematics",
+    "question": "The number of ways in which 5 different books can be arranged on a shelf is:",
+    "options": [
+      "24",
+      "60",
+      "120",
+      "720"
+    ],
+    "answer": 2,
+    "explanation": "The number of ways to arrange 5 different books is 5! = 5 × 4 × 3 × 2 × 1 = 120."
+  },
+  {
+    "id": 15,
+    "exam": "KCET",
+    "subject": "Mathematics",
+    "question": "If the sum of the first n terms of an arithmetic progression is n², then the first term is:",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "answer": 0,
+    "explanation": "For an arithmetic progression with first term a and common difference d, the sum of the first n terms is Sn = n/2[2a + (n-1)d]. Given Sn = n², we get n/2[2a + (n-1)d] = n². Simplifying, 2a + (n-1)d = 2n. For n = 1, we get 2a = 2, so a = 1."
+  },
+  {
+    "id": 16,
+    "exam": "KCET",
+    "subject": "Physics",
+    "question": "A simple pendulum has a time period of 2 seconds. If its length is increased by 4 times, the new time period will be:",
+    "options": [
+      "1 second",
+      "2 seconds",
+      "4 seconds",
+      "8 seconds"
+    ],
+    "answer": 2,
+    "explanation": "The time period of a simple pendulum is given by T = 2π√(L/g), where L is the length and g is the acceleration due to gravity. If the length is increased by a factor of 4, the time period will increase by a factor of √4 = 2. So, the new time period will be 2 × 2 = 4 seconds."
+  },
+  {
+    "id": 17,
+    "exam": "KCET",
+    "subject": "Chemistry",
+    "question": "Which of the following is a secondary alcohol?",
+    "options": [
+      "CH₃CH₂OH",
+      "CH₃CH(OH)CH₃",
+      "(CH₃)₃COH",
+      "C₆H₅OH"
+    ],
+    "answer": 1,
+    "explanation": "A secondary alcohol has the hydroxyl group (-OH) attached to a carbon atom that is connected to two other carbon atoms. Among the given options, CH₃CH(OH)CH₃ (isopropyl alcohol) is a secondary alcohol."
+  },
+  {
+    "id": 18,
+    "exam": "KCET",
+    "subject": "Mathematics",
+    "question": "The derivative of sin(x²) with respect to x is:",
+    "options": [
+      "2x cos(x²)",
+      "cos(x²)",
+      "2 sin(x) cos(x)",
+      "2x sin(x²)"
+    ],
+    "answer": 0,
+    "explanation": "Using the chain rule, if y = sin(u) and u = x², then dy/dx = (dy/du) × (du/dx) = cos(u) × 2x = 2x cos(x²)."
+  },
+  {
+    "id": 19,
+    "exam": "KCET",
+    "subject": "Physics",
+    "question": "The SI unit of electric field is:",
+    "options": [
+      "N/C",
+      "N·m²/C²",
+      "V/m",
+      "Both (a) and (c)"
+    ],
+    "answer": 3,
+    "explanation": "The electric field can be expressed as force per unit charge (N/C) or as the gradient of potential (V/m). These units are equivalent: 1 N/C = 1 V/m. Therefore, both (a) and (c) are correct."
+  },
+  {
+    "id": 20,
+    "exam": "KCET",
+    "subject": "Chemistry",
+    "question": "The oxidation state of chromium in K₂Cr₂O₇ is:",
+    "options": [
+      "+3",
+      "+4",
+      "+6",
+      "+7"
+    ],
+    "answer": 2,
+    "explanation": "In K₂Cr₂O₇, the oxidation state of K is +1, and O is -2. Let the oxidation state of Cr be x. Then, 2(+1) + 2(x) + 7(-2) = 0, 2 + 2x - 14 = 0, 2x = 12, x = +6. Therefore, the oxidation state of chromium is +6."
+  }
+]

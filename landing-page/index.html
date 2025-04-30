@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +12,50 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- i18n Script -->
+    <script src="/static/js/i18n.js"></script>
+
+    <style>
+        .language-selector {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 1rem;
+        }
+
+        .language-select {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: inherit;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .language-select:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .dark .language-select {
+            border-color: rgba(75, 85, 99, 0.5);
+        }
+
+        .dark .language-select:hover {
+            border-color: rgba(75, 85, 99, 0.8);
+        }
+
+        /* Style for the dropdown arrow */
+        .language-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1rem;
+            padding-right: 2rem;
+        }
+    </style>
 </head>
 <body>
     <!-- Loader Animation -->
@@ -31,12 +75,19 @@
                 <div class="bar"></div>
             </div>
             <ul class="nav-menu">
-                <li><a href="#home" class="nav-link active">Home</a></li>
-                <li><a href="#about" class="nav-link">About</a></li>
-                <li><a href="#contact" class="nav-link">Contact Us</a></li>
-                <li><a href="/pages/login.html" class="nav-link login-btn">Login</a></li>
-                <li><a href="/pages/signup.html" class="nav-link signup-btn">Sign Up</a></li>
+                <li><a href="#home" class="nav-link active" data-i18n="landing.nav.home">Home</a></li>
+                <li><a href="#about" class="nav-link" data-i18n="landing.nav.about">About</a></li>
+                <li><a href="#contact" class="nav-link" data-i18n="landing.nav.contact">Contact Us</a></li>
+                <li><a href="/pages/login.html" class="nav-link login-btn" data-i18n="landing.nav.login">Login</a></li>
+                <li><a href="/pages/signup.html" class="nav-link signup-btn" data-i18n="landing.nav.signup">Sign Up</a></li>
             </ul>
+            <div class="language-selector">
+                <select id="language-selector" aria-label="Select language" class="language-select">
+                    <option value="en" data-i18n="languages.english">English</option>
+                    <option value="hi" data-i18n="languages.hindi">हिंदी</option>
+                    <option value="kn" data-i18n="languages.kannada">ಕನ್ನಡ</option>
+                </select>
+            </div>
             <div class="theme-toggle">
                 <i class="fas fa-moon"></i>
             </div>
@@ -47,11 +98,11 @@
     <section id="home" class="hero-section">
         <div class="hero-container">
             <div class="hero-content">
-                <h1 class="hero-title">Welcome to <span>E-Shiksha</span></h1>
-                <p class="hero-description">Ace your competitive exams with AI-powered personalized study plans for GATE, JEE, CAT, GMAT and more.</p>
+                <h1 class="hero-title" data-i18n="landing.hero.title">Welcome to <span>E-Shiksha</span></h1>
+                <p class="hero-description" data-i18n="landing.hero.description">Ace your competitive exams with AI-powered personalized study plans for GATE, JEE, CAT, GMAT and more.</p>
                 <div class="hero-buttons">
-                    <a href="/pages/signup.html" class="btn primary-btn">Start Preparing</a>
-                    <a href="#exams" class="btn secondary-btn">Explore Exams</a>
+                    <a href="/pages/signup.html" class="btn primary-btn" data-i18n="landing.hero.startBtn">Start Preparing</a>
+                    <a href="#exams" class="btn secondary-btn" data-i18n="landing.hero.exploreBtn">Explore Exams</a>
                 </div>
             </div>
             <div class="hero-image">
@@ -69,49 +120,49 @@
     <!-- Exams Section -->
     <section id="exams" class="features-section">
         <div class="section-title">
-            <h2>Prepare for Top Exams</h2>
-            <p>AI-powered study plans tailored for competitive exams</p>
+            <h2 data-i18n="landing.exams.title">Prepare for Top Exams</h2>
+            <p data-i18n="landing.exams.subtitle">AI-powered study plans tailored for competitive exams</p>
         </div>
         <div class="features-container">
             <div class="feature-card exam-card">
                 <div class="feature-icon">
                     <i class="fas fa-microchip"></i>
                 </div>
-                <h3>GATE</h3>
-                <p>Comprehensive preparation for Graduate Aptitude Test in Engineering with specialized focus on all branches.</p>
+                <h3 data-i18n="landing.exams.gate.title">GATE</h3>
+                <p data-i18n="landing.exams.gate.description">Comprehensive preparation for Graduate Aptitude Test in Engineering with specialized focus on all branches.</p>
                 <div class="exam-topics">
-                    <span>Computer Science</span>
-                    <span>Electronics</span>
-                    <span>Electrical</span>
-                    <span>Mechanical</span>
-                    <span>Civil</span>
+                    <span data-i18n="landing.exams.gate.topics.0">Computer Science</span>
+                    <span data-i18n="landing.exams.gate.topics.1">Electronics</span>
+                    <span data-i18n="landing.exams.gate.topics.2">Electrical</span>
+                    <span data-i18n="landing.exams.gate.topics.3">Mechanical</span>
+                    <span data-i18n="landing.exams.gate.topics.4">Civil</span>
                 </div>
             </div>
             <div class="feature-card exam-card">
                 <div class="feature-icon">
                     <i class="fas fa-atom"></i>
                 </div>
-                <h3>JEE</h3>
-                <p>Master the Joint Entrance Examination with our structured learning paths and practice tests.</p>
+                <h3 data-i18n="landing.exams.jee.title">JEE</h3>
+                <p data-i18n="landing.exams.jee.description">Master the Joint Entrance Examination with our structured learning paths and practice tests.</p>
                 <div class="exam-topics">
-                    <span>Physics</span>
-                    <span>Chemistry</span>
-                    <span>Mathematics</span>
-                    <span>JEE Main</span>
-                    <span>JEE Advanced</span>
+                    <span data-i18n="landing.exams.jee.topics.0">Physics</span>
+                    <span data-i18n="landing.exams.jee.topics.1">Chemistry</span>
+                    <span data-i18n="landing.exams.jee.topics.2">Mathematics</span>
+                    <span data-i18n="landing.exams.jee.topics.3">JEE Main</span>
+                    <span data-i18n="landing.exams.jee.topics.4">JEE Advanced</span>
                 </div>
             </div>
             <div class="feature-card exam-card">
                 <div class="feature-icon">
                     <i class="fas fa-chart-line"></i>
                 </div>
-                <h3>CAT & GMAT</h3>
-                <p>Ace management entrance exams with personalized preparation for quantitative, verbal, and reasoning sections.</p>
+                <h3 data-i18n="landing.exams.cat.title">CAT & GMAT</h3>
+                <p data-i18n="landing.exams.cat.description">Ace management entrance exams with personalized preparation for quantitative, verbal, and reasoning sections.</p>
                 <div class="exam-topics">
-                    <span>Quantitative Aptitude</span>
-                    <span>Verbal Ability</span>
-                    <span>Data Interpretation</span>
-                    <span>Logical Reasoning</span>
+                    <span data-i18n="landing.exams.cat.topics.0">Quantitative Aptitude</span>
+                    <span data-i18n="landing.exams.cat.topics.1">Verbal Ability</span>
+                    <span data-i18n="landing.exams.cat.topics.2">Data Interpretation</span>
+                    <span data-i18n="landing.exams.cat.topics.3">Logical Reasoning</span>
                 </div>
             </div>
         </div>
@@ -120,8 +171,8 @@
     <!-- About Section -->
     <section id="about" class="about-section">
         <div class="section-title">
-            <h2>How E-Shiksha Works</h2>
-            <p>Our AI-powered approach to exam preparation</p>
+            <h2 data-i18n="landing.about.title">How E-Shiksha Works</h2>
+            <p data-i18n="landing.about.subtitle">Our AI-powered approach to exam preparation</p>
         </div>
         <div class="about-container">
             <div class="about-image">
@@ -129,41 +180,41 @@
                 <div id="about-lottie"></div>
             </div>
             <div class="about-content">
-                <h3>Personalized Learning Journey</h3>
-                <p>E-Shiksha uses advanced AI algorithms to analyze your learning style, strengths, and weaknesses to create a personalized study plan tailored specifically for your target exam.</p>
+                <h3 data-i18n="landing.about.heading">Personalized Learning Journey</h3>
+                <p data-i18n="landing.about.description">E-Shiksha uses advanced AI algorithms to analyze your learning style, strengths, and weaknesses to create a personalized study plan tailored specifically for your target exam.</p>
 
                 <div class="process-steps">
                     <div class="process-step">
                         <div class="step-number">1</div>
                         <div class="step-content">
-                            <h4>Upload Study Materials</h4>
-                            <p>Upload your notes, textbooks, or any study materials you have.</p>
+                            <h4 data-i18n="landing.about.steps.step1.title">Upload Study Materials</h4>
+                            <p data-i18n="landing.about.steps.step1.description">Upload your notes, textbooks, or any study materials you have.</p>
                         </div>
                     </div>
                     <div class="process-step">
                         <div class="step-number">2</div>
                         <div class="step-content">
-                            <h4>Take Assessment Quiz</h4>
-                            <p>Complete a brief assessment to determine your current knowledge level.</p>
+                            <h4 data-i18n="landing.about.steps.step2.title">Take Assessment Quiz</h4>
+                            <p data-i18n="landing.about.steps.step2.description">Complete a brief assessment to determine your current knowledge level.</p>
                         </div>
                     </div>
                     <div class="process-step">
                         <div class="step-number">3</div>
                         <div class="step-content">
-                            <h4>Get Personalized Plan</h4>
-                            <p>Receive a customized study plan with daily learning goals.</p>
+                            <h4 data-i18n="landing.about.steps.step3.title">Get Personalized Plan</h4>
+                            <p data-i18n="landing.about.steps.step3.description">Receive a customized study plan with daily learning goals.</p>
                         </div>
                     </div>
                     <div class="process-step">
                         <div class="step-number">4</div>
                         <div class="step-content">
-                            <h4>Track Progress</h4>
-                            <p>Monitor your improvement and adjust your plan as needed.</p>
+                            <h4 data-i18n="landing.about.steps.step4.title">Track Progress</h4>
+                            <p data-i18n="landing.about.steps.step4.description">Monitor your improvement and adjust your plan as needed.</p>
                         </div>
                     </div>
                 </div>
 
-                <a href="pages/signup.html" class="btn primary-btn">Start Your Journey</a>
+                <a href="/pages/signup.html" class="btn primary-btn" data-i18n="landing.about.startJourney">Start Your Journey</a>
             </div>
         </div>
     </section>
@@ -171,22 +222,22 @@
     <!-- Contact Section -->
     <section id="contact" class="contact-section">
         <div class="section-title">
-            <h2>Contact Us</h2>
-            <p>Get in touch with our team</p>
+            <h2 data-i18n="landing.contact.title">Contact Us</h2>
+            <p data-i18n="landing.contact.subtitle">Get in touch with our team</p>
         </div>
         <div class="contact-container">
             <div class="contact-info">
                 <div class="contact-item">
                     <i class="fas fa-map-marker-alt"></i>
-                    <p>123 Innovation Street, Tech City, TC 12345</p>
+                    <p data-i18n="landing.contact.address">123 Innovation Street, Tech City, TC 12345</p>
                 </div>
                 <div class="contact-item">
                     <i class="fas fa-phone"></i>
-                    <p>+1 (555) 123-4567</p>
+                    <p data-i18n="landing.contact.phone">+1 (555) 123-4567</p>
                 </div>
                 <div class="contact-item">
                     <i class="fas fa-envelope"></i>
-                    <p>info@e-shiksha.com</p>
+                    <p data-i18n="landing.contact.email">info@e-shiksha.com</p>
                 </div>
                 <div class="social-links">
                     <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
@@ -198,33 +249,35 @@
             <div class="contact-form">
                 <form id="contactForm">
                     <div class="form-group">
-                        <input type="text" id="name" name="name" placeholder="Your Name" required>
-                        <label for="name">Your Name</label>
+                        <input type="text" id="name" name="name" data-i18n-placeholder="landing.contact.form.name" placeholder="Your Name" required>
+                        <label for="name" data-i18n="landing.contact.form.name">Your Name</label>
                     </div>
                     <div class="form-group">
-                        <input type="email" id="email" name="email" placeholder="Your Email" required>
-                        <label for="email">Your Email</label>
+                        <input type="email" id="email" name="email" data-i18n-placeholder="landing.contact.form.email" placeholder="Your Email" required>
+                        <label for="email" data-i18n="landing.contact.form.email">Your Email</label>
                     </div>
                     <div class="form-group">
                         <select id="exam" name="exam" required>
-                            <option value="" disabled selected>Select Exam</option>
+                            <option value="" disabled selected data-i18n="landing.contact.form.selectExam">Select Exam</option>
                             <option value="GATE">GATE</option>
                             <option value="JEE">JEE</option>
                             <option value="CAT">CAT</option>
                             <option value="GMAT">GMAT</option>
                             <option value="Other">Other</option>
                         </select>
-                        <label for="exam">Target Exam</label>
+                        <label for="exam" data-i18n="landing.contact.form.exam">Target Exam</label>
                     </div>
                     <div class="form-group">
-                        <textarea id="message" name="message" placeholder="Your Query" required></textarea>
-                        <label for="message">Your Query</label>
+                        <textarea id="message" name="message" data-i18n-placeholder="landing.contact.form.message" placeholder="Your Query" required></textarea>
+                        <label for="message" data-i18n="landing.contact.form.message">Your Query</label>
                     </div>
-                    <button type="submit" class="btn primary-btn">Send Message</button>
+                    <button type="submit" class="btn primary-btn" data-i18n="landing.contact.form.submit">Send Message</button>
                 </form>
             </div>
         </div>
     </section>
+
+    <!-- Modals removed - using separate pages instead -->
 
     <!-- Footer -->
     <footer class="footer">
@@ -304,5 +357,6 @@
 
     <!-- Custom JavaScript -->
     <script src="landing-js/main.js"></script>
+    <script src="contact-form.js"></script>
 </body>
 </html>

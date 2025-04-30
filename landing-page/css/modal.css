@@ -1,0 +1,278 @@
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow: auto;
+    transition: all 0.3s ease;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 30px;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-modal:hover {
+    color: #333;
+}
+
+.modal h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #333;
+    font-size: 24px;
+}
+
+.modal .form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.modal input[type="text"],
+.modal input[type="email"],
+.modal input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.modal input:focus {
+    border-color: #4f46e5;
+    outline: none;
+}
+
+.modal label {
+    position: absolute;
+    top: -10px;
+    left: 10px;
+    background-color: #fff;
+    padding: 0 5px;
+    font-size: 14px;
+    color: #666;
+    transition: all 0.3s;
+}
+
+.modal input:focus + label,
+.modal input:not(:placeholder-shown) + label {
+    top: -10px;
+    font-size: 14px;
+    color: #4f46e5;
+}
+
+.form-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.form-checkbox input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.form-checkbox label {
+    position: static;
+    background: none;
+    padding: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.forgot-password {
+    color: #4f46e5;
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.forgot-password:hover {
+    color: #3730a3;
+    text-decoration: underline;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.form-divider {
+    position: relative;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.form-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #ddd;
+}
+
+.form-divider span {
+    position: relative;
+    background-color: #fff;
+    padding: 0 10px;
+    color: #666;
+    font-size: 14px;
+}
+
+.google-btn {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.google-btn:hover {
+    background-color: #f8f8f8;
+    border-color: #ccc;
+}
+
+.google-btn i {
+    color: #4285F4;
+}
+
+.form-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+.form-footer a {
+    color: #4f46e5;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.form-footer a:hover {
+    color: #3730a3;
+    text-decoration: underline;
+}
+
+/* Dark mode styles */
+.dark .modal-content {
+    background-color: #1f2937;
+    color: #e5e7eb;
+}
+
+.dark .close-modal {
+    color: #9ca3af;
+}
+
+.dark .close-modal:hover {
+    color: #e5e7eb;
+}
+
+.dark .modal h2 {
+    color: #e5e7eb;
+}
+
+.dark .modal input[type="text"],
+.dark .modal input[type="email"],
+.dark .modal input[type="password"] {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+.dark .modal input:focus {
+    border-color: #818cf8;
+}
+
+.dark .modal label {
+    background-color: #1f2937;
+    color: #9ca3af;
+}
+
+.dark .modal input:focus + label,
+.dark .modal input:not(:placeholder-shown) + label {
+    color: #818cf8;
+}
+
+.dark .form-checkbox label {
+    color: #9ca3af;
+}
+
+.dark .forgot-password {
+    color: #818cf8;
+}
+
+.dark .forgot-password:hover {
+    color: #a5b4fc;
+}
+
+.dark .form-divider::before {
+    background-color: #4b5563;
+}
+
+.dark .form-divider span {
+    background-color: #1f2937;
+    color: #9ca3af;
+}
+
+.dark .google-btn {
+    background-color: #374151;
+    color: #e5e7eb;
+    border-color: #4b5563;
+}
+
+.dark .google-btn:hover {
+    background-color: #4b5563;
+    border-color: #6b7280;
+}
+
+.dark .form-footer {
+    color: #9ca3af;
+}
+
+.dark .form-footer a {
+    color: #818cf8;
+}
+
+.dark .form-footer a:hover {
+    color: #a5b4fc;
+}

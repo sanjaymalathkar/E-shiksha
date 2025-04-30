@@ -1,0 +1,70 @@
+<!-- Language Selector Component -->
+<div class="language-selector">
+    <select id="language-selector" aria-label="Select language" class="language-select">
+        <option value="en" data-i18n="languages.english">English</option>
+        <option value="hi" data-i18n="languages.hindi">हिंदी</option>
+        <option value="kn" data-i18n="languages.kannada">ಕನ್ನಡ</option>
+    </select>
+</div>
+
+<style>
+    .language-selector {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 1rem;
+    }
+    
+    .language-select {
+        background-color: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: inherit;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .language-select:hover {
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .dark .language-select {
+        border-color: rgba(75, 85, 99, 0.5);
+    }
+    
+    .dark .language-select:hover {
+        border-color: rgba(75, 85, 99, 0.8);
+    }
+    
+    /* Style for the dropdown arrow */
+    .language-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.5rem center;
+        background-size: 1rem;
+        padding-right: 2rem;
+    }
+</style>
+
+<script>
+    // Initialize language selector
+    document.addEventListener('DOMContentLoaded', () => {
+        const languageSelector = document.getElementById('language-selector');
+        
+        if (languageSelector) {
+            // Set initial value
+            const currentLanguage = localStorage.getItem('language') || 'en';
+            languageSelector.value = currentLanguage;
+            
+            // Add change event listener
+            languageSelector.addEventListener('change', (e) => {
+                const newLanguage = e.target.value;
+                if (window.i18n && typeof window.i18n.changeLanguage === 'function') {
+                    window.i18n.changeLanguage(newLanguage);
+                }
+            });
+        }
+    });
+</script>

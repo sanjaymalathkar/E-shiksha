@@ -1,14 +1,18 @@
 {
   "app": {
     "name": "Educational Content Analysis System",
-    "shortName": "e-Gurukool"
+    "shortName": "E-Shiksha"
   },
   "nav": {
     "dashboard": "Dashboard",
     "planner": "Planner",
     "daily_report": "Daily Report",
     "test_viewer": "Test Viewer",
-    "folder_upload": "Folder Upload"
+    "folder_upload": "Folder Upload",
+    "mock_test": "Mock Test",
+    "attendance": "Attendance",
+    "profile": "Profile",
+    "logout": "Logout"
   },
   "footer": {
     "description": "Empowering education through AI-driven content analysis and planning.",
@@ -18,7 +22,7 @@
     "help": "Help",
     "privacy": "Privacy",
     "terms": "Terms",
-    "copyright": "© 2025 e-Gurukool. All rights reserved."
+    "copyright": "© 2025 E-Shiksha. All rights reserved."
   },
   "common": {
     "loading": "Loading...",
@@ -54,6 +58,226 @@
     "darkMode": "Dark Mode",
     "lightMode": "Light Mode"
   },
+  "languages": {
+    "english": "English",
+    "hindi": "हिंदी",
+    "kannada": "ಕನ್ನಡ"
+  },
+  "landing": {
+    "hero": {
+      "title": "Welcome to E-Shiksha",
+      "description": "Ace your competitive exams with AI-powered personalized study plans for GATE, JEE, CAT, GMAT and more.",
+      "startBtn": "Start Preparing",
+      "exploreBtn": "Explore Exams"
+    },
+    "exams": {
+      "title": "Prepare for Top Exams",
+      "subtitle": "AI-powered study plans tailored for competitive exams",
+      "gate": {
+        "title": "GATE",
+        "description": "Comprehensive preparation for Graduate Aptitude Test in Engineering with specialized focus on all branches.",
+        "topics": ["Computer Science", "Electronics", "Electrical", "Mechanical", "Civil"]
+      },
+      "jee": {
+        "title": "JEE",
+        "description": "Master the Joint Entrance Examination with our structured learning paths and practice tests.",
+        "topics": ["Physics", "Chemistry", "Mathematics", "JEE Main", "JEE Advanced"]
+      },
+      "cat": {
+        "title": "CAT & GMAT",
+        "description": "Ace management entrance exams with personalized preparation for quantitative, verbal, and reasoning sections.",
+        "topics": ["Quantitative Aptitude", "Verbal Ability", "Data Interpretation", "Logical Reasoning"]
+      }
+    },
+    "about": {
+      "title": "How E-Shiksha Works",
+      "subtitle": "Our AI-powered approach to exam preparation",
+      "heading": "Personalized Learning Journey",
+      "description": "E-Shiksha uses advanced AI algorithms to analyze your learning style, strengths, and weaknesses to create a personalized study plan tailored specifically for your target exam.",
+      "steps": {
+        "step1": {
+          "title": "Upload Study Materials",
+          "description": "Upload your notes, textbooks, or any study materials you have."
+        },
+        "step2": {
+          "title": "Take Assessment Quiz",
+          "description": "Complete a brief assessment to determine your current knowledge level."
+        },
+        "step3": {
+          "title": "Get Personalized Plan",
+          "description": "Receive a customized study plan with daily learning goals."
+        },
+        "step4": {
+          "title": "Track Progress",
+          "description": "Monitor your improvement and adjust your plan as needed."
+        }
+      },
+      "startJourney": "Start Your Journey"
+    },
+    "contact": {
+      "title": "Contact Us",
+      "subtitle": "Get in touch with our team",
+      "address": "123 Innovation Street, Tech City, TC 12345",
+      "phone": "+1 (555) 123-4567",
+      "email": "info@e-shiksha.com",
+      "form": {
+        "name": "Your Name",
+        "email": "Your Email",
+        "exam": "Target Exam",
+        "message": "Your Query",
+        "submit": "Send Message",
+        "selectExam": "Select Exam"
+      }
+    },
+    "nav": {
+      "home": "Home",
+      "about": "About",
+      "contact": "Contact Us",
+      "login": "Login",
+      "signup": "Sign Up"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Log in to your account to continue",
+      "email": "Your Email",
+      "password": "Your Password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot Password?",
+      "loginBtn": "Login",
+      "orText": "OR",
+      "googleBtn": "Continue with Google",
+      "noAccount": "Don't have an account?",
+      "signupLink": "Sign Up",
+      "loginSuccess": "Login Successful!",
+      "redirecting": "Redirecting to E-Shiksha application...",
+      "loginFailed": "Login Failed",
+      "userNotFound": "No account found with this email.",
+      "wrongPassword": "Incorrect password.",
+      "invalidEmail": "Invalid email format.",
+      "genericError": "Failed to login. Please try again."
+    },
+    "signup": {
+      "title": "Create Account",
+      "subtitle": "Join E-Shiksha to start your learning journey",
+      "name": "Your Name",
+      "email": "Your Email",
+      "phone": "Your Phone Number",
+      "password": "Create Password",
+      "confirmPassword": "Confirm Password",
+      "termsAgree": "I agree to the Terms and Privacy Policy",
+      "signupBtn": "Sign Up",
+      "orText": "OR",
+      "googleBtn": "Continue with Google",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Login",
+      "signupSuccess": "Account Created Successfully!",
+      "redirecting": "Redirecting to E-Shiksha application...",
+      "signupFailed": "Registration Failed",
+      "emailInUse": "Email already in use.",
+      "weakPassword": "Password is too weak.",
+      "passwordMismatch": "Passwords do not match.",
+      "genericError": "Failed to create account. Please try again."
+    },
+    "forgotPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your email to receive a password reset link",
+      "email": "Your Email",
+      "resetBtn": "Send Reset Link",
+      "backToLogin": "Back to Login",
+      "resetSuccess": "Reset Link Sent!",
+      "checkEmail": "Please check your email for the password reset link.",
+      "resetFailed": "Reset Failed",
+      "emailNotFound": "No account found with this email.",
+      "genericError": "Failed to send reset link. Please try again."
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "editProfile": "Edit Profile",
+    "leaderboard": {
+      "title": "Top Performers",
+      "refresh": "Refresh",
+      "rank": "Rank",
+      "user": "User",
+      "presentDays": "Present Days",
+      "streak": "Streak",
+      "lastSeen": "Last Seen",
+      "loading": "Loading leaderboard data...",
+      "info": "The leaderboard shows the top students based on attendance. Regular attendance helps maintain your study plan and improves learning outcomes."
+    },
+    "motivation": {
+      "title": "Today's Motivation",
+      "quote": "The harder you work for something, the greater you'll feel when you achieve it."
+    },
+    "upload": {
+      "title": "Upload Educational Content for GATE, JEE, CAT & GMAT",
+      "selectFiles": "Select Multiple Files",
+      "dragDrop": "Drag and drop files here or click to browse",
+      "supportedFormats": "Supported formats: PDF, JPG, PNG, WEBP",
+      "examType": "Exam Type",
+      "selectExamType": "-- Select Exam Type --",
+      "examDate": "Exam Date",
+      "uploadBtn": "Upload and Process",
+      "preparing": "Preparing files...",
+      "processingNote": "This may take a few minutes depending on file size and complexity.",
+      "results": "Processing Results"
+    },
+    "examDashboard": {
+      "title": "Exam Dashboard",
+      "examInfo": "Exam Information",
+      "preparationTime": "Preparation Time",
+      "examDate": "Exam Date",
+      "daysRemaining": "Days Remaining",
+      "selectExam": "Select an exam type to see information",
+      "quickStats": "Quick Stats",
+      "filesProcessed": "Files Processed",
+      "testsGenerated": "Tests Generated",
+      "questionsAnalyzed": "Questions Analyzed",
+      "topicsIdentified": "Topics Identified",
+      "questionDistribution": "Question Distribution"
+    },
+    "chatbot": {
+      "title": "E-Shiksha Exam Assistant",
+      "placeholder": "Ask about JEE, GMAT, UPSC...",
+      "typing": "Assistant is typing..."
+    },
+    "testPlans": {
+      "title": "Generated Test Plans for Your Exam"
+    },
+    "files": {
+      "title": "Your Uploaded Files",
+      "refresh": "Refresh",
+      "noFiles": "No files uploaded yet. Upload files to see them here."
+    },
+    "activity": {
+      "title": "Your Learning Journey",
+      "date": "Date",
+      "activity": "Activity",
+      "details": "Details",
+      "status": "Status",
+      "noActivity": "No recent activity - Start your learning journey today!"
+    }
+  },
+  "profile": {
+    "title": "User Profile",
+    "profileInfo": "Profile Information",
+    "displayName": "Display Name",
+    "email": "Email Address",
+    "emailReadonly": "Email cannot be changed",
+    "phone": "Phone Number",
+    "updateBtn": "Update Profile",
+    "updateSuccess": "Profile updated successfully",
+    "updateError": "Failed to update profile. Please try again.",
+    "uploadTitle": "Upload Files",
+    "dragDrop": "Drag and drop files here, or click to select files",
+    "selectFiles": "Select Files",
+    "uploading": "Uploading...",
+    "myUploads": "My Uploads",
+    "loadingFiles": "Loading your files...",
+    "noFiles": "You haven't uploaded any files yet."
+  },
   "mock_test": {
     "title": "Personalized Mock Test",
     "description": "This personalized mock test is designed to assess your logical reasoning, problem-solving, comprehension, and memory recall abilities. Complete all questions to receive your Daily Learning Capacity Score and personalized recommendations.",
@@ -71,5 +295,34 @@
     "analysis_title": "Analysis",
     "back_to_dashboard": "Back to Dashboard",
     "view_study_plan": "View Study Plan"
+  },
+  "planner": {
+    "title": "Study Planner",
+    "subtitle": "Your personalized study plan based on your learning capacity and exam date",
+    "today": "Today",
+    "upcoming": "Upcoming",
+    "completed": "Completed",
+    "markComplete": "Mark as Complete",
+    "markIncomplete": "Mark as Incomplete",
+    "noTasks": "No tasks for this day",
+    "loading": "Loading your study plan...",
+    "examDate": "Exam Date",
+    "daysRemaining": "Days Remaining",
+    "dailyCapacity": "Daily Learning Capacity",
+    "progress": "Overall Progress"
+  },
+  "attendance": {
+    "title": "Attendance Tracker",
+    "subtitle": "Track your study consistency and login streaks",
+    "currentStreak": "Current Streak",
+    "longestStreak": "Longest Streak",
+    "totalDays": "Total Days",
+    "calendar": "Attendance Calendar",
+    "present": "Present",
+    "absent": "Absent",
+    "today": "Today",
+    "streakInfo": "Your current login streak is {count} days!",
+    "keepItUp": "Keep it up!",
+    "startStreak": "Start your streak by logging in daily!"
   }
 }

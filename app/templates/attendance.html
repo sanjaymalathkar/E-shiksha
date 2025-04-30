@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Statistics{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Attendance Statistics</h1>
+        <div class="flex space-x-4 mt-4 md:mt-0">
+            <button id="refresh-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center">
+                <i class="fas fa-sync-alt mr-2"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Present Days Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-700">Present Days</h2>
+                <div class="bg-green-100 p-2 rounded-full">
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+            </div>
+            <p id="present-days" class="text-4xl font-bold text-gray-800">0</p>
+            <p class="text-gray-500 mt-2">Total days present</p>
+        </div>
+
+        <!-- Absent Days Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-700">Absent Days</h2>
+                <div class="bg-red-100 p-2 rounded-full">
+                    <i class="fas fa-times text-red-500"></i>
+                </div>
+            </div>
+            <p id="absent-days" class="text-4xl font-bold text-gray-800">0</p>
+            <p class="text-gray-500 mt-2">Total days absent</p>
+        </div>
+
+        <!-- Current Streak Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-700">Current Streak</h2>
+                <div class="bg-yellow-100 p-2 rounded-full">
+                    <i class="fas fa-fire text-yellow-500"></i>
+                </div>
+            </div>
+            <p id="streak" class="text-4xl font-bold text-gray-800">0</p>
+            <p class="text-gray-500 mt-2">Consecutive days present</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Attendance Impact</h2>
+        <div id="attendance-impact" class="p-4 rounded-md bg-gray-50">
+            <p class="text-gray-700">Your attendance data will be displayed here. Regular attendance helps maintain your study plan and ensures consistent progress.</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Recent Attendance</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead>
+                    <tr>
+                        <th class="py-3 px-4 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Date</th>
+                        <th class="py-3 px-4 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
+                        <th class="py-3 px-4 bg-gray-100 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Login Time</th>
+                    </tr>
+                </thead>
+                <tbody id="attendance-table-body">
+                    <!-- Attendance records will be inserted here -->
+                    <tr>
+                        <td class="py-4 px-4 border-b border-gray-200" colspan="3">Loading attendance data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load attendance data when the page loads
+        loadAttendanceData();
+        
+        // Add event listener for refresh button
+        document.getElementById('refresh-btn').addEventListener('click', loadAttendanceData);
+    });
+    
+    async function loadAttendanceData() {
+        try {
+            // Show loading state
+            document.getElementById('present-days').textContent = '...';
+            document.getElementById('absent-days').textContent = '...';
+            document.getElementById('streak').textContent = '...';
+            document.getElementById('attendance-table-body').innerHTML = '<tr><td class="py-4 px-4 border-b border-gray-200" colspan="3">Loading attendance data...</td></tr>';
+            
+            // Get attendance statistics
+            const statsResponse = await fetch('/api/attendance/stats', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
+            });
+            
+            if (!statsResponse.ok) {
+                throw new Error('Failed to load attendance statistics');
+            }
+            
+            const statsData = await statsResponse.json();
+            
+            // Update statistics cards
+            document.getElementById('present-days').textContent = statsData.data.present_days || 0;
+            document.getElementById('absent-days').textContent = statsData.data.absent_days || 0;
+            document.getElementById('streak').textContent = statsData.data.streak || 0;
+            
+            // Get attendance record
+            const recordResponse = await fetch('/api/attendance/record', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
+            });
+            
+            if (!recordResponse.ok) {
+                throw new Error('Failed to load attendance record');
+            }
+            
+            const recordData = await recordResponse.json();
+            
+            // Update attendance table
+            updateAttendanceTable(recordData.data);
+            
+            // Update attendance impact message
+            updateAttendanceImpact(statsData.data);
+            
+        } catch (error) {
+            console.error('Error loading attendance data:', error);
+            
+            // Show error message
+            document.getElementById('attendance-table-body').innerHTML = `
+                <tr>
+                    <td class="py-4 px-4 border-b border-gray-200 text-red-500" colspan="3">
+                        Error loading attendance data. Please try again later.
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    function updateAttendanceTable(data) {
+        const tableBody = document.getElementById('attendance-table-body');
+        
+        if (!data || !data.attendance || data.attendance.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td class="py-4 px-4 border-b border-gray-200" colspan="3">
+                        No attendance records found.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        // Sort attendance records by date (newest first)
+        const sortedAttendance = [...data.attendance].sort((a, b) => {
+            return new Date(b.date) - new Date(a.date);
+        });
+        
+        // Take only the 10 most recent records
+        const recentAttendance = sortedAttendance.slice(0, 10);
+        
+        // Generate table rows
+        const rows = recentAttendance.map(record => {
+            const date = new Date(record.date).toLocaleDateString();
+            const status = record.status === 'present' 
+                ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Present</span>' 
+                : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Absent</span>';
+            const loginTime = record.login_time 
+                ? new Date(record.login_time).toLocaleTimeString() 
+                : 'N/A';
+            
+            return `
+                <tr>
+                    <td class="py-4 px-4 border-b border-gray-200">${date}</td>
+                    <td class="py-4 px-4 border-b border-gray-200">${status}</td>
+                    <td class="py-4 px-4 border-b border-gray-200">${loginTime}</td>
+                </tr>
+            `;
+        }).join('');
+        
+        tableBody.innerHTML = rows;
+    }
+    
+    function updateAttendanceImpact(stats) {
+        const impactDiv = document.getElementById('attendance-impact');
+        const absentDays = stats.absent_days || 0;
+        const presentDays = stats.present_days || 0;
+        const streak = stats.streak || 0;
+        
+        let message = '';
+        let bgColor = '';
+        
+        if (absentDays === 0 && presentDays > 0) {
+            message = `
+                <p class="font-semibold">Perfect Attendance!</p>
+                <p>You have not missed any days. Keep up the great work!</p>
+                <p class="mt-2">Your study plan is on track and you're making excellent progress.</p>
+            `;
+            bgColor = 'bg-green-50';
+        } else if (absentDays > 5) {
+            message = `
+                <p class="font-semibold">Attendance Needs Improvement</p>
+                <p>You have missed ${absentDays} days, which has significantly impacted your study plan.</p>
+                <p class="mt-2">Your study plan has been reassigned to help you catch up. Focus on consistency to get back on track.</p>
+            `;
+            bgColor = 'bg-red-50';
+        } else if (absentDays > 0) {
+            message = `
+                <p class="font-semibold">Good Attendance with Some Gaps</p>
+                <p>You have missed ${absentDays} days. Your study plan has been adjusted to accommodate these absences.</p>
+                <p class="mt-2">Try to maintain consistent attendance to maximize your learning progress.</p>
+            `;
+            bgColor = 'bg-yellow-50';
+        } else {
+            message = `
+                <p class="font-semibold">No Attendance Data Yet</p>
+                <p>Start logging in regularly to track your attendance and maintain your study plan.</p>
+                <p class="mt-2">Consistent attendance helps ensure steady progress in your studies.</p>
+            `;
+            bgColor = 'bg-gray-50';
+        }
+        
+        if (streak >= 5) {
+            message += `
+                <p class="mt-2 font-semibold text-green-600">
+                    <i class="fas fa-fire"></i> You're on a ${streak}-day streak! Excellent consistency!
+                </p>
+            `;
+        }
+        
+        impactDiv.className = `p-4 rounded-md ${bgColor}`;
+        impactDiv.innerHTML = message;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Select Exam Domain - E-Shiksha{% endblock %}
+
+{% block head %}
+<style>
+    .domain-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .domain-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .domain-logo {
+        height: 80px;
+        width: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem auto;
+        border-radius: 50%;
+    }
+    .jee-logo {
+        background: linear-gradient(135deg, #4F46E5, #7C3AED);
+    }
+    .neet-logo {
+        background: linear-gradient(135deg, #10B981, #059669);
+    }
+    .kcet-logo {
+        background: linear-gradient(135deg, #F59E0B, #D97706);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="text-center mb-10">
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Create Mock Test</h1>
+        <p class="text-gray-600 dark:text-gray-400">Select an exam domain to generate a mock test with 20 multiple choice questions</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- JEE Domain Card -->
+        <div class="domain-card bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 text-center cursor-pointer" data-domain="jee">
+            <div class="domain-logo jee-logo">
+                <span class="text-white text-2xl font-bold">JEE</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">JEE</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">Joint Entrance Examination for Engineering</p>
+            <div class="flex flex-wrap justify-center gap-2 mb-4">
+                <span class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full text-sm">Physics</span>
+                <span class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full text-sm">Chemistry</span>
+                <span class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full text-sm">Mathematics</span>
+            </div>
+            <button class="start-test-btn w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
+                Start Test
+            </button>
+        </div>
+
+        <!-- NEET Domain Card -->
+        <div class="domain-card bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 text-center cursor-pointer" data-domain="neet">
+            <div class="domain-logo neet-logo">
+                <span class="text-white text-2xl font-bold">NEET</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">NEET</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">National Eligibility cum Entrance Test for Medical</p>
+            <div class="flex flex-wrap justify-center gap-2 mb-4">
+                <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm">Physics</span>
+                <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm">Chemistry</span>
+                <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm">Biology</span>
+            </div>
+            <button class="start-test-btn w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
+                Start Test
+            </button>
+        </div>
+
+        <!-- KCET Domain Card -->
+        <div class="domain-card bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 text-center cursor-pointer" data-domain="kcet">
+            <div class="domain-logo kcet-logo">
+                <span class="text-white text-2xl font-bold">KCET</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">KCET</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">Karnataka Common Entrance Test</p>
+            <div class="flex flex-wrap justify-center gap-2 mb-4">
+                <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full text-sm">Physics</span>
+                <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full text-sm">Chemistry</span>
+                <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full text-sm">Mathematics</span>
+                <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full text-sm">Biology</span>
+            </div>
+            <button class="start-test-btn w-full py-2 px-4 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors">
+                Start Test
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add click event to domain cards
+        const domainCards = document.querySelectorAll('.domain-card');
+        domainCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const domain = this.dataset.domain;
+                window.location.href = `/domain-test/${domain}`;
+            });
+        });
+
+        // Add click event to start test buttons
+        const startButtons = document.querySelectorAll('.start-test-btn');
+        startButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent the card click event
+                const domain = this.closest('.domain-card').dataset.domain;
+                window.location.href = `/domain-test/${domain}`;
+            });
+        });
+    });
+</script>
+{% endblock %}

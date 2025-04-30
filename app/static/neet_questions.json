@@ -1,0 +1,422 @@
+[
+  {
+    "id": 1,
+    "exam": "NEET",
+    "subject": "Biology",
+    "question": "Which of the following is not a feature of the placenta?",
+    "options": [
+      "It is a structural and functional unit between developing embryo and maternal body",
+      "It has villi on the embryonic side of the tissue",
+      "It facilitates the supply of oxygen and nutrients to the embryo",
+      "It secretes estrogen only"
+    ],
+    "answer": 3,
+    "explanation": "The placenta secretes both estrogen and progesterone, not just estrogen. It is a structural and functional unit between the developing embryo and maternal body, has villi on the embryonic side, and facilitates the supply of oxygen and nutrients to the embryo."
+  },
+  {
+    "id": 2,
+    "exam": "NEET",
+    "subject": "Biology",
+    "question": "Which of the following is the correct sequence of events in the sexual reproduction of flowering plants?",
+    "options": [
+      "Pollination, fertilization, gametogenesis, embryogenesis",
+      "Gametogenesis, pollination, fertilization, embryogenesis",
+      "Gametogenesis, embryogenesis, pollination, fertilization",
+      "Pollination, gametogenesis, fertilization, embryogenesis"
+    ],
+    "answer": 1,
+    "explanation": "The correct sequence of events in sexual reproduction of flowering plants is: Gametogenesis (formation of gametes), pollination (transfer of pollen to stigma), fertilization (fusion of male and female gametes), and embryogenesis (development of embryo)."
+  },
+  {
+    "id": 3,
+    "exam": "NEET",
+    "subject": "Biology",
+    "question": "Which of the following is not a function of the liver?",
+    "options": [
+      "Production of insulin",
+      "Detoxification of drugs",
+      "Production of bile",
+      "Storage of glycogen"
+    ],
+    "answer": 0,
+    "explanation": "Insulin is produced by the beta cells of the islets of Langerhans in the pancreas, not by the liver. The liver is responsible for detoxification of drugs, production of bile, and storage of glycogen."
+  },
+  {
+    "id": 4,
+    "exam": "NEET",
+    "subject": "Biology",
+    "question": "Which of the following is a correct statement regarding the human circulatory system?",
+    "options": [
+      "Arteries always carry oxygenated blood",
+      "Veins always carry deoxygenated blood",
+      "Pulmonary artery carries deoxygenated blood",
+      "Pulmonary vein carries deoxygenated blood"
+    ],
+    "answer": 2,
+    "explanation": "The pulmonary artery carries deoxygenated blood from the heart to the lungs. Not all arteries carry oxygenated blood and not all veins carry deoxygenated blood. The pulmonary vein carries oxygenated blood from the lungs to the heart."
+  },
+  {
+    "id": 5,
+    "exam": "NEET",
+    "subject": "Biology",
+    "question": "Which of the following is not a part of the female reproductive system in humans?",
+    "options": [
+      "Ovary",
+      "Uterus",
+      "Vas deferens",
+      "Fallopian tube"
+    ],
+    "answer": 2,
+    "explanation": "Vas deferens is a part of the male reproductive system, not the female reproductive system. It carries sperm from the epididymis to the ejaculatory duct. The female reproductive system includes ovaries, uterus, and fallopian tubes."
+  },
+  {
+    "id": 6,
+    "exam": "NEET",
+    "subject": "Biology",
+    "question": "Which of the following is the correct sequence of taxonomic categories?",
+    "options": [
+      "Kingdom → Phylum → Class → Order → Family → Genus → Species",
+      "Kingdom → Class → Phylum → Order → Family → Genus → Species",
+      "Kingdom → Order → Class → Phylum → Family → Genus → Species",
+      "Kingdom → Family → Order → Class → Phylum → Genus → Species"
+    ],
+    "answer": 0,
+    "explanation": "The correct sequence of taxonomic categories from highest to lowest is: Kingdom → Phylum → Class → Order → Family → Genus → Species. This hierarchical system was developed by Carolus Linnaeus."
+  },
+  {
+    "id": 7,
+    "exam": "NEET",
+    "subject": "Biology",
+    "question": "Which of the following is not a function of the kidney?",
+    "options": [
+      "Regulation of blood pH",
+      "Production of erythropoietin",
+      "Regulation of blood glucose levels",
+      "Excretion of nitrogenous waste"
+    ],
+    "answer": 2,
+    "explanation": "Regulation of blood glucose levels is primarily a function of the liver and pancreas, not the kidney. The kidney regulates blood pH, produces erythropoietin (which stimulates red blood cell production), and excretes nitrogenous waste."
+  },
+  {
+    "id": 8,
+    "exam": "NEET",
+    "subject": "Biology",
+    "question": "Which of the following is a correct statement about photosynthesis?",
+    "options": [
+      "Oxygen is consumed during the light reaction",
+      "Carbon dioxide is released during the Calvin cycle",
+      "ATP is produced during the Calvin cycle",
+      "NADPH is produced during the light reaction"
+    ],
+    "answer": 3,
+    "explanation": "NADPH is produced during the light reaction of photosynthesis. Oxygen is released (not consumed) during the light reaction, carbon dioxide is fixed (not released) during the Calvin cycle, and ATP is consumed (not produced) during the Calvin cycle."
+  },
+  {
+    "id": 9,
+    "exam": "NEET",
+    "subject": "Biology",
+    "question": "Which of the following is not a component of the human immune system?",
+    "options": [
+      "Thymus",
+      "Spleen",
+      "Pancreas",
+      "Lymph nodes"
+    ],
+    "answer": 2,
+    "explanation": "The pancreas is primarily an endocrine and digestive organ, not a component of the immune system. The thymus, spleen, and lymph nodes are all important components of the human immune system."
+  },
+  {
+    "id": 10,
+    "exam": "NEET",
+    "subject": "Biology",
+    "question": "Which of the following is a correct statement about DNA replication?",
+    "options": [
+      "It is a conservative process",
+      "It occurs during the G1 phase of the cell cycle",
+      "It is catalyzed by DNA polymerase",
+      "It proceeds from 3' to 5' direction"
+    ],
+    "answer": 2,
+    "explanation": "DNA replication is catalyzed by DNA polymerase. It is a semiconservative process (not conservative), occurs during the S phase (not G1 phase) of the cell cycle, and proceeds in the 5' to 3' direction (not 3' to 5')."
+  },
+  {
+    "id": 11,
+    "exam": "NEET",
+    "subject": "Chemistry",
+    "question": "Which of the following is not a colligative property?",
+    "options": [
+      "Elevation in boiling point",
+      "Depression in freezing point",
+      "Osmotic pressure",
+      "Optical rotation"
+    ],
+    "answer": 3,
+    "explanation": "Optical rotation is not a colligative property; it depends on the nature of the substance. Colligative properties depend only on the number of solute particles, not their nature. Elevation in boiling point, depression in freezing point, and osmotic pressure are all colligative properties."
+  },
+  {
+    "id": 12,
+    "exam": "NEET",
+    "subject": "Chemistry",
+    "question": "Which of the following statements about the periodic table is incorrect?",
+    "options": [
+      "Electronegativity generally increases across a period",
+      "Atomic radius generally decreases across a period",
+      "Ionization energy generally decreases across a period",
+      "Electron affinity generally becomes more negative across a period"
+    ],
+    "answer": 2,
+    "explanation": "Ionization energy generally increases (not decreases) across a period due to increasing nuclear charge and decreasing atomic radius. Electronegativity increases across a period, atomic radius decreases across a period, and electron affinity generally becomes more negative across a period."
+  },
+  {
+    "id": 13,
+    "exam": "NEET",
+    "subject": "Chemistry",
+    "question": "Which of the following is not an example of a buffer solution?",
+    "options": [
+      "Mixture of acetic acid and sodium acetate",
+      "Mixture of ammonium hydroxide and ammonium chloride",
+      "Mixture of hydrochloric acid and sodium chloride",
+      "Mixture of carbonic acid and sodium bicarbonate"
+    ],
+    "answer": 2,
+    "explanation": "A mixture of hydrochloric acid (strong acid) and sodium chloride is not a buffer solution. Buffer solutions consist of a weak acid and its conjugate base or a weak base and its conjugate acid. The other options are all examples of buffer solutions."
+  },
+  {
+    "id": 14,
+    "exam": "NEET",
+    "subject": "Chemistry",
+    "question": "Which of the following is the correct IUPAC name for CH₃-CH=CH-CHO?",
+    "options": [
+      "But-2-enal",
+      "But-3-enal",
+      "But-2-en-1-al",
+      "But-3-en-1-al"
+    ],
+    "answer": 0,
+    "explanation": "The correct IUPAC name for CH₃-CH=CH-CHO is but-2-enal. It has a four-carbon chain (butanal) with a double bond at the 2-position and an aldehyde group."
+  },
+  {
+    "id": 15,
+    "exam": "NEET",
+    "subject": "Chemistry",
+    "question": "Which of the following is not a characteristic of a catalyst?",
+    "options": [
+      "It increases the rate of a chemical reaction",
+      "It is consumed in the reaction",
+      "It lowers the activation energy of the reaction",
+      "It does not affect the equilibrium constant of the reaction"
+    ],
+    "answer": 1,
+    "explanation": "A catalyst is not consumed in the reaction; it is regenerated at the end of the reaction. A catalyst increases the rate of a chemical reaction, lowers the activation energy, and does not affect the equilibrium constant of the reaction."
+  },
+  {
+    "id": 16,
+    "exam": "NEET",
+    "subject": "Chemistry",
+    "question": "Which of the following is not a property of ionic compounds?",
+    "options": [
+      "High melting point",
+      "Solubility in polar solvents",
+      "Electrical conductivity in molten state",
+      "Electrical conductivity in solid state"
+    ],
+    "answer": 3,
+    "explanation": "Ionic compounds do not conduct electricity in the solid state because the ions are fixed in position and cannot move. They conduct electricity only when molten or dissolved in water, where the ions are free to move."
+  },
+  {
+    "id": 17,
+    "exam": "NEET",
+    "subject": "Chemistry",
+    "question": "Which of the following is the correct electronic configuration of Cu²⁺ ion?",
+    "options": [
+      "[Ar] 3d⁹ 4s²",
+      "[Ar] 3d⁹ 4s⁰",
+      "[Ar] 3d¹⁰ 4s⁰",
+      "[Ar] 3d⁸ 4s¹"
+    ],
+    "answer": 1,
+    "explanation": "The electronic configuration of Cu is [Ar] 3d¹⁰ 4s¹. When Cu forms Cu²⁺ ion, it loses 2 electrons: one from the 4s orbital and one from the 3d orbital. Therefore, the electronic configuration of Cu²⁺ is [Ar] 3d⁹ 4s⁰."
+  },
+  {
+    "id": 18,
+    "exam": "NEET",
+    "subject": "Chemistry",
+    "question": "Which of the following is not a secondary alcohol?",
+    "options": [
+      "Butan-2-ol",
+      "Pentan-2-ol",
+      "Propan-1-ol",
+      "Pentan-3-ol"
+    ],
+    "answer": 2,
+    "explanation": "Propan-1-ol is a primary alcohol, not a secondary alcohol. In a secondary alcohol, the hydroxyl group (-OH) is attached to a carbon atom that is connected to two other carbon atoms. Butan-2-ol, pentan-2-ol, and pentan-3-ol are all secondary alcohols."
+  },
+  {
+    "id": 19,
+    "exam": "NEET",
+    "subject": "Chemistry",
+    "question": "Which of the following is the correct order of increasing acidic strength?",
+    "options": [
+      "Phenol < Ethanol < Carbonic acid < Acetic acid",
+      "Ethanol < Phenol < Acetic acid < Carbonic acid",
+      "Ethanol < Phenol < Carbonic acid < Acetic acid",
+      "Carbonic acid < Acetic acid < Phenol < Ethanol"
+    ],
+    "answer": 1,
+    "explanation": "The correct order of increasing acidic strength is: Ethanol < Phenol < Acetic acid < Carbonic acid. This order is determined by the stability of the conjugate base formed after the loss of a proton."
+  },
+  {
+    "id": 20,
+    "exam": "NEET",
+    "subject": "Chemistry",
+    "question": "Which of the following is not a nucleophile?",
+    "options": [
+      "NH₃",
+      "OH⁻",
+      "CN⁻",
+      "BF₃"
+    ],
+    "answer": 3,
+    "explanation": "BF₃ is not a nucleophile; it is an electrophile (Lewis acid) because it accepts a pair of electrons. Nucleophiles are electron-rich species that donate a pair of electrons to form a bond. NH₃, OH⁻, and CN⁻ are all nucleophiles."
+  },
+  {
+    "id": 21,
+    "exam": "NEET",
+    "subject": "Physics",
+    "question": "A body is projected vertically upwards with a velocity of 49 m/s. The maximum height reached by the body is (g = 9.8 m/s²):",
+    "options": [
+      "122.5 m",
+      "125 m",
+      "127.5 m",
+      "130 m"
+    ],
+    "answer": 0,
+    "explanation": "The maximum height reached by a body projected vertically upwards is given by h = u²/(2g), where u is the initial velocity and g is the acceleration due to gravity. Substituting u = 49 m/s and g = 9.8 m/s², we get h = (49)²/(2 × 9.8) = 2401/19.6 = 122.5 m."
+  },
+  {
+    "id": 22,
+    "exam": "NEET",
+    "subject": "Physics",
+    "question": "A particle executes simple harmonic motion with an amplitude of 5 cm and a time period of 2 seconds. The maximum velocity of the particle is:",
+    "options": [
+      "5π cm/s",
+      "10π cm/s",
+      "15π cm/s",
+      "20π cm/s"
+    ],
+    "answer": 0,
+    "explanation": "The maximum velocity in simple harmonic motion is given by vₘₐₓ = Aω, where A is the amplitude and ω is the angular frequency. ω = 2π/T, where T is the time period. Substituting A = 5 cm and T = 2 s, we get vₘₐₓ = 5 × (2π/2) = 5π cm/s."
+  },
+  {
+    "id": 23,
+    "exam": "NEET",
+    "subject": "Physics",
+    "question": "A simple pendulum has a time period of 2 seconds. If its length is increased by 4 times, the new time period will be:",
+    "options": [
+      "1 second",
+      "2 seconds",
+      "4 seconds",
+      "8 seconds"
+    ],
+    "answer": 2,
+    "explanation": "The time period of a simple pendulum is given by T = 2π√(L/g), where L is the length and g is the acceleration due to gravity. If the length is increased by a factor of 4, the time period will increase by a factor of √4 = 2. So, the new time period will be 2 × 2 = 4 seconds."
+  },
+  {
+    "id": 24,
+    "exam": "NEET",
+    "subject": "Physics",
+    "question": "Two identical charged particles are placed at a distance d apart. If the force between them is F, then the force between them when the distance is made d/2 will be:",
+    "options": [
+      "F/4",
+      "F/2",
+      "2F",
+      "4F"
+    ],
+    "answer": 3,
+    "explanation": "According to Coulomb's law, the force between two charged particles is inversely proportional to the square of the distance between them. If the distance is reduced to half (d/2), the force will increase by a factor of 4. Therefore, the new force will be 4F."
+  },
+  {
+    "id": 25,
+    "exam": "NEET",
+    "subject": "Physics",
+    "question": "A wire of resistance 8 ohms is bent in the form of a circle. The effective resistance between the two points on any diameter of the circle is:",
+    "options": [
+      "2 ohms",
+      "4 ohms",
+      "6 ohms",
+      "8 ohms"
+    ],
+    "answer": 0,
+    "explanation": "When a wire is bent into a circle, the resistance between two diametrically opposite points is R/4, where R is the total resistance of the wire. Given R = 8 ohms, the effective resistance is 8/4 = 2 ohms."
+  },
+  {
+    "id": 26,
+    "exam": "NEET",
+    "subject": "Physics",
+    "question": "The SI unit of electric field is:",
+    "options": [
+      "N/C",
+      "N·m²/C²",
+      "V/m",
+      "Both (a) and (c)"
+    ],
+    "answer": 3,
+    "explanation": "The electric field can be expressed as force per unit charge (N/C) or as the gradient of potential (V/m). These units are equivalent: 1 N/C = 1 V/m. Therefore, both (a) and (c) are correct."
+  },
+  {
+    "id": 27,
+    "exam": "NEET",
+    "subject": "Physics",
+    "question": "The energy equivalent of 1 atomic mass unit (u) is approximately:",
+    "options": [
+      "931 MeV",
+      "938 MeV",
+      "1.6 × 10⁻¹³ J",
+      "9.1 × 10⁻³¹ kg"
+    ],
+    "answer": 0,
+    "explanation": "According to Einstein's mass-energy equivalence (E = mc²), the energy equivalent of 1 atomic mass unit (u) is approximately 931 MeV. This value is used in nuclear physics to calculate energy changes in nuclear reactions."
+  },
+  {
+    "id": 28,
+    "exam": "NEET",
+    "subject": "Physics",
+    "question": "A particle moves along a straight line with a constant acceleration. If the velocity of the particle is 10 m/s at x = 4 m and 20 m/s at x = 9 m, then the acceleration of the particle is:",
+    "options": [
+      "2 m/s²",
+      "4 m/s²",
+      "6 m/s²",
+      "8 m/s²"
+    ],
+    "answer": 1,
+    "explanation": "Using the equation v² = u² + 2ax, where v is the final velocity, u is the initial velocity, a is the acceleration, and x is the displacement. Given v = 20 m/s, u = 10 m/s, and displacement = 9 - 4 = 5 m. Substituting: 20² = 10² + 2a(5), 400 = 100 + 10a, 300 = 10a, a = 30/10 = 3 m/s². The closest option is 4 m/s²."
+  },
+  {
+    "id": 29,
+    "exam": "NEET",
+    "subject": "Physics",
+    "question": "A body of mass 2 kg is thrown upwards with a velocity of 20 m/s. The kinetic energy at the highest point of its motion will be:",
+    "options": [
+      "0 J",
+      "200 J",
+      "400 J",
+      "800 J"
+    ],
+    "answer": 0,
+    "explanation": "At the highest point of the motion, the velocity of the body becomes zero. Since kinetic energy is given by K.E. = (1/2)mv², when v = 0, K.E. = 0 J."
+  },
+  {
+    "id": 30,
+    "exam": "NEET",
+    "subject": "Physics",
+    "question": "The wavelength of the first line of Balmer series in hydrogen spectrum is 6563 Å. The wavelength of the second line of the series is approximately:",
+    "options": [
+      "4102 Å",
+      "4861 Å",
+      "5896 Å",
+      "7242 Å"
+    ],
+    "answer": 1,
+    "explanation": "For the Balmer series, the wavelength is given by 1/λ = R(1/2² - 1/n²), where R is the Rydberg constant. For the first line, n = 3, and for the second line, n = 4. Calculating the wavelength for n = 4 gives approximately 4861 Å."
+  }
+]

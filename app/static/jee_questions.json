@@ -1,0 +1,422 @@
+[
+  {
+    "id": 1,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "The number of non-empty equivalence relations on the set {1,2,3} is:",
+    "options": [
+      "2",
+      "4",
+      "5",
+      "6"
+    ],
+    "answer": 2,
+    "explanation": "There are 5 possible partitions of a 3-element set, but one of them is empty, so there are 5-1=4 non-empty equivalence relations."
+  },
+  {
+    "id": 2,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "Let A = [aij] be a 3 × 3 matrix such that A[0,0] = [1,0,0], A[1,0] = [4,1,3], and A[2,0] = [2,1,0], then a23 equals:",
+    "options": [
+      "3",
+      "0",
+      "2",
+      "1"
+    ],
+    "answer": 3,
+    "explanation": "By solving the matrix equations, we find that a23 = 1."
+  },
+  {
+    "id": 3,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "Let the position vectors of the vertices A, B and C of a tetrahedron ABCD be i+2j+k, i+3j+2k and 2i+j+k respectively. The altitude from the vertex D to the opposite face ABC meets the median line segment through A of the triangle ABC at the point E. If the length of AD is 110/3 and the volume of the tetrahedron is 805/62, then the position vector of E is:",
+    "options": [
+      "7i+4j+3k/6",
+      "7i+4j+3k/12",
+      "12i+12j+k/6",
+      "7i+12j+k/6"
+    ],
+    "answer": 3,
+    "explanation": "By using vector algebra and the properties of tetrahedrons, we can determine that the position vector of E is 7i+12j+k/6."
+  },
+  {
+    "id": 4,
+    "exam": "JEE",
+    "subject": "Physics",
+    "question": "In photoelectric effect an em-wave is incident on a metal surface and electrons are ejected from the surface. If the work function of the metal is 2.14 eV and stopping potential is 2V, what is the wavelength of the em-wave? (Given hc = 1242 eVnm where h is the Planck's constant and c is the speed of light in vacuum.)",
+    "options": [
+      "400 nm",
+      "300 nm",
+      "200 nm",
+      "600 nm"
+    ],
+    "answer": 1,
+    "explanation": "Using the photoelectric equation: hf = φ + eV_s, where φ is the work function and V_s is the stopping potential. Converting to wavelength: λ = hc/(φ + eV_s) = 1242/(2.14 + 2) = 300 nm."
+  },
+  {
+    "id": 5,
+    "exam": "JEE",
+    "subject": "Physics",
+    "question": "The maximum percentage error in the measurement of density of a wire is [Given, mass of wire = (0.60 ± 0.003)g, radius of wire = (0.50 ± 0.01)cm, length of wire (10.00 ± 0.05)cm]",
+    "options": [
+      "4",
+      "5",
+      "8",
+      "7"
+    ],
+    "answer": 1,
+    "explanation": "The percentage error in density is the sum of percentage errors in mass, and twice the percentage error in radius, and the percentage error in length. Calculating this gives us 5%."
+  },
+  {
+    "id": 6,
+    "exam": "JEE",
+    "subject": "Physics",
+    "question": "Match the List-I with List-II: A. Pressure varies inversely with volume of an ideal gas. (I. Adiabatic process) B. Heat absorbed goes partly to increase internal energy and partly to do work. (II. Isochoric process) C. Heat is neither absorbed nor released by a system (III. Isothermal process) D. No work is done on or by a gas (IV. Isobaric process)",
+    "options": [
+      "A-I, B-III, C-II, D-IV",
+      "A-III, B-I, C-IV, D-II",
+      "A-I, B-IV, C-III, D-II",
+      "A-III, B-IV, C-I, D-II"
+    ],
+    "answer": 3,
+    "explanation": "A-III (Isothermal process follows Boyle's law), B-IV (Isobaric process), C-I (Adiabatic process), D-II (Isochoric process)."
+  },
+  {
+    "id": 7,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "If A, B and (adj(A–1) + adj(B–1)) are non-singular matrices of same order, then the inverse of A(adj(A–1) + adj(B–1))–1B, is equal to:",
+    "options": [
+      "A^(-1) + B^(-1)",
+      "adj(B–1) + adj(A–1)",
+      "1/(AB) (adj(B) + adj(A))",
+      "AB/(A+B)"
+    ],
+    "answer": 2,
+    "explanation": "Using properties of adjoint matrices and matrix algebra, we can derive that the inverse is 1/(AB) (adj(B) + adj(A))."
+  },
+  {
+    "id": 8,
+    "exam": "JEE",
+    "subject": "Chemistry",
+    "question": "Match List - I with List - II. (A) Bronze (I) Cu, Ni (B) Brass (II) Fe, Cr, Ni, C (C) UK silver coin (III) Cu, Zn (D) Stainless Steel (IV) Cu, Sn",
+    "options": [
+      "A-III, B-IV, C-I, D-II",
+      "A-IV, B-III, C-I, D-II",
+      "A-III, B-I, C-IV, D-II",
+      "A-III, B-IV, C-II, D-I"
+    ],
+    "answer": 1,
+    "explanation": "Bronze is an alloy of copper and tin (Cu, Sn), Brass is an alloy of copper and zinc (Cu, Zn), UK silver coins contain copper and nickel (Cu, Ni), and Stainless Steel contains iron, chromium, nickel, and carbon (Fe, Cr, Ni, C)."
+  },
+  {
+    "id": 9,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "Let the arc AC of a circle subtend a right angle at the centre O. If the point B on the arc AC, divides the arc AC such that length of arc AB / length of arc BC = 1/5, and OC = OA = OB, then α^2 + 3α - 1 is equal to:",
+    "options": [
+      "2/3",
+      "2/3",
+      "5/3",
+      "2/3/3"
+    ],
+    "answer": 0,
+    "explanation": "Using properties of circles and the given conditions, we can derive that α^2 + 3α - 1 = 2/3."
+  },
+  {
+    "id": 10,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "From all the English alphabets, five letters are chosen and are arranged in alphabetical order. The total number of ways, in which the middle letter is 'M', is:",
+    "options": [
+      "3276",
+      "6084",
+      "4356",
+      "5148"
+    ],
+    "answer": 3,
+    "explanation": "We need to select 2 letters before M and 2 letters after M. There are C(12,2) ways to select 2 letters from A to L, and C(13,2) ways to select 2 letters from N to Z. Total number of ways = C(12,2) × C(13,2) = 66 × 78 = 5148."
+  },
+  {
+    "id": 11,
+    "exam": "JEE",
+    "subject": "Physics",
+    "question": "A symmetric thin biconvex lens is cut into four equal parts by two planes AB and CD as shown in figure. If the power of original lens is 4D then the power of a part of the divided lens is:",
+    "options": [
+      "1D",
+      "4D",
+      "D",
+      "2D"
+    ],
+    "answer": 3,
+    "explanation": "When a lens is cut into equal parts, each part has the same power as the original lens. So the power of each part is 4D."
+  },
+  {
+    "id": 12,
+    "exam": "JEE",
+    "subject": "Chemistry",
+    "question": "Some CO2 gas was kept in a sealed container at a pressure of 1 atm and at 273 K. This entire amount of CO2 gas was later passed through an aqueous solution of Ca(OH)2. The excess unreacted Ca(OH)2 was later neutralized with 0.1 M of 40 mL HCl. If the volume of the sealed container of CO2 was x, then x is _____ cm3 (nearest integer). [Given: The entire amount of CO2(g) reacted with exactly half the initial amount of Ca(OH)2 present in the aqueous solution.]",
+    "options": [
+      "10",
+      "15",
+      "20",
+      "25"
+    ],
+    "answer": 2,
+    "explanation": "Using stoichiometry and the ideal gas law, we can calculate that x = 20 cm³."
+  },
+  {
+    "id": 13,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "Let f(x) = logex and g(x) = 2x^4 + 2x^3 + 3x^2 + 2x + 2/(2x^2 + 2x + 1). Then the domain of fog is:",
+    "options": [
+      "(0, ∞)",
+      "(0, ∞)",
+      "[0, ∞)",
+      "[1, ∞)"
+    ],
+    "answer": 0,
+    "explanation": "For fog to be defined, g(x) must be positive (since f(x) = ln(x) is only defined for positive x). Analyzing g(x), we find that it's positive for all x in (0, ∞)."
+  },
+  {
+    "id": 14,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "Let g(x) = ∫sin^3(x)dx, where C is the constant of integration. If g(α) + g'(β) + g''(γ) = 28, where α, β, γ ∈ Z, Then α + β - γ equals:",
+    "options": [
+      "3",
+      "5",
+      "7",
+      "9"
+    ],
+    "answer": 0,
+    "explanation": "By evaluating the integral and its derivatives, and solving the equation, we find that α + β - γ = 3."
+  },
+  {
+    "id": 15,
+    "exam": "JEE",
+    "subject": "Physics",
+    "question": "If B is magnetic field and μ0 is permeability of free space, then the dimensions of (B/μ0) is:",
+    "options": [
+      "L^-1 T^-1 A",
+      "L^-1 A",
+      "L T^-2 A^-1",
+      "L T^-1 A^-1"
+    ],
+    "answer": 1,
+    "explanation": "The dimensions of B are [M][T]^-2[I]^-1, and the dimensions of μ0 are [M][L][T]^-2[I]^-2. Therefore, the dimensions of B/μ0 are [L]^-1[I] or L^-1 A."
+  },
+  {
+    "id": 16,
+    "exam": "JEE",
+    "subject": "Chemistry",
+    "question": "Given below are two statements: Statement I: CH3-O-CH2-Cl will undergo SN1 reaction though it is a primary halide. Statement II: CH3-C(CH3)2-CH2Cl will not undergo SN2 reaction very easily though it is a primary halide.",
+    "options": [
+      "Statement I is correct but Statement II is incorrect",
+      "Statement I is incorrect but Statement II is correct",
+      "Both Statement I and Statement II are incorrect",
+      "Both Statement I and Statement II are correct"
+    ],
+    "answer": 3,
+    "explanation": "Statement I is correct because the oxygen atom can stabilize the carbocation intermediate in SN1 reaction. Statement II is correct because the bulky tert-butyl group creates steric hindrance that prevents the SN2 reaction."
+  },
+  {
+    "id": 17,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "If the system of equations (-1)x + (α-4)y + z = 5, x + (α-1)y + (α-4)z = 7, (α+1)x + (α+2)y - (α+2)z = 9 has infinitely many solutions, then α^2 + α is equal to:",
+    "options": [
+      "6",
+      "12",
+      "6",
+      "20"
+    ],
+    "answer": 1,
+    "explanation": "For the system to have infinitely many solutions, the determinant of the coefficient matrix must be zero. Solving this equation gives us α^2 + α = 12."
+  },
+  {
+    "id": 18,
+    "exam": "JEE",
+    "subject": "Physics",
+    "question": "A spherical surface of radius of curvature R, separates air from glass (refractive index = 1.5). The centre of curvature is in the glass medium. A point object 'O' placed in air on the optic axis of the surface, so that its real image is formed at 'I' inside glass. The line OI intersects the spherical surface at P and PO = PI. The distance PO equals to:",
+    "options": [
+      "3R",
+      "2R",
+      "2R",
+      "1.5R"
+    ],
+    "answer": 1,
+    "explanation": "Using the lens formula and the condition PO = PI, we can derive that PO = 2R."
+  },
+  {
+    "id": 19,
+    "exam": "JEE",
+    "subject": "Physics",
+    "question": "Given below are two statements. One is labelled as Assertion (A) and the other is labelled as Reason (R). Assertion (A): The binding energy per nucleon is found to be practically independent of the atomic number A, for nuclei with mass numbers between 30 and 170. Reason (R): Nuclear force is long range.",
+    "options": [
+      "Both (A) and (R) are true but (R) is NOT the correct explanation of (A)",
+      "Both (A) and (R) are true and (R) is the correct explanation of (A)",
+      "Both (A) and (R) are true but (R) is NOT the correct explanation of (A)",
+      "Both (A) and (R) are true and (R) is the correct explanation of (A)"
+    ],
+    "answer": 2,
+    "explanation": "Assertion (A) is true because the binding energy per nucleon is approximately constant (around 8 MeV) for nuclei with mass numbers between 30 and 170. Reason (R) is false because nuclear force is short-range, not long-range. Therefore, both (A) and (R) are not true."
+  },
+  {
+    "id": 20,
+    "exam": "JEE",
+    "subject": "Physics",
+    "question": "A galvanometer having a coil of resistance 30Ω need 20 mA of current for full-scale deflection. If a maximum current of 3 A is to be measured using this galvanometer, the resistance of the shunt to be added to the galvanometer should be 30/X Ω, where X is:",
+    "options": [
+      "596",
+      "298",
+      "149",
+      "596"
+    ],
+    "answer": 2,
+    "explanation": "Using the formula for shunt resistance: S = G/(n-1), where G is the galvanometer resistance and n is the factor by which the range is increased. Here, n = 3A/20mA = 150. So, S = 30/(150-1) = 30/149 Ω. Therefore, X = 149."
+  },
+  {
+    "id": 21,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "Let P(4,4√3) be a point on the parabola y^2 = 4ax and PQ be a focal chord of the parabola. If M and N are the foot of perpendiculars drawn from P and Q respectively on the directrix of the parabola, then the area of the quadrilateral PQMN is equal to:",
+    "options": [
+      "34√3/3",
+      "17√3",
+      "34√3/8",
+      "34√3/3"
+    ],
+    "answer": 2,
+    "explanation": "Using the properties of parabolas and focal chords, we can calculate the area of the quadrilateral PQMN to be 34√3/8."
+  },
+  {
+    "id": 22,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "If lim(x→0) (e^x-1-x)/(e^x-e^(-x)-2x) = α, then the value of log_e(1+log_e(α)) equals:",
+    "options": [
+      "2 and 3",
+      "3 and 2",
+      "1 and 3",
+      "2 and 2"
+    ],
+    "answer": 0,
+    "explanation": "By applying L'Hôpital's rule and evaluating the limit, we find that α = 1/2. Therefore, log_e(1+log_e(1/2)) = log_e(1-log_e(2)) = log_e(1-0.693) = log_e(0.307) ≈ -1.18."
+  },
+  {
+    "id": 23,
+    "exam": "JEE",
+    "subject": "Physics",
+    "question": "Two spherical bodies of same materials having radii 0.2 m and 0.8 m are placed in same atmosphere. The temperature of the smaller body is 800 K and temperature of bigger body is 400 K. If the energy radiate from the smaller body is E, the energy radiated from the bigger body is (assume, effect of the surrounding to be negligible):",
+    "options": [
+      "4E",
+      "E",
+      "64E",
+      "16E"
+    ],
+    "answer": 1,
+    "explanation": "Using Stefan-Boltzmann law, the energy radiated is proportional to r^2 × T^4. For the smaller body: E ∝ (0.2)^2 × (800)^4. For the larger body: E' ∝ (0.8)^2 × (400)^4. The ratio E'/E = (0.8/0.2)^2 × (400/800)^4 = 16 × (1/16) = 1. Therefore, E' = E."
+  },
+  {
+    "id": 24,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "The number of words, which can be formed using all the letters of the word 'DAUGHTER', so that all the vowels never come together, is:",
+    "options": [
+      "38000",
+      "37000",
+      "36000",
+      "35000"
+    ],
+    "answer": 2,
+    "explanation": "The word 'DAUGHTER' has 8 letters with 3 vowels (A, U, E) and 5 consonants (D, G, H, T, R). Total arrangements = 8!/1! = 40320. Number of arrangements with vowels together = 6!×3! = 4320. Therefore, number of arrangements with vowels not together = 40320 - 4320 = 36000."
+  },
+  {
+    "id": 25,
+    "exam": "JEE",
+    "subject": "Chemistry",
+    "question": "Toluene (excess) (i)CrO2Cl2, CS2 (ii)H3O+ (iii)NaHSO3 Filter Residue (A) Residue (A) + HCl (dil.) Compound (B). Structure of residue A and compound B formed respectively is:",
+    "options": [
+      "CH(OCrOHCl2)2 and CHO",
+      "CH(OCrOHCl2)2 and C(OH)(SO3Na)H",
+      "CHO and COONa",
+      "C(OH)(SO3Na)H and C=O(H)"
+    ],
+    "answer": 3,
+    "explanation": "The reaction sequence converts toluene to benzaldehyde, which then forms a bisulfite addition product (residue A). Treatment with dilute HCl regenerates benzaldehyde (compound B)."
+  },
+  {
+    "id": 26,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "If the first term of an A.P. is 3 and the sum of its first four terms is equal to one-fifth of the sum of the next four terms, then the sum of the first 20 terms is equal to:",
+    "options": [
+      "1230",
+      "1240",
+      "1250",
+      "1260"
+    ],
+    "answer": 1,
+    "explanation": "Let the common difference be d. Given that a = 3 and S4 = (1/5)×(S8 - S4). Solving these equations gives d = 5. The sum of the first 20 terms is S20 = 20(2×3 + (20-1)×5)/2 = 10(6 + 95) = 10×101 = 1010."
+  },
+  {
+    "id": 27,
+    "exam": "JEE",
+    "subject": "Chemistry",
+    "question": "Identify the number of structure/s from the following which can be correlated to D-glyceraldehyde: (A) CHO-OH-OH, (B) CHO-OH-HO, (C) CHO-HO-OH, (D) CHO-HO-HO",
+    "options": [
+      "three",
+      "two",
+      "four",
+      "one"
+    ],
+    "answer": 3,
+    "explanation": "D-glyceraldehyde has the structure CHO-HO-OH. Among the given structures, only one (C) matches this configuration."
+  },
+  {
+    "id": 28,
+    "exam": "JEE",
+    "subject": "Chemistry",
+    "question": "Given below are two statements: Statement (I): A spectral line will be observed for a 2px → 2py transition. Statement (II): 2px and 2py are degenerate orbitals.",
+    "options": [
+      "Both Statement-I and Statement-II are true",
+      "Both Statement-I and Statement-II are false",
+      "Statement-I is true but Statement-II is false",
+      "Statement-I is false but Statement-II is true"
+    ],
+    "answer": 3,
+    "explanation": "Statement I is false because transitions between degenerate orbitals (same energy level) like 2px and 2py do not produce spectral lines. Statement II is true because 2px and 2py orbitals have the same energy level and are degenerate."
+  },
+  {
+    "id": 29,
+    "exam": "JEE",
+    "subject": "Mathematics",
+    "question": "The system of equations x + y + z = 6, x + 2y + 5z = 9, x + 5y + z = μ, has no solution if:",
+    "options": [
+      "μ = 10",
+      "μ = 12",
+      "μ = 14",
+      "μ = 16"
+    ],
+    "answer": 0,
+    "explanation": "For the system to have no solution, the augmented matrix must have rank less than the coefficient matrix. Analyzing the determinants and applying Cramer's rule, we find that the system has no solution when μ = 10."
+  },
+  {
+    "id": 30,
+    "exam": "JEE",
+    "subject": "Physics",
+    "question": "Two charges 7μc and -4μc are placed at (-7 cm, 0, 0) and (7 cm, 0, 0) respectively. Given, ε0 = 8.85 × 10^-12 C^2 N^-1 m^-2, the electrostatic potential energy of the charge configuration is:",
+    "options": [
+      "50°",
+      "60°",
+      "58°",
+      "48°"
+    ],
+    "answer": 1,
+    "explanation": "The electrostatic potential energy is given by U = (1/4πε0) × (q1×q2/r). Substituting the values, we get U = (9×10^9) × (7×10^-6 × (-4)×10^-6) / (0.14) = -18 J."
+  }
+]

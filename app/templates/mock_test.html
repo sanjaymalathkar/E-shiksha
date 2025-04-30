@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Personalized Mock Test - Educational Content Analysis System{% endblock %}
+{% block title %}{% if language == 'hi' %}व्यक्तिगत मॉक टेस्ट - ई-शिक्षा{% else %}Personalized Mock Test - E-Shiksha{% endif %}{% endblock %}
 
 {% block head %}
 <style>
@@ -238,7 +238,7 @@
 
             <!-- Cognitive Abilities Breakdown -->
             <div class="mb-8">
-                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Cognitive Abilities Breakdown</h3>
+                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white" data-i18n="mock_test.cognitive_abilities">Cognitive Abilities Breakdown</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-white dark:bg-gray-700 rounded-lg p-4">
                         <div class="flex items-center mb-2">
@@ -247,9 +247,9 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                                 </svg>
                             </div>
-                            <h4 class="text-lg font-medium text-gray-800 dark:text-white">Logical Reasoning</h4>
+                            <h4 class="text-lg font-medium text-gray-800 dark:text-white" data-i18n="mock_test.logical_reasoning">Logical Reasoning</h4>
                         </div>
-                        <p class="text-gray-600 dark:text-gray-300 pl-11">
+                        <p class="text-gray-600 dark:text-gray-300 pl-11" data-i18n="mock_test.logical_reasoning_desc">
                             Your ability to identify patterns, make deductions, and solve logical problems.
                         </p>
                     </div>
@@ -261,9 +261,9 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path>
                                 </svg>
                             </div>
-                            <h4 class="text-lg font-medium text-gray-800 dark:text-white">Problem-Solving</h4>
+                            <h4 class="text-lg font-medium text-gray-800 dark:text-white" data-i18n="mock_test.problem_solving">Problem-Solving</h4>
                         </div>
-                        <p class="text-gray-600 dark:text-gray-300 pl-11">
+                        <p class="text-gray-600 dark:text-gray-300 pl-11" data-i18n="mock_test.problem_solving_desc">
                             Your ability to analyze situations, apply knowledge, and find solutions to complex problems.
                         </p>
                     </div>
@@ -275,9 +275,9 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                                 </svg>
                             </div>
-                            <h4 class="text-lg font-medium text-gray-800 dark:text-white">Comprehension</h4>
+                            <h4 class="text-lg font-medium text-gray-800 dark:text-white" data-i18n="mock_test.comprehension">Comprehension</h4>
                         </div>
-                        <p class="text-gray-600 dark:text-gray-300 pl-11">
+                        <p class="text-gray-600 dark:text-gray-300 pl-11" data-i18n="mock_test.comprehension_desc">
                             Your ability to understand and interpret information from text and other sources.
                         </p>
                     </div>
@@ -289,9 +289,9 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
                                 </svg>
                             </div>
-                            <h4 class="text-lg font-medium text-gray-800 dark:text-white">Memory Recall</h4>
+                            <h4 class="text-lg font-medium text-gray-800 dark:text-white" data-i18n="mock_test.memory_recall">Memory Recall</h4>
                         </div>
-                        <p class="text-gray-600 dark:text-gray-300 pl-11">
+                        <p class="text-gray-600 dark:text-gray-300 pl-11" data-i18n="mock_test.memory_recall_desc">
                             Your ability to store and retrieve information when needed.
                         </p>
                     </div>
@@ -303,7 +303,7 @@
                     Back to Dashboard
                 </a>
                 <button id="generate-study-plan-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 flex items-center">
-                    <span data-i18n="mock_test.generate_study_plan">Generate Study Plan</span>
+                    <span data-i18n="mock_test.view_study_plan">Generate Study Plan</span>
                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                     </svg>
@@ -314,7 +314,7 @@
             <div id="study-plan-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-gray-800 dark:text-white">Generating Your Personalized Study Plan</h3>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-white" data-i18n="mock_test.generating_plan">Generating Your Personalized Study Plan</h3>
                         <button id="close-modal-btn" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -324,7 +324,7 @@
 
                     <div id="study-plan-loading" class="py-8 text-center">
                         <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mb-4"></div>
-                        <p class="text-gray-700 dark:text-gray-300">Creating your personalized study plan based on your IQ level and learning capacity...</p>
+                        <p class="text-gray-700 dark:text-gray-300" data-i18n="mock_test.creating_plan">Creating your personalized study plan based on your IQ level and learning capacity...</p>
                     </div>
 
                     <div id="study-plan-content" class="hidden">
@@ -333,7 +333,7 @@
 
                     <div class="mt-6 flex justify-end">
                         <a id="view-full-plan-btn" href="/study-plan" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 hidden items-center">
-                            <span>View Full Study Plan</span>
+                            <span data-i18n="mock_test.view_full_plan">View Full Study Plan</span>
                             <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                             </svg>
@@ -401,7 +401,7 @@
             console.error('Error loading questions:', error);
             document.getElementById('questions-container').innerHTML = `
                 <div class="bg-red-100 dark:bg-red-900/20 p-4 rounded-lg">
-                    <p class="text-red-700 dark:text-red-300">Error loading questions. Please try again.</p>
+                    <p class="text-red-700 dark:text-red-300" data-i18n="mock_test.error_loading">Error loading questions. Please try again.</p>
                 </div>
             `;
         }

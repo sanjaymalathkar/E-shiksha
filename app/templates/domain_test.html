@@ -1,0 +1,967 @@
+{% extends "base.html" %}
+
+{% block title %}{{ domain|upper }} Mock Test - E-Shiksha{% endblock %}
+
+{% block head %}
+<style>
+    .question-card {
+        transition: all 0.3s ease;
+    }
+    .option-label {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .option-label:hover {
+        background-color: rgba(79, 70, 229, 0.1);
+    }
+    .option-input:checked + .option-label {
+        background-color: rgba(79, 70, 229, 0.2);
+        border-color: #4F46E5;
+    }
+    .dark .option-label:hover {
+        background-color: rgba(139, 92, 246, 0.2);
+    }
+    .dark .option-input:checked + .option-label {
+        background-color: rgba(139, 92, 246, 0.3);
+        border-color: #8B5CF6;
+    }
+    .timer {
+        position: sticky;
+        top: 5rem;
+        z-index: 10;
+    }
+    .subject-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+    }
+    .subject-Physics {
+        background-color: rgba(239, 68, 68, 0.2);
+        color: rgb(239, 68, 68);
+    }
+    .subject-Chemistry {
+        background-color: rgba(16, 185, 129, 0.2);
+        color: rgb(16, 185, 129);
+    }
+    .subject-Mathematics {
+        background-color: rgba(59, 130, 246, 0.2);
+        color: rgb(59, 130, 246);
+    }
+    .subject-Biology {
+        background-color: rgba(139, 92, 246, 0.2);
+        color: rgb(139, 92, 246);
+    }
+    .subject-JEE {
+        background-color: rgba(79, 70, 229, 0.2);
+        color: rgb(79, 70, 229);
+    }
+    .subject-NEET {
+        background-color: rgba(16, 185, 129, 0.2);
+        color: rgb(16, 185, 129);
+    }
+    .subject-UPSC {
+        background-color: rgba(245, 158, 11, 0.2);
+        color: rgb(245, 158, 11);
+    }
+    .subject-CAT {
+        background-color: rgba(139, 92, 246, 0.2);
+        color: rgb(139, 92, 246);
+    }
+    .dark .subject-Physics {
+        background-color: rgba(239, 68, 68, 0.3);
+        color: rgb(252, 165, 165);
+    }
+    .dark .subject-Chemistry {
+        background-color: rgba(16, 185, 129, 0.3);
+        color: rgb(110, 231, 183);
+    }
+    .dark .subject-Mathematics {
+        background-color: rgba(59, 130, 246, 0.3);
+        color: rgb(147, 197, 253);
+    }
+    .dark .subject-Biology {
+        background-color: rgba(139, 92, 246, 0.3);
+        color: rgb(196, 181, 253);
+    }
+    .dark .subject-JEE {
+        background-color: rgba(79, 70, 229, 0.3);
+        color: rgb(165, 180, 252);
+    }
+    .dark .subject-NEET {
+        background-color: rgba(16, 185, 129, 0.3);
+        color: rgb(110, 231, 183);
+    }
+    .dark .subject-UPSC {
+        background-color: rgba(245, 158, 11, 0.3);
+        color: rgb(253, 230, 138);
+    }
+    .dark .subject-CAT {
+        background-color: rgba(139, 92, 246, 0.3);
+        color: rgb(196, 181, 253);
+    }
+    .result-card {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="text-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">{{ domain|upper }} Mock Test</h1>
+        <p class="text-gray-600 dark:text-gray-400">20 Multiple Choice Questions</p>
+    </div>
+
+    <!-- Timer -->
+    <div class="timer bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6 flex justify-between items-center">
+        <div>
+            <span class="text-gray-600 dark:text-gray-400">Time Remaining:</span>
+            <span id="timer" class="ml-2 font-bold text-gray-800 dark:text-white">30:00</span>
+        </div>
+        <div>
+            <span class="text-gray-600 dark:text-gray-400">Questions:</span>
+            <span id="progress" class="ml-2 font-bold text-gray-800 dark:text-white">0/20</span>
+        </div>
+    </div>
+
+    <!-- Test Form -->
+    <form id="test-form" class="space-y-6">
+        <div id="questions-container" class="space-y-6">
+            <!-- Loading indicator -->
+            <div id="loading" class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+                <p class="mt-4 text-gray-600 dark:text-gray-400">Loading questions...</p>
+            </div>
+            <!-- Questions will be loaded here -->
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mt-8 text-center">
+            <button id="submit-btn" type="submit" class="py-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
+                Submit Test
+            </button>
+        </div>
+    </form>
+
+    <!-- Fixed Submit Button (always visible) -->
+    <div class="fixed bottom-4 right-4 z-50">
+        <button id="fixed-submit-btn" class="py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition-colors flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Submit Answers
+        </button>
+    </div>
+
+    <!-- Results Section (initially hidden) -->
+    <div id="results-section" class="mt-8 hidden">
+        <div class="result-card bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Test Results</h2>
+
+            <!-- Score Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-4 text-center">
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Score</p>
+                    <p id="result-score" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">0/20</p>
+                </div>
+                <div class="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-4 text-center">
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Percentage</p>
+                    <p id="result-percentage" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">0%</p>
+                </div>
+                <div class="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-4 text-center">
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Time Taken</p>
+                    <p id="result-time" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">00:00</p>
+                </div>
+                <div class="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/30 dark:to-amber-900/30 rounded-lg p-4 text-center">
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">IQ Level</p>
+                    <p id="result-iq" class="text-2xl font-bold text-amber-600 dark:text-amber-400">--</p>
+                    <p id="result-iq-category" class="text-xs text-gray-500 dark:text-gray-400">--</p>
+                    <div id="iq-details" class="mt-2 text-left hidden">
+                        <div class="text-xs text-gray-600 dark:text-gray-400">
+                            <p class="font-medium">Strengths:</p>
+                            <p id="iq-strengths" class="text-green-600 dark:text-green-400">--</p>
+                        </div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                            <p class="font-medium">Areas for improvement:</p>
+                            <p id="iq-improvements" class="text-orange-600 dark:text-orange-400">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Analysis -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Performance Analysis</h3>
+                <div id="performance-analysis" class="bg-white dark:bg-gray-700 rounded-lg p-5 shadow-sm">
+                    <p id="analysis-text" class="text-gray-700 dark:text-gray-300">Analyzing your performance...</p>
+                </div>
+            </div>
+
+            <!-- Subject-wise Performance -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Subject-wise Performance</h3>
+                <div id="subject-performance" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Subject performance will be added here -->
+                </div>
+            </div>
+
+            <!-- Study Materials -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Recommended Study Materials</h3>
+                <div id="study-materials" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Study materials will be added here -->
+                </div>
+            </div>
+
+
+
+            <!-- Question Review -->
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Question Review</h3>
+                <div id="question-review" class="space-y-4">
+                    <!-- Question review will be added here -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <a href="/mock-test" class="py-2 px-4 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium rounded-lg transition-colors">
+                    Try Another Test
+                </a>
+                <button id="review-btn" class="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
+                    Review Answers
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Global variables
+    let questions = [];
+    let userAnswers = {};
+    let startTime;
+    let timerInterval;
+    let timeLeft = 30 * 60; // 30 minutes in seconds
+    let testCompleted = false;
+
+    // Initialize the test
+    document.addEventListener('DOMContentLoaded', function() {
+        startTime = new Date();
+        startTimer();
+        loadQuestions();
+
+        // Submit form event
+        document.getElementById('test-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitTest();
+        });
+
+        // Fixed submit button event
+        document.getElementById('fixed-submit-btn').addEventListener('click', function() {
+            console.log('Fixed submit button clicked');
+            submitTest();
+        });
+
+        // Review button event
+        document.getElementById('review-btn').addEventListener('click', function() {
+            scrollToQuestions();
+        });
+
+        // Add debug logging
+        console.log('DOM fully loaded');
+    });
+
+    // Load questions from API
+    async function loadQuestions() {
+        try {
+            console.log('Loading questions...');
+            const domain = window.location.pathname.split('/').pop();
+            console.log('Domain:', domain);
+
+            const response = await fetch(`/api/domain-test/questions/${domain}`);
+            console.log('API response status:', response.status);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Questions loaded:', data.questions.length);
+            questions = data.questions;
+
+            // Render questions
+            renderQuestions(questions);
+
+            // Hide loading indicator
+            document.getElementById('loading').classList.add('hidden');
+
+            // Show submit button (both buttons should be visible)
+            document.getElementById('submit-btn').classList.remove('hidden');
+
+            // Update the fixed submit button to show question count
+            document.getElementById('fixed-submit-btn').innerHTML = `
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Submit Answers (${questions.length} Questions)
+            `;
+        } catch (error) {
+            console.error('Error loading questions:', error);
+            document.getElementById('loading').innerHTML = `
+                <div class="text-red-500 dark:text-red-400">
+                    <p class="font-bold">Error loading questions</p>
+                    <p class="mt-2">${error.message}</p>
+                    <button onclick="location.reload()" class="mt-4 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
+                        Try Again
+                    </button>
+                </div>
+            `;
+
+            // Even if there's an error, make sure the fixed submit button is visible
+            document.getElementById('fixed-submit-btn').innerHTML = `
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Submit Test
+            `;
+        }
+    }
+
+    // Render questions
+    function renderQuestions(questions) {
+        const container = document.getElementById('questions-container');
+        container.innerHTML = '';
+
+        questions.forEach((question, index) => {
+            const questionNumber = index + 1;
+            // Use index as question ID if not present
+            const questionId = question.id !== undefined ? question.id : index;
+
+            // Create subject badge with appropriate styling
+            let subjectClass = '';
+            let subjectName = question.subject || question.exam || 'General';
+
+            if (subjectName === 'Mathematics') {
+                subjectClass = 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200';
+            } else if (subjectName === 'Physics') {
+                subjectClass = 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200';
+            } else if (subjectName === 'Chemistry') {
+                subjectClass = 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+            } else {
+                subjectClass = 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
+            }
+
+            // Format the question text to handle special characters and formatting
+            const formattedQuestion = question.question
+                .replace(/\n/g, '<br>')  // Replace newlines with HTML line breaks
+                .replace(/\s\s+/g, ' ');  // Replace multiple spaces with a single space
+
+            const questionHtml = `
+                <div class="question-card bg-white dark:bg-gray-800 rounded-xl shadow-md p-6" id="question-${questionId}">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Question ${questionNumber}</h3>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium ${subjectClass}">${subjectName}</span>
+                    </div>
+                    <p class="text-gray-700 dark:text-gray-300 mb-4">${formattedQuestion}</p>
+                    <div class="space-y-3">
+                        ${question.options.map((option, optIndex) => `
+                            <div class="option-container">
+                                <input type="radio" id="q${questionId}_opt${optIndex}" name="q${questionId}" value="${option}" class="option-input hidden" data-question-id="${questionId}">
+                                <label for="q${questionId}_opt${optIndex}" class="option-label block w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300">
+                                    <span class="font-medium">${String.fromCharCode(65 + optIndex)}.</span> ${option}
+                                </label>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML += questionHtml;
+        });
+
+        // Add event listeners to radio buttons
+        document.querySelectorAll('.option-input').forEach(input => {
+            input.addEventListener('change', function() {
+                const questionId = this.dataset.questionId;
+                userAnswers[questionId] = this.value;
+                updateProgress();
+            });
+        });
+    }
+
+    // Update progress
+    function updateProgress() {
+        const answeredCount = Object.keys(userAnswers).length;
+        document.getElementById('progress').textContent = `${answeredCount}/20`;
+    }
+
+    // Start timer
+    function startTimer() {
+        timerInterval = setInterval(function() {
+            timeLeft--;
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                submitTest();
+                return;
+            }
+
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // Change color when less than 5 minutes remaining
+            if (timeLeft < 300) {
+                document.getElementById('timer').classList.add('text-red-500');
+            }
+        }, 1000);
+    }
+
+    // Submit test
+    async function submitTest() {
+        console.log('Submit test called');
+
+        if (testCompleted) {
+            console.log('Test already completed, ignoring submit');
+            return;
+        }
+
+        // Check if questions are loaded
+        if (!questions || questions.length === 0) {
+            console.log('No questions loaded, reloading questions');
+            alert('Questions are still loading. Please wait a moment and try again.');
+            loadQuestions(); // Try to reload questions
+            return;
+        }
+
+        console.log('Submitting test with answers:', userAnswers);
+        testCompleted = true;
+        clearInterval(timerInterval);
+
+        // Calculate time taken
+        const endTime = new Date();
+        const timeTaken = Math.floor((endTime - startTime) / 1000); // in seconds
+        console.log('Time taken:', timeTaken, 'seconds');
+
+        try {
+            // Hide the fixed submit button during submission
+            document.getElementById('fixed-submit-btn').classList.add('opacity-50', 'pointer-events-none');
+            document.getElementById('fixed-submit-btn').innerHTML = `
+                <svg class="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Submitting...
+            `;
+
+            console.log('Sending API request to evaluate test');
+            const response = await fetch('/api/domain-test/evaluate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    answers: userAnswers,
+                    questions: questions
+                })
+            });
+
+            console.log('API response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Evaluation result:', result);
+            displayResults(result, timeTaken);
+        } catch (error) {
+            console.error('Error submitting test:', error);
+            alert('Error submitting test. Please try again.');
+            testCompleted = false;
+
+            // Restore the fixed submit button
+            document.getElementById('fixed-submit-btn').classList.remove('opacity-50', 'pointer-events-none');
+            document.getElementById('fixed-submit-btn').innerHTML = `
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Submit Answers
+            `;
+        }
+    }
+
+    // Display results
+    async function displayResults(result, timeTaken) {
+        // Hide test form
+        document.getElementById('test-form').classList.add('hidden');
+
+        // Show results section
+        const resultsSection = document.getElementById('results-section');
+        resultsSection.classList.remove('hidden');
+
+        // Update score
+        document.getElementById('result-score').textContent = `${result.score}/${result.total}`;
+        document.getElementById('result-percentage').textContent = `${result.percentage}%`;
+
+        // Update time taken
+        const minutes = Math.floor(timeTaken / 60);
+        const seconds = timeTaken % 60;
+        document.getElementById('result-time').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        // Update IQ level if available
+        if (result.iq_level) {
+            document.getElementById('result-iq').textContent = result.iq_level.score;
+            document.getElementById('result-iq-category').textContent = result.iq_level.category;
+
+            // Show IQ details section
+            document.getElementById('iq-details').classList.remove('hidden');
+
+            // Update strengths and improvements
+            if (result.iq_level.strengths && result.iq_level.strengths.length > 0) {
+                document.getElementById('iq-strengths').textContent = result.iq_level.strengths.join(', ');
+            } else {
+                document.getElementById('iq-strengths').textContent = 'None identified';
+            }
+
+            if (result.iq_level.improvements && result.iq_level.improvements.length > 0) {
+                document.getElementById('iq-improvements').textContent = result.iq_level.improvements.join(', ');
+            } else {
+                document.getElementById('iq-improvements').textContent = 'None identified';
+            }
+
+            // Add a visual indicator based on IQ category
+            const iqElement = document.getElementById('result-iq');
+            // Remove any existing color classes
+            iqElement.classList.remove(
+                'text-purple-600', 'dark:text-purple-400',
+                'text-blue-600', 'dark:text-blue-400',
+                'text-green-600', 'dark:text-green-400',
+                'text-amber-600', 'dark:text-amber-400',
+                'text-orange-600', 'dark:text-orange-400',
+                'text-red-600', 'dark:text-red-400'
+            );
+
+            // Add appropriate color based on IQ category
+            if (result.iq_level.category === "Very Superior") {
+                iqElement.classList.add('text-purple-600', 'dark:text-purple-400');
+            } else if (result.iq_level.category === "Superior") {
+                iqElement.classList.add('text-blue-600', 'dark:text-blue-400');
+            } else if (result.iq_level.category === "High Average") {
+                iqElement.classList.add('text-green-600', 'dark:text-green-400');
+            } else if (result.iq_level.category === "Average") {
+                iqElement.classList.add('text-amber-600', 'dark:text-amber-400');
+            } else if (result.iq_level.category === "Low Average") {
+                iqElement.classList.add('text-orange-600', 'dark:text-orange-400');
+            } else {
+                iqElement.classList.add('text-red-600', 'dark:text-red-400');
+            }
+        }
+
+        // Calculate subject-wise performance
+        const subjectPerformance = {};
+        result.question_results.forEach(qResult => {
+            // Find the original question to get the exam type if subject is not available
+            const questionIndex = parseInt(qResult.id);
+            const originalQuestion = questions[questionIndex];
+            const subject = qResult.subject || (originalQuestion ? originalQuestion.exam : 'Unknown');
+
+            if (!subjectPerformance[subject]) {
+                subjectPerformance[subject] = { total: 0, correct: 0 };
+            }
+            subjectPerformance[subject].total++;
+            if (qResult.is_correct) {
+                subjectPerformance[subject].correct++;
+            }
+        });
+
+        // Display subject-wise performance
+        const subjectContainer = document.getElementById('subject-performance');
+        subjectContainer.innerHTML = '';
+
+        Object.entries(subjectPerformance).forEach(([subject, data]) => {
+            const percentage = Math.round((data.correct / data.total) * 100);
+            subjectContainer.innerHTML += `
+                <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium text-gray-800 dark:text-white">${subject}</span>
+                        <span class="subject-badge subject-${subject}">${data.correct}/${data.total}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                        <div class="bg-indigo-600 h-2.5 rounded-full" style="width: ${percentage}%"></div>
+                    </div>
+                    <p class="text-right text-sm text-gray-600 dark:text-gray-400 mt-1">${percentage}%</p>
+                </div>
+            `;
+        });
+
+        // Generate performance analysis directly without API call
+        const domain = window.location.pathname.split('/').pop();
+        const percentage = result.percentage;
+        const analysisDiv = document.getElementById('performance-analysis');
+        const studyMaterialsContainer = document.getElementById('study-materials');
+
+        // Clear containers
+        studyMaterialsContainer.innerHTML = '';
+
+        // Generate analysis text based on score
+        let analysisText = '';
+        let performanceLevel = '';
+
+        if (percentage >= 80) {
+            performanceLevel = 'excellent';
+            analysisText = `Excellent performance on the ${domain.toUpperCase()} mock test! You scored ${percentage}%, which shows a strong understanding of the concepts. Keep up the good work and continue to challenge yourself with more advanced problems.`;
+        } else if (percentage >= 60) {
+            performanceLevel = 'good';
+            analysisText = `Good performance on the ${domain.toUpperCase()} mock test. You scored ${percentage}%, showing a solid grasp of many concepts. Consider focusing more on the subjects where you scored lower to improve your overall score.`;
+        } else if (percentage >= 40) {
+            performanceLevel = 'average';
+            analysisText = `You scored ${percentage}% on the ${domain.toUpperCase()} mock test, which is an average performance. You need to strengthen your understanding across all subjects. Regular practice and focused study will help you improve.`;
+        } else {
+            performanceLevel = 'needs_improvement';
+            analysisText = `Your score of ${percentage}% on the ${domain.toUpperCase()} mock test indicates that you need to strengthen your fundamentals. Focus particularly on the subjects where you scored the lowest. Don't be discouraged - with structured study and regular practice, you can significantly improve your performance.`;
+        }
+
+        // Display analysis text
+        document.getElementById('analysis-text').textContent = analysisText;
+
+        // Identify weaknesses (subjects with less than 50% score)
+        const weakSubjects = [];
+        Object.entries(subjectPerformance).forEach(([subject, data]) => {
+            const subjectPercentage = (data.correct / data.total) * 100;
+            if (subjectPercentage < 50) {
+                weakSubjects.push(subject);
+            }
+        });
+
+        // Add improvement tips
+        let tipsHtml = `
+            <div class="mt-4">
+                <h4 class="font-medium text-gray-800 dark:text-white mb-2">Improvement Tips</h4>
+                <ul class="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300">
+        `;
+
+        // General tips
+        tipsHtml += `<li>Create a structured study schedule and stick to it</li>`;
+        tipsHtml += `<li>Practice with previous years' question papers</li>`;
+
+        // Subject-specific tips
+        if (weakSubjects.includes('Physics')) {
+            tipsHtml += `<li>Physics: Focus on understanding concepts rather than memorizing formulas</li>`;
+            tipsHtml += `<li>Physics: Practice numerical problems regularly</li>`;
+        }
+
+        if (weakSubjects.includes('Chemistry')) {
+            tipsHtml += `<li>Chemistry: Create mind maps for organic chemistry reactions</li>`;
+            tipsHtml += `<li>Chemistry: Memorize periodic table trends and exceptions</li>`;
+        }
+
+        if (weakSubjects.includes('Mathematics')) {
+            tipsHtml += `<li>Mathematics: Practice a variety of problems for each concept</li>`;
+            tipsHtml += `<li>Mathematics: Focus on understanding the derivation of formulas</li>`;
+        }
+
+        if (weakSubjects.includes('Biology')) {
+            tipsHtml += `<li>Biology: Create diagrams and flowcharts for complex processes</li>`;
+            tipsHtml += `<li>Biology: Use mnemonics for remembering biological classifications</li>`;
+        }
+
+        tipsHtml += `
+                </ul>
+            </div>
+        `;
+
+        analysisDiv.innerHTML += tipsHtml;
+
+        // Add study materials based on domain and weak subjects
+        if (domain === 'jee') {
+            // JEE study materials
+            if (weakSubjects.includes('Physics') || weakSubjects.length === 0) {
+                studyMaterialsContainer.innerHTML += `
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                        <h4 class="font-medium text-gray-800 dark:text-white mb-2">JEE Physics - Mechanics</h4>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">Comprehensive study material covering mechanics concepts for JEE</p>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="subject-badge subject-Physics">Physics</span>
+                            <a href="/study_materials/jee_physics_mechanics.pdf" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Download PDF
+                            </a>
+                        </div>
+                        <div class="mt-2">
+                            <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recommended Videos:</h5>
+                            <ul class="space-y-2">
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
+                                    </svg>
+                                    <div>
+                                        <a href="https://www.youtube.com/watch?v=CvAmSIAFQ-Q" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400 font-medium">
+                                            JEE Physics - Mechanics Complete Course
+                                        </a>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">3 hours</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
+                                    </svg>
+                                    <div>
+                                        <a href="https://www.youtube.com/watch?v=Rr2xCoOyLko" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400 font-medium">
+                                            Newton's Laws of Motion - JEE Advanced
+                                        </a>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">45 minutes</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (weakSubjects.includes('Chemistry') || weakSubjects.length === 0) {
+                studyMaterialsContainer.innerHTML += `
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                        <h4 class="font-medium text-gray-800 dark:text-white mb-2">JEE Chemistry - Organic Chemistry</h4>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">Complete guide to organic chemistry for JEE preparation</p>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="subject-badge subject-Chemistry">Chemistry</span>
+                            <a href="/study_materials/jee_chemistry_organic.pdf" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Download PDF
+                            </a>
+                        </div>
+                        <div class="mt-2">
+                            <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recommended Videos:</h5>
+                            <ul class="space-y-2">
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
+                                    </svg>
+                                    <div>
+                                        <a href="https://www.youtube.com/watch?v=bO8xzWFZ850" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400 font-medium">
+                                            Organic Chemistry Basics - JEE Preparation
+                                        </a>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">1.5 hours</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+        } else if (domain === 'neet') {
+            // NEET study materials
+            if (weakSubjects.includes('Biology') || weakSubjects.length === 0) {
+                studyMaterialsContainer.innerHTML += `
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                        <h4 class="font-medium text-gray-800 dark:text-white mb-2">NEET Biology - Human Physiology</h4>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">Comprehensive guide to human physiology for NEET preparation</p>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="subject-badge subject-Biology">Biology</span>
+                            <a href="/study_materials/neet_biology_human_physiology.pdf" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Download PDF
+                            </a>
+                        </div>
+                        <div class="mt-2">
+                            <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recommended Videos:</h5>
+                            <ul class="space-y-2">
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
+                                    </svg>
+                                    <div>
+                                        <a href="https://www.youtube.com/watch?v=WrjM9B5_bG0" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400 font-medium">
+                                            Human Physiology for NEET - Full Course
+                                        </a>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">2.5 hours</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
+                                    </svg>
+                                    <div>
+                                        <a href="https://www.youtube.com/watch?v=_HUB95zqXzo" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400 font-medium">
+                                            Digestive System - NEET Biology
+                                        </a>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">1 hour</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+        } else if (domain === 'kcet') {
+            // KCET study materials
+            if (weakSubjects.includes('Chemistry') || weakSubjects.length === 0) {
+                studyMaterialsContainer.innerHTML += `
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                        <h4 class="font-medium text-gray-800 dark:text-white mb-2">KCET Chemistry - Organic Chemistry</h4>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">Complete guide to organic chemistry for KCET preparation</p>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="subject-badge subject-Chemistry">Chemistry</span>
+                            <a href="/study_materials/kcet_chemistry_organic.pdf" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Download PDF
+                            </a>
+                        </div>
+                        <div class="mt-2">
+                            <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recommended Videos:</h5>
+                            <ul class="space-y-2">
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
+                                    </svg>
+                                    <div>
+                                        <a href="https://www.youtube.com/watch?v=bO8xzWFZ850" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400 font-medium">
+                                            Organic Chemistry Basics - KCET Preparation
+                                        </a>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">1.5 hours</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
+                                    </svg>
+                                    <div>
+                                        <a href="https://www.youtube.com/watch?v=Yk5eCbMzetU" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400 font-medium">
+                                            Hydrocarbons - Complete Chapter for KCET
+                                        </a>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">2 hours</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Display question review
+        const reviewContainer = document.getElementById('question-review');
+        reviewContainer.innerHTML = '';
+
+        result.question_results.forEach(qResult => {
+            const question = questions.find(q => q.id === qResult.id);
+            if (!question) return;
+
+            const isCorrect = qResult.is_correct;
+            const userAnswer = qResult.user_answer;
+            const correctAnswer = qResult.correct_answer;
+            const explanation = qResult.explanation || question.explanation || '';
+
+            // Create subject badge with appropriate styling
+            let subjectClass = '';
+            let subjectName = question.subject || question.exam || 'General';
+
+            if (subjectName === 'Mathematics') {
+                subjectClass = 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200';
+            } else if (subjectName === 'Physics') {
+                subjectClass = 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200';
+            } else if (subjectName === 'Chemistry') {
+                subjectClass = 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+            } else {
+                subjectClass = 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
+            }
+
+            // Format the question text to handle special characters and formatting
+            const formattedQuestion = question.question
+                .replace(/\n/g, '<br>')  // Replace newlines with HTML line breaks
+                .replace(/\s\s+/g, ' ');  // Replace multiple spaces with a single space
+
+            reviewContainer.innerHTML += `
+                <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm ${isCorrect ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'}">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="font-medium text-gray-800 dark:text-white">Question ${parseInt(qResult.id) + 1}</p>
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1 rounded-full text-sm font-medium ${subjectClass}">${subjectName}</span>
+                            <span class="px-2 py-1 rounded text-sm ${isCorrect ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}">
+                                ${isCorrect ? 'Correct' : 'Incorrect'}
+                            </span>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 dark:text-gray-300 mb-2">${formattedQuestion}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Your Answer:</p>
+                            <p class="font-medium ${isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
+                                ${userAnswer || 'Not answered'}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Correct Answer:</p>
+                            <p class="font-medium text-green-600 dark:text-green-400">${correctAnswer}</p>
+                        </div>
+                    </div>
+                    ${explanation ? `
+                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Explanation:</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">${explanation}</p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+
+        // Scroll to results
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Scroll to questions for review
+    function scrollToQuestions() {
+        const questionsContainer = document.getElementById('questions-container');
+        questionsContainer.classList.remove('hidden');
+        document.getElementById('test-form').classList.remove('hidden');
+        document.getElementById('submit-btn').classList.add('hidden');
+
+        // Highlight correct and incorrect answers
+        questions.forEach(question => {
+            const questionId = question.id;
+            const correctAnswer = question.correct_answer;
+            const userAnswer = userAnswers[questionId];
+
+            // Disable all inputs
+            document.querySelectorAll(`input[name="q${questionId}"]`).forEach(input => {
+                input.disabled = true;
+            });
+
+            // Mark correct answer
+            const correctOption = Array.from(document.querySelectorAll(`input[name="q${questionId}"]`))
+                .find(input => input.value === correctAnswer);
+
+            if (correctOption) {
+                correctOption.nextElementSibling.classList.add('bg-green-50', 'dark:bg-green-900/30', 'border-green-500');
+            }
+
+            // Mark user's incorrect answer
+            if (userAnswer && userAnswer !== correctAnswer) {
+                const userOption = Array.from(document.querySelectorAll(`input[name="q${questionId}"]`))
+                    .find(input => input.value === userAnswer);
+
+                if (userOption) {
+                    userOption.nextElementSibling.classList.add('bg-red-50', 'dark:bg-red-900/30', 'border-red-500');
+                }
+            }
+        });
+
+        // Scroll to questions
+        questionsContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+{% endblock %}

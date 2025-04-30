@@ -3,15 +3,45 @@
 {% block title %}Mock Test - E-Shiksha{% endblock %}
 
 {% block content %}
+<style>
+    .fade-in {
+        opacity: 0;
+        animation: fadeInAnim 0.7s ease forwards;
+    }
+    @keyframes fadeInAnim {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: none; }
+    }
+    .mock-btn {
+        background: linear-gradient(90deg, #6366f1 0%, #a78bfa 100%);
+        color: #fff;
+        font-size: 1.125rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        padding: 0.75rem 2rem;
+        box-shadow: 0 4px 12px rgba(99,102,241,0.08);
+        transition: background 0.3s, transform 0.2s;
+    }
+    .mock-btn:hover, .mock-btn:focus {
+        background: linear-gradient(90deg, #a78bfa 0%, #6366f1 100%);
+        transform: translateY(-2px) scale(1.03);
+    }
+    .mock-label {
+        font-size: 1rem;
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        transition: background 0.3s, color 0.3s;
+    }
+</style>
 <div class="flex flex-col items-center justify-center min-h-[60vh] py-10">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 max-w-xl w-full text-center card-3d glow">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 max-w-xl w-full text-center card-3d glow fade-in" id="mock-test-root">
         <h1 class="text-3xl md:text-4xl font-extrabold text-indigo-700 dark:text-indigo-300 mb-4" data-i18n="mock_test.title">
             Mock Test for Competitive Exams
         </h1>
         <p class="text-lg text-gray-600 dark:text-gray-300 mb-8" data-i18n="mock_test.desc">
             Practice JEE, UPSC, CAT, NEET, and more.
         </p>
-        <button class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-purple-600 hover:to-indigo-500 text-white px-8 py-3 rounded-lg text-lg font-semibold shadow-lg transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2" id="start-mock-test" data-i18n="mock_test.start_btn">
+        <button class="mock-btn" id="start-mock-test" data-i18n="mock_test.start_btn">
             Start Test
         </button>
     </div>
@@ -20,6 +50,131 @@
 
 {% block scripts %}
 <script>
-// Placeholder for future mock test logic
+let questions = [];
+let currentQuestion = 0;
+let userAnswers = [];
+
+function renderQuestionList() {
+    const container = document.getElementById('mock-test-container');
+    container.innerHTML = '';
+    questions.forEach((q, idx) => {
+        const qDiv = document.createElement('div');
+        qDiv.className = 'mb-8 p-6 rounded-xl shadow bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 fade-in';
+        qDiv.style.animationDelay = (idx * 0.05) + 's';
+        qDiv.innerHTML = `
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-semibold px-2 py-1 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">${q.exam}</span>
+                <span class="text-xs text-gray-400">Q${idx + 1}</span>
+            </div>
+            <div class="text-lg font-bold mb-3 text-gray-800 dark:text-white">${q.question}</div>
+            <div class="space-y-2">
+                ${q.options.map((opt, i) => `
+                    <label class="block cursor-pointer mock-label">
+                        <input type="radio" name="question_${idx}" value="${i}" class="mr-2 align-middle" ${userAnswers[idx] == i ? 'checked' : ''}>
+                        <span class="align-middle">${opt}</span>
+                    </label>
+                `).join('')}
+            </div>
+        `;
+        container.appendChild(qDiv);
+    });
+
+    // Add event listeners for radio buttons
+    questions.forEach((q, idx) => {
+        const radios = document.getElementsByName(`question_${idx}`);
+        radios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                userAnswers[idx] = parseInt(this.value);
+            });
+        });
+    });
+
+    // Add submit button
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'mt-6 mock-btn';
+    submitBtn.textContent = 'Submit Test';
+    submitBtn.onclick = submitTest;
+    submitBtn.style.opacity = 0;
+    setTimeout(() => { submitBtn.style.transition = 'opacity 0.6s'; submitBtn.style.opacity = 1; }, 300);
+    container.appendChild(submitBtn);
+}
+
+function submitTest() {
+    let correct = 0;
+    // Disable all radios and highlight answers
+    questions.forEach((q, idx) => {
+        const radios = document.getElementsByName(`question_${idx}`);
+        radios.forEach((radio, i) => {
+            radio.disabled = true;
+            const label = radio.closest('label');
+            label.classList.remove('bg-green-100', 'bg-red-100', 'dark:bg-green-900', 'dark:bg-red-900', 'text-green-700', 'text-red-700', 'dark:text-green-300', 'dark:text-red-300');
+            if (parseInt(radio.value) === q.answer) {
+                // Correct answer
+                if (userAnswers[idx] === q.answer && radio.checked) {
+                    label.classList.add('bg-green-100', 'text-green-700', 'dark:bg-green-900', 'dark:text-green-300');
+                    correct++;
+                } else if (userAnswers[idx] !== q.answer) {
+                    label.classList.add('bg-green-100', 'text-green-700', 'dark:bg-green-900', 'dark:text-green-300');
+                }
+            } else if (radio.checked) {
+                // User's wrong answer
+                label.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900', 'dark:text-red-300');
+            }
+        });
+    });
+    // Show score and evaluation at top
+    const container = document.getElementById('mock-test-container');
+    const total = questions.length;
+    const wrong = total - correct;
+    let iqEval = '';
+    const percent = (correct / total) * 100;
+    if (percent >= 80) {
+        iqEval = 'Genius';
+    } else if (percent >= 60) {
+        iqEval = 'Above Average';
+    } else if (percent >= 40) {
+        iqEval = 'Average';
+    } else {
+        iqEval = 'Needs Improvement';
+    }
+    const resultDiv = document.createElement('div');
+    resultDiv.className = 'mb-6 p-6 rounded-xl bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 shadow-lg text-center fade-in';
+    resultDiv.innerHTML = `
+        <div class='text-2xl font-bold text-green-600 dark:text-green-400 mb-2'>You scored ${correct} out of ${total}!</div>
+        <div class='text-lg text-gray-700 dark:text-gray-200 mb-1'>Correct Answers: <span class='font-semibold text-green-700 dark:text-green-400'>${correct}</span></div>
+        <div class='text-lg text-gray-700 dark:text-gray-200 mb-2'>Wrong Answers: <span class='font-semibold text-red-700 dark:text-red-400'>${wrong}</span></div>
+        <div class='text-xl font-bold mt-2'><span class='px-4 py-2 rounded-lg' style='background: linear-gradient(90deg, #6366f1 0%, #a78bfa 100%); color: white;'>IQ Evaluation: ${iqEval}</span></div>
+    `;
+    setTimeout(() => { resultDiv.style.opacity = 1; }, 50);
+    container.insertBefore(resultDiv, container.firstChild);
+    // Remove submit button
+    const submitBtn = container.querySelector('button');
+    if (submitBtn) submitBtn.remove();
+}
+
+document.getElementById('start-mock-test').addEventListener('click', function() {
+    // Fade out intro
+    const parent = this.closest('.card-3d');
+    parent.classList.remove('fade-in');
+    parent.style.transition = 'opacity 0.5s';
+    parent.style.opacity = 0;
+    setTimeout(() => {
+        this.style.display = 'none';
+        parent.querySelector('h1').style.display = 'none';
+        parent.querySelector('p').style.display = 'none';
+        let container = document.createElement('div');
+        container.id = 'mock-test-container';
+        parent.appendChild(container);
+        parent.style.opacity = 1;
+        parent.classList.add('fade-in');
+        fetch('/static/mock_questions.json')
+            .then(res => res.json())
+            .then(data => {
+                questions = data.slice(0, 20); // Use first 20 questions
+                userAnswers = Array(questions.length).fill(null);
+                renderQuestionList();
+            });
+    }, 500);
+});
 </script>
 {% endblock %}

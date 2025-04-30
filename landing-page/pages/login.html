@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +13,50 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- i18n Script -->
+    <script src="/static/js/i18n.js"></script>
+
+    <style>
+        .language-selector {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 1rem;
+        }
+
+        .language-select {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: inherit;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .language-select:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .dark .language-select {
+            border-color: rgba(75, 85, 99, 0.5);
+        }
+
+        .dark .language-select:hover {
+            border-color: rgba(75, 85, 99, 0.8);
+        }
+
+        /* Style for the dropdown arrow */
+        .language-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1rem;
+            padding-right: 2rem;
+        }
+    </style>
 </head>
 <body>
     <!-- Loader Animation -->
@@ -34,12 +78,19 @@
                 <div class="bar"></div>
             </div>
             <ul class="nav-menu">
-                <li><a href="/" class="nav-link">Home</a></li>
-                <li><a href="/#about" class="nav-link">About</a></li>
-                <li><a href="/#contact" class="nav-link">Contact Us</a></li>
-                <li><a href="/pages/login.html" class="nav-link login-btn active">Login</a></li>
-                <li><a href="/pages/signup.html" class="nav-link signup-btn">Sign Up</a></li>
+                <li><a href="/" class="nav-link" data-i18n="landing.nav.home">Home</a></li>
+                <li><a href="/#about" class="nav-link" data-i18n="landing.nav.about">About</a></li>
+                <li><a href="/#contact" class="nav-link" data-i18n="landing.nav.contact">Contact Us</a></li>
+                <li><a href="/pages/login.html" class="nav-link login-btn active" data-i18n="landing.nav.login">Login</a></li>
+                <li><a href="/pages/signup.html" class="nav-link signup-btn" data-i18n="landing.nav.signup">Sign Up</a></li>
             </ul>
+            <div class="language-selector">
+                <select id="language-selector" aria-label="Select language" class="language-select">
+                    <option value="en" data-i18n="languages.english">English</option>
+                    <option value="hi" data-i18n="languages.hindi">हिंदी</option>
+                    <option value="kn" data-i18n="languages.kannada">ಕನ್ನಡ</option>
+                </select>
+            </div>
             <div class="theme-toggle">
                 <i class="fas fa-moon"></i>
             </div>
@@ -51,51 +102,51 @@
         <div class="auth-container">
             <div class="auth-form-container">
                 <div class="auth-form-header">
-                    <h2>Welcome Back</h2>
-                    <p>Log in to your account to continue</p>
+                    <h2 data-i18n="auth.login.title">Welcome Back</h2>
+                    <p data-i18n="auth.login.subtitle">Log in to your account to continue</p>
                 </div>
                 <form id="loginForm" class="auth-form">
                     <div class="form-group">
-                        <input type="email" id="email" name="email" placeholder="Your Email" required>
-                        <label for="email">Your Email</label>
+                        <input type="email" id="email" name="email" data-i18n-placeholder="auth.login.email" placeholder="Your Email" required>
+                        <label for="email" data-i18n="auth.login.email">Your Email</label>
                         <i class="fas fa-envelope"></i>
                     </div>
                     <div class="form-group">
-                        <input type="password" id="password" name="password" placeholder="Your Password" required>
-                        <label for="password">Your Password</label>
+                        <input type="password" id="password" name="password" data-i18n-placeholder="auth.login.password" placeholder="Your Password" required>
+                        <label for="password" data-i18n="auth.login.password">Your Password</label>
                         <i class="fas fa-lock"></i>
                         <i class="fas fa-eye toggle-password"></i>
                     </div>
                     <div class="form-options">
                         <div class="remember-me">
                             <input type="checkbox" id="remember" name="remember">
-                            <label for="remember">Remember me</label>
+                            <label for="remember" data-i18n="auth.login.rememberMe">Remember me</label>
                         </div>
-                        <a href="forgot-password.html" class="forgot-password">Forgot Password?</a>
+                        <a href="forgot-password.html" class="forgot-password" data-i18n="auth.login.forgotPassword">Forgot Password?</a>
                     </div>
                     <button type="submit" class="btn primary-btn auth-btn">
-                        <span>Login</span>
+                        <span data-i18n="auth.login.loginBtn">Login</span>
                         <i class="fas fa-arrow-right"></i>
                     </button>
                 </form>
                 <div class="auth-divider">
-                    <span>OR</span>
+                    <span data-i18n="auth.login.orText">OR</span>
                 </div>
                 <div class="social-auth">
                     <button class="social-auth-btn google-btn">
                         <i class="fab fa-google"></i>
-                        <span>Continue with Google</span>
+                        <span data-i18n="auth.login.googleBtn">Continue with Google</span>
                     </button>
                 </div>
                 <div class="auth-redirect">
-                    <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+                    <p><span data-i18n="auth.login.noAccount">Don't have an account?</span> <a href="signup.html" data-i18n="auth.login.signupLink">Sign Up</a></p>
                 </div>
             </div>
             <div class="auth-image">
                 <div id="login-lottie"></div>
                 <div class="auth-image-text">
-                    <h3>Experience the Future</h3>
-                    <p>Join thousands of students who trust E-Shiksha for their educational journey.</p>
+                    <h3 data-i18n="auth.login.imageTitle">Experience the Future</h3>
+                    <p data-i18n="auth.login.imageText">Join thousands of students who trust E-Shiksha for their educational journey.</p>
                 </div>
             </div>
         </div>
@@ -140,8 +191,8 @@
             try {
                 // Show loading
                 Swal.fire({
-                    title: 'Logging in...',
-                    text: 'Please wait',
+                    title: window.i18n?.translate('common.loading') || 'Logging in...',
+                    text: window.i18n?.translate('common.pleaseWait') || 'Please wait',
                     allowOutsideClick: false,
                     showConfirmButton: false,
                     willOpen: () => {
@@ -153,33 +204,76 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // Success message
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Login Successful!',
-                    text: 'Redirecting to E-Shiksha application...',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    // Redirect to main app
-                    window.location.href = '/app';
-                });
+                // Get Firebase ID token for backend authentication
+                const idToken = await user.getIdToken();
+
+                // Get client IP address
+                const getClientIP = async () => {
+                    try {
+                        const response = await fetch('https://api.ipify.org?format=json');
+                        const data = await response.json();
+                        return data.ip;
+                    } catch (error) {
+                        console.error('Error getting client IP:', error);
+                        return '';
+                    }
+                };
+
+                try {
+                    // Call our direct API to verify both Firebase and MongoDB credentials
+                    const response = await fetch('/api/direct-login/verify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            firebase_uid: user.uid,
+                            email: email,
+                            password: password, // Send password for MongoDB verification
+                            client_ip: await getClientIP()
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Authentication failed');
+                    }
+
+                    // Success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: window.i18n?.translate('auth.login.loginSuccess') || 'Login Successful!',
+                        text: window.i18n?.translate('auth.login.redirecting') || 'Redirecting to E-Shiksha application...',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Redirect to main app
+                        window.location.href = '/app';
+                    });
+                } catch (backendError) {
+                    console.error('Backend authentication error:', backendError);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Authentication Failed',
+                        text: backendError.message || 'Failed to authenticate with the server.'
+                    });
+                }
 
             } catch (error) {
                 // Error handling
-                let errorMessage = 'Failed to login. Please try again.';
+                let errorMessage = window.i18n?.translate('auth.login.genericError') || 'Failed to login. Please try again.';
 
                 if (error.code === 'auth/user-not-found') {
-                    errorMessage = 'No account found with this email.';
+                    errorMessage = window.i18n?.translate('auth.login.userNotFound') || 'No account found with this email.';
                 } else if (error.code === 'auth/wrong-password') {
-                    errorMessage = 'Incorrect password.';
+                    errorMessage = window.i18n?.translate('auth.login.wrongPassword') || 'Incorrect password.';
                 } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'Invalid email format.';
+                    errorMessage = window.i18n?.translate('auth.login.invalidEmail') || 'Invalid email format.';
                 }
 
                 Swal.fire({
                     icon: 'error',
-                    title: 'Login Failed',
+                    title: window.i18n?.translate('auth.login.loginFailed') || 'Login Failed',
                     text: errorMessage
                 });
 
@@ -190,14 +284,84 @@
         // Google Sign In
         document.querySelector('.google-btn').addEventListener('click', async () => {
             try {
-                await signInWithPopup(auth, googleProvider);
-                window.location.href = '/app';
+                // Show loading
+                Swal.fire({
+                    title: window.i18n?.translate('common.loading') || 'Logging in...',
+                    text: window.i18n?.translate('common.pleaseWait') || 'Please wait',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Sign in with Google
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+
+                // Get Firebase ID token for backend authentication
+                const idToken = await user.getIdToken();
+
+                // Get client IP address
+                const getClientIP = async () => {
+                    try {
+                        const response = await fetch('https://api.ipify.org?format=json');
+                        const data = await response.json();
+                        return data.ip;
+                    } catch (error) {
+                        console.error('Error getting client IP:', error);
+                        return '';
+                    }
+                };
+
+                try {
+                    // Generate a random password for MongoDB verification
+                    const randomPassword = Math.random().toString(36).slice(-10);
+
+                    // Call our direct API to verify Firebase credentials and create/update MongoDB user
+                    const response = await fetch('/api/direct-login/verify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            firebase_uid: user.uid,
+                            email: user.email,
+                            password: randomPassword, // This will be used if the user doesn't have a password hash yet
+                            client_ip: await getClientIP()
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Authentication failed');
+                    }
+
+                    // Success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: window.i18n?.translate('auth.login.loginSuccess') || 'Login Successful!',
+                        text: window.i18n?.translate('auth.login.redirecting') || 'Redirecting to E-Shiksha application...',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Redirect to main app
+                        window.location.href = '/app';
+                    });
+                } catch (backendError) {
+                    console.error('Backend authentication error:', backendError);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Authentication Failed',
+                        text: backendError.message || 'Failed to authenticate with the server.'
+                    });
+                }
             } catch (error) {
                 console.error('Google sign in error:', error);
                 Swal.fire({
                     icon: 'error',
-                    title: 'Google Sign In Failed',
-                    text: 'Failed to sign in with Google. Please try again.'
+                    title: window.i18n?.translate('auth.login.googleSignInFailed') || 'Google Sign In Failed',
+                    text: window.i18n?.translate('auth.login.googleSignInError') || 'Failed to sign in with Google. Please try again.'
                 });
             }
         });
@@ -216,5 +380,36 @@
 
     <!-- Custom JavaScript -->
     <script src="/landing-js/auth.js"></script>
+
+    <!-- Initialize i18n -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize translations
+            if (window.i18n && typeof window.i18n.changeLanguage === 'function') {
+                // Set initial language from localStorage or browser preference
+                const savedLanguage = localStorage.getItem('language');
+                const browserLanguage = navigator.language.split('-')[0];
+                const supportedLanguages = ['en', 'hi', 'kn'];
+
+                const currentLanguage = savedLanguage ||
+                                      (supportedLanguages.includes(browserLanguage) ? browserLanguage : 'en');
+
+                // Update language selector
+                const languageSelector = document.getElementById('language-selector');
+                if (languageSelector) {
+                    languageSelector.value = currentLanguage;
+
+                    // Add change event listener
+                    languageSelector.addEventListener('change', (e) => {
+                        const newLanguage = e.target.value;
+                        window.i18n.changeLanguage(newLanguage);
+                    });
+                }
+
+                // Apply translations
+                window.i18n.changeLanguage(currentLanguage);
+            }
+        });
+    </script>
 </body>
 </html>
