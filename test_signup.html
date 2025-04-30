@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Signup</title>
+</head>
+<body>
+    <h1>Test Signup</h1>
+    <button id="test-button">Test Direct User Create API</button>
+    <pre id="result"></pre>
+
+    <script>
+        document.getElementById('test-button').addEventListener('click', async () => {
+            try {
+                // Create a unique test user
+                const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '');
+                const firebase_uid = `test-firebase-uid-${timestamp}`;
+                const username = `test_user_${timestamp}`;
+                const email = `${username}@example.com`;
+                const password = 'test_password';
+                
+                // Prepare the request data
+                const data = {
+                    firebase_uid: firebase_uid,
+                    username: username,
+                    email: email,
+                    password: password,
+                    display_name: 'Test User',
+                    mobile_number: '1234567890',
+                    role: 'student',
+                    client_ip: '127.0.0.1'
+                };
+                
+                console.log('Sending request to create user:', username);
+                console.log('Request data:', JSON.stringify(data, null, 2));
+                
+                // Send the request to the API endpoint
+                const response = await fetch('/api/direct-user/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                // Check the response
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('User created successfully:', result);
+                    document.getElementById('result').textContent = 'User created successfully: ' + JSON.stringify(result, null, 2);
+                } else {
+                    const error = await response.text();
+                    console.error('Failed to create user:', response.status, error);
+                    document.getElementById('result').textContent = `Failed to create user: ${response.status} - ${error}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

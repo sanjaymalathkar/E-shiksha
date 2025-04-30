@@ -45,3 +45,5 @@ data/output/
 logs/
 *.log
 venv/
+firebase-service-account.json
+firebase-service-account.json

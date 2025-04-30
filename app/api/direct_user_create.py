@@ -40,40 +40,50 @@ class UserResponse(BaseModel):
 async def create_user_direct(user_request: DirectUserCreateRequest, request: Request):
     """
     Create a new user directly in MongoDB
-    
+
     This endpoint:
     1. Creates a user in MongoDB with the provided Firebase UID
     2. Returns the created user information
     """
+    # Log the request
+    logger.info(f"Received request to create user: {user_request.username} with Firebase UID: {user_request.firebase_uid}")
+
     try:
         # Get client IP address
         client_ip = user_request.client_ip or request.client.host
-        
+        logger.info(f"Client IP: {client_ip}")
+
         # Get MongoDB database
         db = get_db()
+        if db is None:
+            logger.error("Failed to get MongoDB database")
+            raise HTTPException(status_code=500, detail="Database connection error")
+
         users_collection = db["users"]
-        
+        logger.info("Got users collection")
+
         # Check if user already exists
         existing_user = users_collection.find_one({"firebase_uid": user_request.firebase_uid})
         if existing_user:
             logger.warning(f"User with Firebase UID {user_request.firebase_uid} already exists")
             raise HTTPException(status_code=400, detail="User already exists")
-        
+
         # Check if username is taken
         username_exists = users_collection.find_one({"username": user_request.username})
         if username_exists:
             logger.warning(f"Username {user_request.username} is already taken")
             raise HTTPException(status_code=400, detail="Username already taken")
-        
+
         # Check if email is taken
         email_exists = users_collection.find_one({"email": user_request.email})
         if email_exists:
             logger.warning(f"Email {user_request.email} is already taken")
             raise HTTPException(status_code=400, detail="Email already taken")
-        
+
         # Hash password
+        logger.info(f"Hashing password for user {user_request.username}")
         password_hash = get_password_hash(user_request.password)
-        
+
         # Create user document
         now = datetime.utcnow()
         user_doc = {
@@ -92,16 +102,22 @@ async def create_user_direct(user_request: DirectUserCreateRequest, request: Req
             "created_at": now,
             "updated_at": now
         }
-        
-        # Insert user into MongoDB
-        result = users_collection.insert_one(user_doc)
-        
-        if not result.inserted_id:
-            logger.error(f"Failed to create user {user_request.username} in MongoDB")
-            raise HTTPException(status_code=500, detail="Failed to create user in MongoDB")
-        
-        logger.info(f"Created user {user_request.username} with Firebase UID {user_request.firebase_uid} in MongoDB")
-        
+
+        logger.info(f"Attempting to insert user {user_request.username} into MongoDB")
+
+        try:
+            # Insert user into MongoDB
+            result = users_collection.insert_one(user_doc)
+
+            if not result.inserted_id:
+                logger.error(f"Failed to create user {user_request.username} in MongoDB - no inserted_id returned")
+                raise HTTPException(status_code=500, detail="Failed to create user in MongoDB")
+
+            logger.info(f"Successfully created user {user_request.username} with Firebase UID {user_request.firebase_uid} in MongoDB with ID: {result.inserted_id}")
+        except Exception as e:
+            logger.error(f"Exception while inserting user into MongoDB: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to create user in MongoDB: {str(e)}")
+
         # Return user information
         return UserResponse(
             firebase_uid=user_request.firebase_uid,
@@ -115,7 +131,7 @@ async def create_user_direct(user_request: DirectUserCreateRequest, request: Req
             created_at=now,
             updated_at=now
         )
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions
         raise

@@ -133,7 +133,7 @@
                     <span data-i18n="auth.login.orText">OR</span>
                 </div>
                 <div class="social-auth">
-                    <button class="social-auth-btn google-btn">
+                    <button class="social-auth-btn google-btn" disabled title="Initializing Google Sign-In...">
                         <i class="fab fa-google"></i>
                         <span data-i18n="auth.login.googleBtn">Continue with Google</span>
                     </button>
@@ -164,22 +164,84 @@
         import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBqsz_mDEHarA-_HzSZNfO9y3LMbf8HSio",
-            authDomain: "education-58a96.firebaseapp.com",
-            projectId: "education-58a96",
-            storageBucket: "education-58a96.firebasestorage.app",
-            messagingSenderId: "86814013646",
-            appId: "1:86814013646:web:1613b7043c29b2f7b9389f",
-            measurementId: "G-K2Z953CCYG"
-        };
+        // Fetch Firebase configuration from the server
+        let firebaseConfig = {};
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const analytics = getAnalytics(app);
-        const googleProvider = new GoogleAuthProvider();
+        // Function to fetch Firebase config
+        async function fetchFirebaseConfig() {
+            try {
+                const response = await fetch('/api/firebase-auth/config');
+                if (response.ok) {
+                    firebaseConfig = await response.json();
+                    console.log("Firebase config loaded successfully");
+
+                    // Initialize Firebase with the fetched config
+                    initializeFirebase();
+                } else {
+                    console.error("Failed to load Firebase config:", response.statusText);
+
+                    // Fallback to development config
+                    firebaseConfig = {
+                        apiKey: "AIzaSyBqsz_mDEHarA-_HzSZNfO9y3LMbf8HSio",
+                        authDomain: "education-58a96.firebaseapp.com",
+                        projectId: "education-58a96",
+                        storageBucket: "education-58a96.firebasestorage.app",
+                        messagingSenderId: "86814013646",
+                        appId: "1:86814013646:web:1613b7043c29b2f7b9389f",
+                        measurementId: "G-K2Z953CCYG"
+                    };
+
+                    // Initialize Firebase with the fallback config
+                    initializeFirebase();
+                }
+            } catch (error) {
+                console.error("Error fetching Firebase config:", error);
+
+                // Fallback to development config
+                firebaseConfig = {
+                    apiKey: "AIzaSyBqsz_mDEHarA-_HzSZNfO9y3LMbf8HSio",
+                    authDomain: "education-58a96.firebaseapp.com",
+                    projectId: "education-58a96",
+                    storageBucket: "education-58a96.firebasestorage.app",
+                    messagingSenderId: "86814013646",
+                    appId: "1:86814013646:web:1613b7043c29b2f7b9389f",
+                    measurementId: "G-K2Z953CCYG"
+                };
+
+                // Initialize Firebase with the fallback config
+                initializeFirebase();
+            }
+        }
+
+        // Fetch the Firebase config immediately
+        fetchFirebaseConfig();
+
+        // Variables to hold Firebase instances
+        let app;
+        let auth;
+        let analytics;
+        let googleProvider;
+
+        // Function to initialize Firebase
+        function initializeFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                analytics = getAnalytics(app);
+                googleProvider = new GoogleAuthProvider();
+
+                // Enable Google sign-in
+                document.querySelector('.google-btn').disabled = false;
+
+                console.log("Firebase initialized successfully");
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+
+                // Disable Google sign-in if Firebase initialization fails
+                document.querySelector('.google-btn').disabled = true;
+                document.querySelector('.google-btn').title = "Google Sign-In is currently unavailable";
+            }
+        }
 
         // Login form submission
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -220,24 +282,22 @@
                 };
 
                 try {
-                    // Call our direct API to verify both Firebase and MongoDB credentials
-                    const response = await fetch('/api/direct-login/verify', {
+                    // Store user login info in MongoDB for tracking purposes only (no verification)
+                    fetch('/api/user/track-login', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${idToken}`
                         },
                         body: JSON.stringify({
                             firebase_uid: user.uid,
                             email: email,
-                            password: password, // Send password for MongoDB verification
                             client_ip: await getClientIP()
                         })
+                    }).catch(err => {
+                        // Just log the error but don't fail login
+                        console.warn('Failed to track login:', err);
                     });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.detail || 'Authentication failed');
-                    }
 
                     // Success message
                     Swal.fire({
@@ -284,6 +344,16 @@
         // Google Sign In
         document.querySelector('.google-btn').addEventListener('click', async () => {
             try {
+                // Check if Firebase is initialized
+                if (!auth || !googleProvider) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Firebase Not Initialized',
+                        text: 'Google Sign-In is not available at the moment. Please try again later or use email/password login.',
+                    });
+                    return;
+                }
+
                 // Show loading
                 Swal.fire({
                     title: window.i18n?.translate('common.loading') || 'Logging in...',
@@ -315,27 +385,22 @@
                 };
 
                 try {
-                    // Generate a random password for MongoDB verification
-                    const randomPassword = Math.random().toString(36).slice(-10);
-
-                    // Call our direct API to verify Firebase credentials and create/update MongoDB user
-                    const response = await fetch('/api/direct-login/verify', {
+                    // Store user login info in MongoDB for tracking purposes only (no verification)
+                    fetch('/api/user/track-login', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${idToken}`
                         },
                         body: JSON.stringify({
                             firebase_uid: user.uid,
                             email: user.email,
-                            password: randomPassword, // This will be used if the user doesn't have a password hash yet
                             client_ip: await getClientIP()
                         })
+                    }).catch(err => {
+                        // Just log the error but don't fail login
+                        console.warn('Failed to track Google login:', err);
                     });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.detail || 'Authentication failed');
-                    }
 
                     // Success message
                     Swal.fire({
