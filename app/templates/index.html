@@ -450,6 +450,54 @@ firebase.initializeApp(firebaseConfig);
         border-color: #4f46e5;
     }
 
+    /* RAG toolbar: file upload + response mode + clear button */
+    .chatbot-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 15px;
+        border-top: 1px solid #eee;
+        font-size: 0.8rem;
+        background: #fafafa;
+    }
+    .chatbot-toolbar select {
+        flex: 1;
+        padding: 6px 8px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: white;
+        font-size: 0.8rem;
+        outline: none;
+    }
+    .chatbot-icon-btn {
+        background: #eef2ff;
+        color: #4f46e5;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s ease;
+    }
+    .chatbot-icon-btn:hover { background: #e0e7ff; }
+    .chatbot-upload-status {
+        padding: 4px 15px;
+        font-size: 0.75rem;
+        color: #6b7280;
+        min-height: 18px;
+    }
+    .chatbot-upload-status.ok { color: #059669; }
+    .chatbot-upload-status.err { color: #dc2626; }
+    .dark .chatbot-toolbar { background: #111827; border-top-color: #374151; }
+    .dark .chatbot-toolbar select {
+        background: #1f2937; border-color: #4b5563; color: #e5e7eb;
+    }
+    .dark .chatbot-icon-btn { background: #374151; color: #a5b4fc; }
+    .dark .chatbot-icon-btn:hover { background: #4b5563; }
+
     /* Dark mode styles for chatbot */
     .dark .chatbot-container {
         background: #1f2937;
@@ -827,8 +875,27 @@ firebase.initializeApp(firebaseConfig);
     <div class="chatbot-body" id="chatbot-body">
         <!-- Messages will be added here dynamically -->
     </div>
+    <!-- RAG toolbar: upload study material, pick response mode, clear -->
+    <div class="chatbot-toolbar">
+        <!-- Hidden file input; triggered by the paperclip button below -->
+        <input type="file" id="chatbot-file-input" accept=".pdf,.txt" style="display:none" />
+        <button class="chatbot-icon-btn" id="chatbot-upload-btn" title="Upload PDF / TXT">
+            <i class="fas fa-paperclip"></i>
+        </button>
+        <select id="chatbot-mode" title="Response mode">
+            <option value="normal">Normal Answer</option>
+            <option value="simple">Explain Simply</option>
+            <option value="example">Explain with Example</option>
+            <option value="exam">Give Exam Answer</option>
+            <option value="summary">Summarize</option>
+        </select>
+        <button class="chatbot-icon-btn" id="chatbot-clear-btn" title="Clear uploaded material">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+    <div class="chatbot-upload-status" id="chatbot-upload-status">No file uploaded yet.</div>
     <div class="chatbot-footer">
-        <input type="text" class="chatbot-input" id="chatbot-input" data-i18n-placeholder="dashboard.chatbot.placeholder" placeholder="Ask about JEE, GMAT, UPSC..." />
+        <input type="text" class="chatbot-input" id="chatbot-input" data-i18n-placeholder="dashboard.chatbot.placeholder" placeholder="Ask a question from the uploaded material..." />
         <button class="chatbot-send" id="chatbot-send">
             <i class="fas fa-paper-plane"></i>
         </button>
@@ -2434,6 +2501,56 @@ firebase.initializeApp(firebaseConfig);
         const chatbotBody = document.getElementById('chatbot-body');
         const chatbotInput = document.getElementById('chatbot-input');
         const chatbotSend = document.getElementById('chatbot-send');
+        // RAG toolbar elements
+        const chatbotModeSelect = document.getElementById('chatbot-mode');
+        const chatbotFileInput = document.getElementById('chatbot-file-input');
+        const chatbotUploadBtn = document.getElementById('chatbot-upload-btn');
+        const chatbotClearBtn = document.getElementById('chatbot-clear-btn');
+        const chatbotUploadStatus = document.getElementById('chatbot-upload-status');
+
+        // Helper to update the small status line under the toolbar
+        function setUploadStatus(text, kind) {
+            chatbotUploadStatus.textContent = text;
+            chatbotUploadStatus.classList.remove('ok', 'err');
+            if (kind) chatbotUploadStatus.classList.add(kind);
+        }
+
+        // Open native file picker when paperclip is clicked
+        chatbotUploadBtn.addEventListener('click', () => chatbotFileInput.click());
+
+        // Upload selected PDF / TXT to /api/chatbot/upload
+        chatbotFileInput.addEventListener('change', async () => {
+            const file = chatbotFileInput.files && chatbotFileInput.files[0];
+            if (!file) return;
+            setUploadStatus('Uploading ' + file.name + '...', null);
+            const fd = new FormData();
+            fd.append('file', file);
+            try {
+                const resp = await fetch('/api/chatbot/upload', { method: 'POST', body: fd });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.detail || 'Upload failed');
+                setUploadStatus(data.message || 'File uploaded.', 'ok');
+                addBotMessage('Study material loaded: ' + data.file_name +
+                    ' (' + data.chunks + ' chunks). You can now ask questions.');
+            } catch (e) {
+                setUploadStatus('Upload failed: ' + (e.message || e), 'err');
+            } finally {
+                chatbotFileInput.value = '';
+            }
+        });
+
+        // Clear uploaded material on the server and reset status
+        chatbotClearBtn.addEventListener('click', async () => {
+            try {
+                const resp = await fetch('/api/chatbot/clear', { method: 'POST' });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.detail || 'Clear failed');
+                setUploadStatus('No file uploaded yet.', null);
+                addBotMessage('Uploaded material cleared.');
+            } catch (e) {
+                setUploadStatus('Clear failed: ' + (e.message || e), 'err');
+            }
+        });
 
         // Competitive exam data
         const examData = {
@@ -2672,10 +2789,12 @@ firebase.initializeApp(firebaseConfig);
         // Process user message and generate response
         function processMessage(message) {
             showTypingIndicator();
+            // Send the selected response mode (normal / simple / example / exam / summary)
+            const mode = chatbotModeSelect ? chatbotModeSelect.value : 'normal';
             fetch('/api/chatbot/query', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message })
+                body: JSON.stringify({ message, mode })
             })
             .then(async (response) => {
                 hideTypingIndicator();

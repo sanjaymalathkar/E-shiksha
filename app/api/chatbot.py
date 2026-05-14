@@ -1,14 +1,15 @@
 import os
 import json
 import logging
-import glob
-import re
-from typing import Dict, Any, List, Optional, Tuple
-from fastapi import APIRouter, HTTPException, Depends, Body
-from pydantic import BaseModel
 import asyncio
-import requests
+from typing import Dict, Any, List, Optional
+
+from fastapi import APIRouter, HTTPException, Body, UploadFile, File
+from pydantic import BaseModel
 import google.generativeai as genai
+
+# RAG utilities (file-based offline AI tutor)
+from app.utils import pdf_processor, retriever, ai_tutor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -16,203 +17,162 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/chatbot", tags=["chatbot"])
 
-_PAR_BREAK = re.compile(r"\n\s*\n+")
+# Folder where uploaded study material is persisted on disk.
+# Resolved relative to the project root so it works in dev and Docker.
+_PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
+UPLOAD_DIR = os.path.join(_PROJECT_ROOT, "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-def _split_paragraphs(text: str) -> List[str]:
-    """Split document text into coarse paragraphs / blocks for retrieval."""
-    if not text or not text.strip():
-        return []
-    parts = _PAR_BREAK.split(text.strip())
-    out: List[str] = []
-    for p in parts:
-        block = " ".join(p.split())
-        if len(block) < 40:
-            continue
-        out.append(block)
-    if not out and text.strip():
-        out.append(" ".join(text.strip().split()))
-    return out
-
-
-def _score_paragraph(p: str, terms: List[str]) -> int:
-    low = p.lower()
-    return sum(1 for t in terms if t in low)
-
-
-def _best_paragraph_windows(
-    text: str,
-    terms: List[str],
-    max_paragraphs: int = 8,
-    window_chars: int = 2200,
-) -> List[str]:
-    """
-    Pick paragraphs that match query terms; expand with neighboring paragraphs
-    so answers can explain a full idea, not a single keyword hit.
-    """
-    paras = _split_paragraphs(text)
-    if not paras:
-        return []
-    scores = [(i, _score_paragraph(p, terms)) for i, p in enumerate(paras)]
-    hits = [i for i, s in scores if s > 0]
-    if not hits:
-        # fall back: use beginning of document
-        joined = " ".join(paras[:3])
-        return [joined[:window_chars]]
-
-    windows: List[str] = []
-    seen = set()
-    for idx in sorted(hits, key=lambda i: scores[i][1], reverse=True)[:max_paragraphs]:
-        lo = max(0, idx - 1)
-        hi = min(len(paras), idx + 2)
-        chunk = "\n\n".join(paras[lo:hi])
-        if len(chunk) > window_chars:
-            chunk = chunk[:window_chars] + "…"
-        key = (lo, hi)
-        if key in seen:
-            continue
-        seen.add(key)
-        windows.append(chunk)
-    return windows[:max_paragraphs]
-
-
-def _build_context_from_corpus(
-    corpus: List[Dict[str, str]],
-    query: str,
-    max_sources: int = 4,
-) -> Tuple[str, List[Dict[str, Any]]]:
-    """Select rich passages from uploaded files for the prompt."""
-    raw_terms = [w for w in re.split(r"\s+", query.lower()) if len(w) > 2]
-    terms = list(dict.fromkeys(raw_terms))[:24]
-    if not terms:
-        terms = [query.lower().strip()]
-
-    scored_files: List[Tuple[int, Dict[str, str]]] = []
-    for c in corpus:
-        low = c["text"].lower()
-        score = sum(1 for t in terms if t in low)
-        scored_files.append((score, c))
-    scored_files.sort(key=lambda x: x[0], reverse=True)
-
-    blocks: List[str] = []
-    sources: List[Dict[str, Any]] = []
-    for score, c in scored_files[:max_sources]:
-        if score == 0 and len(sources) > 0:
-            continue
-        wins = _best_paragraph_windows(c["text"], terms)
-        if not wins:
-            snippet = c["text"][:3200]
-            wins = [snippet]
-        combined = "\n\n---\n\n".join(wins)
-        if len(combined) > 12000:
-            combined = combined[:12000] + "…"
-        blocks.append(f"[SOURCE: {c['file_name']}]\n{combined}")
-        sources.append({"title": c["file_name"], "url": ""})
-
-    return "\n\n".join(blocks), sources
 
 class ChatbotRequest(BaseModel):
+    # `message` is the student question; `mode` selects the response style
+    # (normal / simple / example / exam / summary). `context` is kept for
+    # backwards compatibility with the old chatbot UI.
     message: str
+    mode: Optional[str] = "normal"
     context: Optional[List[Dict[str, str]]] = None
 
 class ChatbotResponse(BaseModel):
     response: str
     sources: Optional[List[Dict[str, Any]]] = None
 
+
+@router.post("/upload")
+async def upload_study_material(file: UploadFile = File(...)):
+    """
+    Upload a single PDF or TXT file to be used as the chatbot's knowledge
+    source. The file is:
+      1. saved under uploads/
+      2. text-extracted (PyMuPDF for PDF, plain read for TXT)
+      3. cleaned and split into ~500-word chunks (100-word overlap)
+      4. added to the in-memory TF-IDF retriever index
+    """
+    filename = file.filename or "upload.bin"
+    if not pdf_processor.is_allowed_file(filename):
+        raise HTTPException(
+            status_code=400,
+            detail="Only .pdf and .txt files are allowed.",
+        )
+
+    save_path = os.path.join(UPLOAD_DIR, filename)
+    try:
+        # Stream the upload to disk so we don't blow up memory on big PDFs.
+        with open(save_path, "wb") as out:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                out.write(chunk)
+    except Exception as e:
+        logger.error("Failed to save upload %s: %s", filename, e)
+        raise HTTPException(status_code=500, detail=f"Could not save file: {e}")
+
+    # Extract + clean + chunk (CPU-bound, run in a thread).
+    try:
+        file_name, chunks = await asyncio.to_thread(
+            pdf_processor.process_file, save_path
+        )
+    except RuntimeError as e:
+        # PyMuPDF missing -> friendly error
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        logger.error("Extraction failed for %s: %s", filename, e)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not read the uploaded file: {e}",
+        )
+
+    if not chunks:
+        raise HTTPException(
+            status_code=400,
+            detail="No readable text was found inside the uploaded file.",
+        )
+
+    n_added = retriever.add_file(file_name, chunks)
+    return {
+        "status": "success",
+        "file_name": file_name,
+        "chunks": n_added,
+        "files_indexed": retriever.list_files(),
+        "message": f"Uploaded '{file_name}' and indexed {n_added} chunks.",
+    }
+
+
+@router.post("/clear")
+async def clear_study_material():
+    """Forget every uploaded file (also removes them from disk)."""
+    retriever.clear()
+    # Best-effort disk cleanup; do not fail the API if files are locked.
+    try:
+        for fname in os.listdir(UPLOAD_DIR):
+            fp = os.path.join(UPLOAD_DIR, fname)
+            if os.path.isfile(fp):
+                os.remove(fp)
+    except Exception as e:
+        logger.warning("Could not clean uploads dir: %s", e)
+    return {"status": "success", "message": "Uploaded material cleared."}
+
+
 @router.post("/query", response_model=ChatbotResponse)
 async def query_chatbot(request: ChatbotRequest = Body(...)):
     """
-    Answer strictly from uploaded content using Ollama.
+    Strict RAG flow:
+      1. Reject if nothing has been uploaded.
+      2. Retrieve top chunks via TF-IDF + cosine similarity.
+      3. Reject if best similarity is below threshold.
+      4. Build the strict E-Shiksha tutor prompt with the chosen response mode.
+      5. Dispatch to the AI backend selected by AI_MODE
+         (default 'ollama' -> local llama3.2:3b; 'online' -> Gemini if a key
+         is configured). Fall back gracefully if the backend is unavailable.
+      6. Validate the answer against the retrieved context to catch any
+         out-of-context drift; replace with NOT_IN_MATERIAL_MESSAGE if so.
     """
-    try:
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        output_dir = os.path.join(base_dir, "data", "output")
-        results_pattern = os.path.join(output_dir, "folder_results_*.json")
-        result_files = sorted(glob.glob(results_pattern), key=os.path.getctime, reverse=True)
-        if not result_files:
-            raise HTTPException(status_code=404, detail="No uploaded content found")
+    question = (request.message or "").strip()
+    if not question:
+        raise HTTPException(status_code=400, detail="Question is required.")
 
-        with open(result_files[0], "r", encoding="utf-8") as f:
-            latest_results = json.load(f)
+    # 1. Nothing uploaded yet.
+    if not retriever.has_content():
+        return {"response": ai_tutor.NO_FILE_MESSAGE, "sources": []}
 
-        corpus = []
-        for item in latest_results:
-            text = (item or {}).get("extracted_text", "").strip()
-            if text and not text.startswith("Error:"):
-                corpus.append({
-                    "file_name": (item or {}).get("file_name", "unknown"),
-                    "text": text
-                })
+    # 2. Retrieve top relevant chunks (top 4 by default).
+    top_chunks, top_sources, best_sim = retriever.retrieve(question, top_k=4)
 
-        if not corpus:
-            raise HTTPException(status_code=404, detail="No readable uploaded content found")
-
-        context_block, sources = _build_context_from_corpus(corpus, request.message.strip())
-
-        prompt = f"""You are a tutor helping a student using ONLY the passages below from their uploaded study materials.
-
-Rules:
-- Base your answer entirely on these passages. Do not invent facts or use outside knowledge.
-- When the user mentions a keyword or topic, explain the full relevant idea: describe the complete argument or paragraph-level meaning found in the sources, not just a phrase.
-- Use clear structure (short paragraphs or bullets). Quote or paraphrase closely from the material.
-- If the passages do not contain enough information to answer, reply exactly: Not found in uploaded content.
-
-User question:
-{request.message}
-
-Material:
-{context_block}
-"""
-
-        model_name = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
-        payload = {
-            "model": model_name,
-            "prompt": prompt,
-            "stream": False,
-            "temperature": 0.15,
-            "options": {"num_predict": 2048},
-        }
-        ollama_result = await asyncio.to_thread(
-            lambda: requests.post("http://127.0.0.1:11434/api/generate", json=payload, timeout=120)
-        )
-        ollama_result.raise_for_status()
-        answer_text = (ollama_result.json().get("response", "") or "").strip()
-        if not answer_text:
-            answer_text = "Not found in uploaded content."
-
-        suspicious = (
-            "contact the uploader",
-            "cannot be used",
-            "provided uploaded content only contains source",
-            "i cannot",
-            "as an ai language model",
-        )
-        if any(token in answer_text.lower() for token in suspicious):
-            query_terms = [w.lower() for w in request.message.split() if len(w) > 2]
-            fallback_blocks: List[str] = []
-            for s in sources:
-                fname = s.get("title") or ""
-                block = next((c["text"] for c in corpus if c["file_name"] == fname), "")
-                for para in _split_paragraphs(block)[:12]:
-                    pl = para.lower()
-                    if query_terms and any(t in pl for t in query_terms):
-                        fallback_blocks.append(para)
-            if fallback_blocks:
-                answer_text = (
-                    "Based on your uploaded material:\n\n"
-                    + "\n\n".join(fallback_blocks[:4])
-                )
-            else:
-                answer_text = "Not found in uploaded content."
-
+    # 3. Hallucination guard: if even the best match is weak, refuse.
+    if not top_chunks or best_sim < retriever.SIMILARITY_THRESHOLD:
         return {
-            "response": answer_text,
-            "sources": sources
+            "response": ai_tutor.NOT_IN_MATERIAL_MESSAGE,
+            "sources": [],
         }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error in chatbot query: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+
+    # 4. Build prompt with the strict tutor rules + chosen response mode.
+    prompt = ai_tutor.build_prompt(top_chunks, question, request.mode or "normal")
+
+    # 5. Dispatch to the configured backend in a thread (network I/O).
+    answer_text, unavailable_msg = await asyncio.to_thread(
+        ai_tutor.generate_answer, prompt
+    )
+    if not answer_text:
+        return {"response": unavailable_msg, "sources": []}
+
+    # 6. Validate that the model stayed inside the retrieved context.
+    is_valid, reason = ai_tutor.validate_answer(answer_text, top_chunks)
+    if not is_valid:
+        logger.info("Answer rejected by validator: %s", reason)
+        return {"response": ai_tutor.NOT_IN_MATERIAL_MESSAGE, "sources": []}
+
+    # Deduplicate source filenames while preserving order.
+    seen = set()
+    sources: List[Dict[str, Any]] = []
+    for s in top_sources:
+        if s in seen:
+            continue
+        seen.add(s)
+        sources.append({"title": s, "url": "", "score": round(best_sim, 3)})
+
+    return {"response": answer_text, "sources": sources}
 
 @router.post("/education-resources")
 async def get_education_resources(topic: str = Body(..., embed=True)):
