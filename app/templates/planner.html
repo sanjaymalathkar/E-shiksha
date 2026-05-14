@@ -397,9 +397,287 @@
     let currentMonth = new Date();
     let selectedDate = null;
 
+    /** Local calendar date as YYYY-MM-DD (avoid UTC shift from toISOString). */
+    function formatLocalYMD(d) {
+        if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    /** Match calendar cells to API plans (handles "2026-05-13" and ISO strings). */
+    function normalizePlanDate(val) {
+        if (val == null || val === '') return '';
+        const s = String(val).trim();
+        const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (m) return m[1];
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? '' : formatLocalYMD(d);
+    }
+
+    /** Guaranteed arrays/objects for template .map() — avoids "Error displaying content for this date". */
+    function sanitizeDayView(p) {
+        if (!p) {
+            return {
+                topics: [],
+                time_allocation: {},
+                key_concepts: [],
+                practice_items: [],
+                raw_content: '',
+            };
+        }
+        return {
+            ...p,
+            topics: coerceTopicList(p.topics),
+            key_concepts: coerceTopicList(p.key_concepts),
+            practice_items: coerceTopicList(p.practice_items),
+            time_allocation: coerceTimeAllocation(p.time_allocation),
+            raw_content:
+                typeof p.raw_content === 'string'
+                    ? p.raw_content
+                    : p.raw_content != null
+                      ? String(p.raw_content)
+                      : '',
+        };
+    }
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function coerceTopicList(val) {
+        if (val == null) return [];
+        if (Array.isArray(val)) return val.map(String).map((t) => t.trim()).filter(Boolean);
+        if (typeof val === 'string') {
+            return val.split(/[,;\n]/).map((t) => t.trim()).filter(Boolean);
+        }
+        return [];
+    }
+
+    function coerceTimeAllocation(val) {
+        if (!val || typeof val !== 'object' || Array.isArray(val)) return {};
+        const out = {};
+        for (const [k, v] of Object.entries(val)) {
+            const key = String(k).trim();
+            if (!key) continue;
+            if (typeof v === 'number') out[key] = v;
+            else if (typeof v === 'string') {
+                const m = v.match(/([\d.]+)/);
+                out[key] = m ? parseFloat(m[1]) : v;
+            } else out[key] = v;
+        }
+        return out;
+    }
+
+    function shapeDayObject(obj, rawFallback) {
+        const topics = coerceTopicList(obj.topics);
+        const time_allocation = coerceTimeAllocation(obj.time_allocation || obj.time_allocations);
+        const key_concepts = coerceTopicList(obj.key_concepts);
+        const practice_items = coerceTopicList(obj.practice_items || obj.practice || obj.exercises);
+        let raw_content = '';
+        if (typeof obj.content === 'string') raw_content = obj.content;
+        else if (typeof obj.summary === 'string') raw_content = obj.summary;
+        else if (typeof obj.notes === 'string') raw_content = obj.notes;
+        if (!raw_content && rawFallback) raw_content = rawFallback;
+        return { topics, time_allocation, key_concepts, practice_items, raw_content };
+    }
+
+    function tryParseContentJson(contentStr, plan) {
+        if (!contentStr || typeof contentStr !== 'string') return null;
+        let t = contentStr.trim();
+        if (t.includes('```')) {
+            try {
+                if (t.includes('```json')) t = t.split('```json')[1].split('```')[0];
+                else t = t.split('```')[1].split('```')[0];
+            } catch (e) {
+                return null;
+            }
+        }
+        t = t.trim();
+        if (!t.startsWith('{') && !t.startsWith('[')) return null;
+        try {
+            const parsed = JSON.parse(t);
+            if (!parsed || typeof parsed !== 'object') return null;
+            const dn = plan && plan.day_number;
+            let inner = null;
+            if (dn != null) {
+                inner = parsed['day_' + dn] || parsed[String(dn)];
+            }
+            if (!inner && typeof parsed === 'object') {
+                const keys = Object.keys(parsed);
+                if (keys.length === 1) inner = parsed[keys[0]];
+                else inner = parsed;
+            }
+            if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+                return shapeDayObject(inner, contentStr);
+            }
+        } catch (e) {
+            return null;
+        }
+        return null;
+    }
+
+    function extractPlanData(plan) {
+        if (!plan) return null;
+
+        const contentStr = typeof plan.content === 'string' ? plan.content : '';
+        const parsedFromContent = tryParseContentJson(contentStr, plan);
+        if (parsedFromContent) {
+            if (!parsedFromContent.raw_content) parsedFromContent.raw_content = contentStr;
+            return parsedFromContent;
+        }
+
+        if (
+            Array.isArray(plan.topics) ||
+            typeof plan.topics === 'string' ||
+            plan.time_allocation ||
+            plan.key_concepts ||
+            plan.practice_items ||
+            plan.practice
+        ) {
+            const shaped = shapeDayObject(plan, contentStr);
+            const hasStructured =
+                shaped.topics.length ||
+                Object.keys(shaped.time_allocation).length ||
+                shaped.key_concepts.length ||
+                shaped.practice_items.length;
+            if (!hasStructured && contentStr) {
+                return {
+                    topics: [],
+                    time_allocation: {},
+                    key_concepts: [],
+                    practice_items: [],
+                    raw_content: contentStr,
+                };
+            }
+            return shaped;
+        }
+
+        if (contentStr) {
+            return {
+                topics: [],
+                time_allocation: {},
+                key_concepts: [],
+                practice_items: [],
+                raw_content: contentStr,
+            };
+        }
+
+        return null;
+    }
+
+    function extractHeadingsFromMaterial(text) {
+        const out = [];
+        const seen = new Set();
+        const push = (s) => {
+            const t = String(s || '').trim();
+            if (t.length < 8 || t.length > 200 || seen.has(t)) return;
+            seen.add(t);
+            out.push(t.slice(0, 180));
+        };
+        const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        for (const line of lines) {
+            if (line.length < 8 || line.length > 200) continue;
+            if (/^(Chapter|Unit|Section|Part|Module|Lesson)\b/i.test(line)) {
+                push(line);
+                continue;
+            }
+            if (/^\d{1,2}[\.)]\s+[A-Za-z\u0900-\u0FFF]/.test(line)) {
+                push(line.replace(/^\d{1,2}[\.)]\s+/, '').trim());
+                continue;
+            }
+            if (line.startsWith('#')) {
+                push(line.replace(/^#+\s*/, '').trim());
+                continue;
+            }
+            const letters = [...line].filter((c) => /[a-zA-Z\u0900-\u0FFF]/.test(c)).length;
+            if (line === line.toUpperCase() && letters >= 6) push(line);
+        }
+        return out.slice(0, 60);
+    }
+
+    function extractBulletsFromMaterial(text) {
+        const out = [];
+        for (const line of text.split(/\r?\n/)) {
+            const t = line.trim();
+            if (t.length < 28 || t.length > 280) continue;
+            if (/^[-•*–—]\s/.test(t)) out.push(t.replace(/^[-•*–—]\s+/, '').trim());
+            else if (/^\d{1,2}[\.)]\s+\S/.test(t)) out.push(t.replace(/^\d{1,2}[\.)]\s+/, '').trim());
+            if (out.length >= 12) break;
+        }
+        return out.slice(0, 10);
+    }
+
+    /** When JSON has empty topics/key concepts, derive them from raw PDF-style text (matches server-side enrichment). */
+    function enrichParsedPlanForDisplay(parsedPlan, plan, dc) {
+        if (!parsedPlan) return parsedPlan;
+        let topics = coerceTopicList(parsedPlan.topics);
+        const ta = coerceTimeAllocation(parsedPlan.time_allocation);
+        let kc = coerceTopicList(parsedPlan.key_concepts);
+        const raw = (
+            parsedPlan.raw_content ||
+            (typeof plan.content === 'string' ? plan.content : '') ||
+            ''
+        ).trim();
+        if (!raw) {
+            return sanitizeDayView({
+                ...parsedPlan,
+                topics,
+                time_allocation: ta,
+                key_concepts: kc,
+            });
+        }
+        const planCount =
+            dc && dc.daily_plans ? Object.keys(dc.daily_plans).length : 1;
+        const dayNum = Number(plan.day_number) || 1;
+        let nextTopics = topics.slice();
+        if (!nextTopics.length) {
+            const headings = extractHeadingsFromMaterial(raw);
+            if (headings.length) {
+                const n = headings.length;
+                const chunk = Math.max(2, Math.min(5, Math.ceil(n / Math.max(planCount, 1))));
+                const start = ((dayNum - 1) * chunk) % n;
+                nextTopics = [];
+                for (let i = 0; i < chunk; i++) nextTopics.push(headings[(start + i) % n]);
+            }
+        }
+        let nextTa = { ...ta };
+        if (nextTopics.length && !Object.keys(nextTa).length) {
+            const per = Math.round((6 / nextTopics.length) * 10) / 10;
+            nextTa = {};
+            nextTopics.forEach((t) => {
+                nextTa[t] = per;
+            });
+        }
+        let nextKc = kc.slice();
+        if (!nextKc.length) {
+            nextKc = extractBulletsFromMaterial(raw);
+            if (!nextKc.length && nextTopics.length) {
+                nextKc = nextTopics.slice(0, 6).map((t) => `Review and consolidate: ${t}`);
+            }
+        }
+        return sanitizeDayView({
+            ...parsedPlan,
+            topics: nextTopics,
+            time_allocation: nextTa,
+            key_concepts: nextKc,
+        });
+    }
+
     async function fetchDailyContent() {
         try {
             const response = await fetch('/api/daily-content');
+            if (response.status === 404) {
+                document.getElementById('day-content-container').innerHTML =
+                    '<div class="text-amber-600">No daily content found yet. Upload files and generate your plan first.</div>';
+                return;
+            }
             if (!response.ok) {
                 throw new Error('Failed to fetch daily content');
             }
@@ -410,8 +688,8 @@
                 populateAllContent();
                 updateTotalStats();
                 // Show today's content by default if available
-                const today = new Date().toISOString().split('T')[0];
-                if (dailyContent?.daily_plans?.[today]) {
+                const today = formatLocalYMD(new Date());
+                if (dailyContent?.daily_plans && Object.values(dailyContent.daily_plans).some((p) => p && normalizePlanDate(p.date) === today)) {
                     showDayContent(new Date());
                 }
             } else {
@@ -457,12 +735,12 @@
 
             const cell = document.createElement('td');
             const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-            const dateString = date.toISOString().split('T')[0];
+            const dateString = formatLocalYMD(date);
 
             // Check if this date has content
             const hasContent = dailyContent &&
                              dailyContent.daily_plans &&
-                             Object.values(dailyContent.daily_plans).some(plan => plan.date === dateString);
+                             Object.values(dailyContent.daily_plans).some(plan => normalizePlanDate(plan.date) === dateString);
 
             cell.className = `calendar-day border p-2 text-center align-top relative ${hasContent ? 'has-content' : ''}`;
 
@@ -517,8 +795,10 @@
             return;
         }
 
-        const dateStr = date.toISOString().split('T')[0];
-        const plan = Object.values(dailyContent.daily_plans).find(p => p.date === dateStr);
+        const dateStr = formatLocalYMD(date);
+        const plan = Object.values(dailyContent.daily_plans).find(
+            (p) => p && normalizePlanDate(p.date) === dateStr
+        );
 
         if (!plan) {
             document.getElementById('day-content-container').innerHTML =
@@ -527,8 +807,19 @@
         }
 
         try {
-            const jsonStr = plan.content.split('```json\n')[1].split('\n```')[0];
-            const planContent = JSON.parse(jsonStr);
+            let parsedPlan = extractPlanData(plan);
+            if (!parsedPlan) {
+                parsedPlan = sanitizeDayView({
+                    topics: [],
+                    time_allocation: {},
+                    key_concepts: [],
+                    practice_items: [],
+                    raw_content: typeof plan.content === 'string' ? plan.content : '',
+                });
+            }
+            parsedPlan = enrichParsedPlanForDisplay(parsedPlan, plan, dailyContent);
+            const dayData = parsedPlan;
+            const dayLabel = `Day ${plan.day_number || ''}`.trim();
 
             // Update the main content container with date-specific information
             let contentHtml = `
@@ -556,23 +847,20 @@
                 daySummarySubtitle.textContent = `${date.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' })} - ${dailyContent.exam_type}`;
             }
 
-            // Update the summary card with the selected date's content
+                // Update the summary card with the selected date's content
             const summaryContent = document.getElementById('summary-content');
             if (summaryContent) {
                 let summaryHtml = `<div class="space-y-6">`;
-
-                // Add date-specific content
-                Object.entries(planContent).forEach(([day, dayData]) => {
                     // Add Topics section with animation
                     summaryHtml += `
                         <div class="transform transition-all duration-300 hover:scale-102">
                             <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Topics</h3>
                             <div class="grid gap-2">
-                                ${dayData.topics.map((topic, index) => `
+                                ${dayData.topics.length ? dayData.topics.map((topic, index) => `
                                     <div class="summary-point text-gray-600 dark:text-gray-400 transform transition-all duration-300">
-                                        ${index + 1}. ${topic}
+                                        ${index + 1}. ${escapeHtml(topic)}
                                     </div>
-                                `).join('')}
+                                `).join('') : '<div class="summary-point text-gray-600 dark:text-gray-400">No topic list available.</div>'}
                             </div>
                         </div>`;
 
@@ -581,14 +869,16 @@
                             <div class="transform transition-all duration-300 hover:scale-102">
                                 <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Time Allocation</h3>
                                 <div class="grid gap-3">
-                                    ${Object.entries(dayData.time_allocation).map(([topic, hours]) => {
-                                        const totalHours = Object.values(dayData.time_allocation).reduce((a, b) => a + parseFloat(b), 0);
-                                        const percentage = (hours / totalHours) * 100;
+                                    ${Object.keys(dayData.time_allocation).length ? Object.entries(dayData.time_allocation).map(([topic, hours]) => {
+                                        const totalHours = Object.values(dayData.time_allocation).reduce((a, b) => a + (parseFloat(b) || 0), 0);
+                                        const h = parseFloat(hours);
+                                        const hh = Number.isFinite(h) ? h : 0;
+                                        const percentage = totalHours > 0 ? (hh / totalHours) * 100 : 0;
                                         return `
                                             <div class="summary-point text-gray-600 dark:text-gray-400">
                                                 <div class="flex justify-between mb-1">
-                                                    <span>${topic}</span>
-                                                    <span>${hours} hours</span>
+                                                    <span>${escapeHtml(topic)}</span>
+                                                    <span>${escapeHtml(String(hours))} hours</span>
                                                 </div>
                                                 <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                                     <div class="bg-indigo-500 h-2 rounded-full transition-all duration-500"
@@ -596,7 +886,7 @@
                                                     </div>
                                                 </div>
                                             </div>`;
-                                    }).join('')}
+                                    }).join('') : '<div class="summary-point text-gray-600 dark:text-gray-400">No time allocation available.</div>'}
                                 </div>
                             </div>`;
 
@@ -605,16 +895,24 @@
                                 <div class="transform transition-all duration-300 hover:scale-102">
                                     <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Key Concepts</h3>
                                     <div class="grid gap-2">
-                                        ${dayData.key_concepts.map((concept, index) => `
+                                        ${dayData.key_concepts.length ? dayData.key_concepts.map((concept, index) => `
                                             <div class="summary-point text-gray-600 dark:text-gray-400 flex items-center group">
                                                 <span class="w-6 h-6 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-2 text-xs text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-800 transition-colors">
                                                     ${index + 1}
                                                 </span>
-                                                ${concept}
+                                                ${escapeHtml(concept)}
                                             </div>
-                                        `).join('')}
+                                        `).join('') : '<div class="summary-point text-gray-600 dark:text-gray-400">No key concepts listed.</div>'}
                                     </div>
                                 </div>`;
+
+                                if (dayData.raw_content && !dayData.topics.length && !Object.keys(dayData.time_allocation).length && !dayData.key_concepts.length) {
+                                    summaryHtml += `
+                                <div class="transform transition-all duration-300 hover:scale-102">
+                                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Study plan (full text)</h3>
+                                    <div class="day-summary-text text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg border border-gray-200 dark:border-gray-700">${escapeHtml(dayData.raw_content)}</div>
+                                </div>`;
+                                }
 
                                 // Add Practice Items section if available
                                 if (dayData.practice_items && dayData.practice_items.length > 0) {
@@ -627,27 +925,24 @@
                                                         <span class="w-6 h-6 flex items-center justify-center bg-green-100 dark:bg-green-900 rounded-full mr-2 text-xs text-green-600 dark:text-green-400">
                                                             P${index + 1}
                                                         </span>
-                                                        ${item}
+                                                        ${escapeHtml(item)}
                                                     </div>
                                                 `).join('')}
                                             </div>
                                         </div>`;
                                 }
-                            });
-
                             summaryHtml += `</div>`;
                             summaryContent.innerHTML = summaryHtml;
                         }
 
                         // Update the main content area with detailed information
-            Object.entries(planContent).forEach(([day, dayData]) => {
                 contentHtml += `
                                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-102">
                                     <h4 class="font-semibold text-lg mb-3 text-gray-800 dark:text-white flex items-center">
                                         <span class="w-8 h-8 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-2 text-indigo-600 dark:text-indigo-400">
                                             Day ${plan.day_number || ''}
                                         </span>
-                                        ${day}
+                                        ${dayLabel}
                                     </h4>
 
                         <div class="mb-4">
@@ -655,7 +950,7 @@
                             <div class="flex flex-wrap gap-2">
                                 ${dayData.topics.map(topic =>
                                                 `<span class="topic-tag text-xs px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors cursor-pointer">
-                                                    ${topic}
+                                                    ${escapeHtml(topic)}
                                                 </span>`
                                 ).join('')}
                             </div>
@@ -667,8 +962,8 @@
                                 ${Object.entries(dayData.time_allocation).map(([topic, hours]) =>
                                                 `<div class="time-allocation-item flex items-center text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-2 rounded-lg">
                                         <div class="w-2 h-2 bg-indigo-400 rounded-full mr-2"></div>
-                                                    <span class="flex-1">${topic}</span>
-                                                    <span class="font-medium">${hours} hours</span>
+                                                    <span class="flex-1">${escapeHtml(topic)}</span>
+                                                    <span class="font-medium">${escapeHtml(String(hours))} hours</span>
                                     </div>`
                                 ).join('')}
                             </div>
@@ -682,14 +977,20 @@
                                                     <span class="w-5 h-5 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-2 text-xs text-indigo-600 dark:text-indigo-400">
                                                         ${index + 1}
                                                     </span>
-                                                    ${concept}
+                                                    ${escapeHtml(concept)}
                                                 </div>`
                                 ).join('')}
                                         </div>
                         </div>
                     </div>
-                `;
-            });
+                    `;
+                if (!dayData.topics.length && !Object.keys(dayData.time_allocation).length && !dayData.key_concepts.length && dayData.raw_content) {
+                    contentHtml += `
+                        <div class="day-summary-text mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap border border-gray-200 dark:border-gray-700">
+                            ${escapeHtml(dayData.raw_content)}
+                        </div>
+                    `;
+                }
 
             document.getElementById('day-content-container').innerHTML = contentHtml;
 
@@ -705,10 +1006,10 @@
                         });
 
         } catch (e) {
-            console.error('Error parsing plan content:', e);
+            console.error('showDayContent failed:', e);
             document.getElementById('day-content-container').innerHTML = `
                             <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 p-4 rounded">
-                                Error displaying content for this date
+                                Could not render this day's plan. Check the browser console for details.
                 </div>
             `;
         }
@@ -720,72 +1021,86 @@
     let currentUtterance = null;
 
     function getContentText() {
-        const container = document.getElementById('day-content-container');
-        if (!container) return '';
-
-        // Get all text content from the container
-        let text = '';
-        const elements = container.querySelectorAll('h3, h4, div, span, li');
-
-        elements.forEach(element => {
-            if (element.tagName === 'H3' || element.tagName === 'H4') {
-                text += element.textContent + '. ';
-            } else if (element.tagName === 'LI') {
-                text += element.textContent + '. ';
-            } else if (element.tagName === 'DIV' && element.classList.contains('time-allocation-item')) {
-                text += element.textContent + '. ';
-            } else if (element.tagName === 'SPAN' && element.classList.contains('topic-tag')) {
-                text += element.textContent + '. ';
+        const parts = [];
+        const summaryEl = document.getElementById('summary-content');
+        if (summaryEl) {
+            const st = summaryEl.innerText.replace(/\s+/g, ' ').trim();
+            if (st && !/Select a date from the calendar/i.test(st)) {
+                parts.push(st);
             }
-        });
+        }
+        const container = document.getElementById('day-content-container');
+        if (container) {
+            const mt = container.innerText.replace(/\s{2,}/g, '\n').trim();
+            if (mt) parts.push(mt);
+        }
+        return parts.join('\n\n').trim();
+    }
 
-        return text.trim();
+    function splitTextForSpeech(text, maxChunk) {
+        const chunks = [];
+        const limit = maxChunk || 380;
+        let i = 0;
+        while (i < text.length) {
+            let end = Math.min(i + limit, text.length);
+            if (end < text.length) {
+                const breakAt = text.lastIndexOf('. ', end);
+                if (breakAt > i + 80) end = breakAt + 1;
+            }
+            chunks.push(text.slice(i, end).trim());
+            i = end;
+        }
+        return chunks.filter(Boolean);
     }
 
     function speakContent() {
-        const text = getContentText();
-        if (!text) {
-            alert('No content available to read');
-            return;
-        }
-
         const speechButton = document.getElementById('speech-button');
+        if (!speechButton) return;
         const buttonText = speechButton.querySelector('.button-text');
 
         if (isSpeaking) {
             speechSynthesis.cancel();
             isSpeaking = false;
             speechButton.classList.remove('playing', 'pulse-animation');
-            buttonText.textContent = 'Read Content';
+            if (buttonText) buttonText.textContent = 'Read Content';
             return;
         }
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        utterance.volume = 1.0;
+        const text = getContentText();
+        if (!text) {
+            alert('No content available to read. Select a date that has a study plan first.');
+            return;
+        }
 
-        utterance.onstart = () => {
-            isSpeaking = true;
-            speechButton.classList.add('playing', 'pulse-animation');
-            buttonText.textContent = 'Stop Reading';
+        const chunks = splitTextForSpeech(text, 400);
+        speechSynthesis.cancel();
+
+        let idx = 0;
+        const speakNext = () => {
+            if (idx >= chunks.length) {
+                isSpeaking = false;
+                speechButton.classList.remove('playing', 'pulse-animation');
+                if (buttonText) buttonText.textContent = 'Read Content';
+                return;
+            }
+            const utterance = new SpeechSynthesisUtterance(chunks[idx++]);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            utterance.onerror = (event) => {
+                console.error('Speech synthesis error:', event);
+                isSpeaking = false;
+                speechButton.classList.remove('playing', 'pulse-animation');
+                if (buttonText) buttonText.textContent = 'Read Content';
+            };
+            utterance.onend = speakNext;
+            speechSynthesis.speak(utterance);
         };
 
-        utterance.onend = () => {
-            isSpeaking = false;
-            speechButton.classList.remove('playing', 'pulse-animation');
-            buttonText.textContent = 'Read Content';
-        };
-
-        utterance.onerror = (event) => {
-            console.error('Speech synthesis error:', event);
-            isSpeaking = false;
-            speechButton.classList.remove('playing', 'pulse-animation');
-            buttonText.textContent = 'Read Content';
-        };
-
-        currentUtterance = utterance;
-        speechSynthesis.speak(utterance);
+        isSpeaking = true;
+        speechButton.classList.add('playing', 'pulse-animation');
+        if (buttonText) buttonText.textContent = 'Stop Reading';
+        speakNext();
     }
 
     // Add event listener for speech button
@@ -921,11 +1236,12 @@
 
         sortedPlans.forEach(plan => {
             try {
-                const jsonStr = plan.content.split('```json\n')[1].split('\n```')[0];
-                const planContent = JSON.parse(jsonStr);
+                let planContent = extractPlanData(plan);
+                if (!planContent) return;
+                planContent = enrichParsedPlanForDisplay(planContent, plan, dailyContent);
                 const date = new Date(plan.date);
-
-                Object.entries(planContent).forEach(([day, dayData]) => {
+                const dayData = planContent;
+                const day = `Day ${plan.day_number || ''}`.trim();
                     allContentHtml += `
                         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-102 mb-6">
                             <div class="flex justify-between items-center mb-4">
@@ -942,12 +1258,12 @@
                             <div class="mb-6">
                                 <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Topics</h4>
                                 <div class="grid gap-2">
-                                    ${dayData.topics.map((topic, index) => `
+                                        ${dayData.topics.map((topic, index) => `
                                         <div class="flex items-center p-2 bg-gray-50 dark:bg-gray-900 rounded-lg transform transition-all duration-300 hover:translate-x-2">
                                             <span class="w-6 h-6 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-3 text-xs text-indigo-600 dark:text-indigo-400">
                                                 ${index + 1}
                                             </span>
-                                            <span class="text-gray-700 dark:text-gray-300">${topic}</span>
+                                            <span class="text-gray-700 dark:text-gray-300">${escapeHtml(topic)}</span>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -958,13 +1274,15 @@
                                 <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Time Allocation</h4>
                                 <div class="grid gap-3">
                                     ${Object.entries(dayData.time_allocation).map(([topic, hours]) => {
-                                        const totalHours = Object.values(dayData.time_allocation).reduce((a, b) => a + parseFloat(b), 0);
-                                        const percentage = (hours / totalHours) * 100;
+                                        const totalHours = Object.values(dayData.time_allocation).reduce((a, b) => a + (parseFloat(b) || 0), 0);
+                                        const h = parseFloat(hours);
+                                        const hh = Number.isFinite(h) ? h : 0;
+                                        const percentage = totalHours > 0 ? (hh / totalHours) * 100 : 0;
                                         return `
                                             <div class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
                                                 <div class="flex justify-between mb-2">
-                                                    <span class="text-gray-700 dark:text-gray-300">${topic}</span>
-                                                    <span class="text-indigo-600 dark:text-indigo-400 font-medium">${hours} hours</span>
+                                                    <span class="text-gray-700 dark:text-gray-300">${escapeHtml(topic)}</span>
+                                                    <span class="text-indigo-600 dark:text-indigo-400 font-medium">${escapeHtml(String(hours))} hours</span>
                                                 </div>
                                                 <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                                     <div class="bg-indigo-500 h-2 rounded-full transition-all duration-500"
@@ -986,11 +1304,18 @@
                                             <span class="w-6 h-6 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 rounded-full mr-3 text-xs text-indigo-600 dark:text-indigo-400">
                                                 ${index + 1}
                                             </span>
-                                            <span class="text-gray-700 dark:text-gray-300">${concept}</span>
+                                            <span class="text-gray-700 dark:text-gray-300">${escapeHtml(concept)}</span>
                                         </div>
                                     `).join('')}
                                 </div>
                             </div>
+
+                            ${dayData.raw_content && !dayData.topics.length && !Object.keys(dayData.time_allocation).length && !dayData.key_concepts.length ? `
+                                <div class="mb-6">
+                                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Study plan (full text)</h4>
+                                    <div class="day-summary-text text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">${escapeHtml(dayData.raw_content)}</div>
+                                </div>
+                            ` : ''}
 
                             ${dayData.practice_items && dayData.practice_items.length > 0 ? `
                                 <!-- Practice Items Section -->
@@ -1002,7 +1327,7 @@
                                                 <span class="w-6 h-6 flex items-center justify-center bg-green-100 dark:bg-green-900 rounded-full mr-3 text-xs text-green-600 dark:text-green-400">
                                                     P${index + 1}
                                                 </span>
-                                                <span class="text-gray-700 dark:text-gray-300">${item}</span>
+                                                <span class="text-gray-700 dark:text-gray-300">${escapeHtml(item)}</span>
                                             </div>
                                         `).join('')}
                                     </div>
@@ -1010,7 +1335,6 @@
                             ` : ''}
                         </div>
                     `;
-                });
             } catch (e) {
                 console.error('Error parsing plan content:', e);
             }
@@ -1018,7 +1342,6 @@
 
         container.innerHTML = allContentHtml;
 
-        // Add toggle functionality
         toggleButton.addEventListener('click', () => {
             const isHidden = container.classList.contains('hidden');
             container.classList.toggle('hidden');
@@ -1050,15 +1373,10 @@
         let uniqueTopics = new Set();
 
         Object.values(dailyContent.daily_plans).forEach(plan => {
-            try {
-                const jsonStr = plan.content.split('```json\n')[1].split('\n```')[0];
-                const planContent = JSON.parse(jsonStr);
-
-                Object.values(planContent).forEach(dayData => {
-                    dayData.topics.forEach(topic => uniqueTopics.add(topic));
-                });
-            } catch (e) {
-                console.error('Error parsing plan content:', e);
+            let parsed = extractPlanData(plan);
+            if (parsed) {
+                parsed = enrichParsedPlanForDisplay(parsed, plan, dailyContent);
+                parsed.topics.forEach(topic => uniqueTopics.add(topic));
             }
         });
 

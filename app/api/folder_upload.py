@@ -8,7 +8,9 @@ from pathlib import Path
 import logging
 
 from app.core.ocr.folder_processor import process_folder
+from app.core.user_upload_registry import record_folder_upload
 from app.models.folder import FolderProcessRequest, FolderProcessResponse
+from app.routes.user_files import get_user
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -80,28 +82,41 @@ async def upload_folder(
 
         logger.info(f"All files saved to {temp_folder}, starting content analysis")
 
-        # Process the folder (extract content only, do NOT generate study plan)
-        # This is the most time-consuming part
+        current_user = await get_user(request)
+        user_id = current_user.get("uid") or "anonymous"
+
+        # Process the folder (OCR, embeddings, daily content, etc.)
         result = await process_folder(
             folder_path=temp_folder,
             recursive=False,
             exam_type=exam_type,
             exam_date=exam_date
         )
-        # Only return extracted topics/skills for mock test generation
-        topics = []
-        for file_result in (result.get('results') or []):
-            if 'topics' in file_result:
-                topics.extend(file_result['topics'])
-        topics = list(set(topics))  # unique topics
+
+        try:
+            record_folder_upload(
+                user_id=user_id,
+                temp_folder=temp_folder,
+                exam_type=exam_type,
+                exam_date=exam_date,
+                process_meta={
+                    "processed_files": result.get("processed_files"),
+                    "output_file": result.get("output_file"),
+                },
+            )
+        except Exception as reg_err:
+            logger.warning("Upload registry / activity log failed: %s", reg_err)
+
+        topics: List[str] = []
         return FolderProcessResponse(
             status="success",
-            message=f"Successfully processed {len(files)} files. Ready for mock test.",
+            message=f"Successfully processed {len(files)} files.",
             result={
+                **result,
                 "topics": topics,
                 "exam_type": exam_type,
-                "exam_date": exam_date
-            }
+                "exam_date": exam_date,
+            },
         )
     except Exception as e:
         logger.error(f"Error processing uploaded files: {str(e)}")

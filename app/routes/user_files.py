@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, UploadFile, File, Form
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from typing import List, Optional, Union, Dict
 import pymongo
 from bson.objectid import ObjectId
@@ -7,6 +7,15 @@ import gridfs
 from datetime import datetime
 import io
 import logging
+import os
+
+from app.core.user_upload_registry import (
+    list_local_files,
+    list_activities,
+    get_local_file,
+    delete_local_file,
+    absolute_path_for_record,
+)
 from app.auth.firebase_auth import get_current_user
 from app.database.mongodb import get_db
 
@@ -63,103 +72,109 @@ async def get_user(request: Request):
         "name": "Demo User"
     }
 
+def _demo_sample_files():
+    """Optional placeholder files when ESHIKSHA_DEMO_USER_FILES is enabled."""
+    from datetime import datetime, timedelta
+    import random
+
+    file_types = [
+        {"type": "pdf", "name": "Study Notes", "content_type": "application/pdf"},
+        {"type": "doc", "name": "Assignment", "content_type": "application/msword"},
+        {"type": "ppt", "name": "Presentation", "content_type": "application/vnd.ms-powerpoint"},
+        {"type": "jpg", "name": "Diagram", "content_type": "image/jpeg"},
+        {"type": "png", "name": "Chart", "content_type": "image/png"},
+        {"type": "txt", "name": "Text Notes", "content_type": "text/plain"},
+    ]
+    sample_files = []
+    for i in range(5):
+        file_type = random.choice(file_types)
+        days_ago = random.randint(1, 30)
+        sample_files.append({
+            "file_id": f"sample-{i+1}",
+            "filename": f"{file_type['name']} {i+1}.{file_type['type']}",
+            "content_type": file_type["content_type"],
+            "size": random.randint(100000, 5000000),
+            "upload_date": (datetime.utcnow() - timedelta(days=days_ago)).isoformat(),
+            "metadata": {"exam_type": random.choice(["JEE", "GMAT", "UPSC", "GATE"]), "is_sample": True},
+        })
+    return sample_files
+
+
 # Get all user files
 @router.get("/")
 async def get_user_files(request: Request):
     """
-    Get all files uploaded by the current user
+    Get files for the current user: persisted local uploads (always) plus GridFS (if configured).
+    Learning journey activities are included under ``activities``.
     """
     try:
-        # Get user from session or Firebase (will always return a user, even if demo)
         current_user = await get_user(request)
-
-        # Get user ID
         user_id = current_user["uid"]
 
-        # Create sample files for demonstration
-        from datetime import datetime, timedelta
-        import random
+        merged: List[Dict] = []
 
-        # Generate random sample files
-        sample_files = []
-        file_types = [
-            {"type": "pdf", "name": "Study Notes", "content_type": "application/pdf"},
-            {"type": "doc", "name": "Assignment", "content_type": "application/msword"},
-            {"type": "ppt", "name": "Presentation", "content_type": "application/vnd.ms-powerpoint"},
-            {"type": "jpg", "name": "Diagram", "content_type": "image/jpeg"},
-            {"type": "png", "name": "Chart", "content_type": "image/png"},
-            {"type": "txt", "name": "Text Notes", "content_type": "text/plain"}
-        ]
-
-        # Generate 5 sample files
-        for i in range(5):
-            file_type = random.choice(file_types)
-            days_ago = random.randint(1, 30)
-
-            sample_files.append({
-                "file_id": f"sample-{i+1}",
-                "filename": f"{file_type['name']} {i+1}.{file_type['type']}",
-                "content_type": file_type["content_type"],
-                "size": random.randint(100000, 5000000),  # Random size between 100KB and 5MB
-                "upload_date": (datetime.utcnow() - timedelta(days=days_ago)).isoformat(),
-                "metadata": {
-                    "exam_type": random.choice(["JEE", "GMAT", "UPSC", "GATE"]),
-                    "is_sample": True
-                }
-            })
-
-        # Try to get real files from MongoDB if available
+        # Local persisted uploads (from /api/folder/upload)
         try:
-            # Try to get MongoDB connection
+            for lf in list_local_files(user_id):
+                merged.append(
+                    {
+                        "file_id": lf["file_id"],
+                        "filename": lf["filename"],
+                        "content_type": lf.get("content_type", "application/octet-stream"),
+                        "size": lf.get("size", 0),
+                        "upload_date": lf.get("upload_date"),
+                        "metadata": {**(lf.get("metadata") or {}), "storage": "local"},
+                    }
+                )
+        except Exception as e:
+            logger.warning("Local file list error: %s", e)
+
+        # MongoDB GridFS
+        try:
             from app.database.mongodb import get_db
             db = get_db()
-
             if db is not None:
-                # Initialize GridFS
-                fs = gridfs.GridFS(db)
-
+                files_cursor = db.fs.files.find({"metadata.user_id": user_id})
                 try:
-                    # Find all files for this user
-                    files_cursor = db.fs.files.find({"metadata.user_id": user_id})
-
-                    # Try to sort if the cursor supports it
-                    try:
-                        if hasattr(files_cursor, 'sort'):
-                            files_cursor = files_cursor.sort("uploadDate", pymongo.DESCENDING)
-                    except Exception as sort_error:
-                        logger.warning(f"Error sorting files: {str(sort_error)}")
-
-                    # Convert cursor to list and format the response
-                    real_files = []
-                    for file_doc in files_cursor:
-                        real_files.append({
+                    if hasattr(files_cursor, "sort"):
+                        files_cursor = files_cursor.sort("uploadDate", pymongo.DESCENDING)
+                except Exception as sort_error:
+                    logger.warning("Error sorting files: %s", sort_error)
+                for file_doc in files_cursor:
+                    merged.append(
+                        {
                             "file_id": str(file_doc["_id"]),
                             "filename": file_doc["filename"],
                             "content_type": file_doc["metadata"].get("content_type", "application/octet-stream"),
                             "size": file_doc["length"],
                             "upload_date": file_doc["uploadDate"].isoformat(),
                             "metadata": {
-                                k: v for k, v in file_doc["metadata"].items()
-                                if k not in ["user_id", "content_type"]  # Exclude some metadata fields
-                            }
-                        })
-
-                    # If we found real files, use those instead of samples
-                    if real_files:
-                        return {"status": "success", "files": real_files}
-                except Exception as cursor_error:
-                    logger.warning(f"Error processing MongoDB cursor: {str(cursor_error)}")
+                                k: v
+                                for k, v in file_doc["metadata"].items()
+                                if k not in ["user_id", "content_type"]
+                            },
+                        }
+                    )
         except Exception as mongo_error:
-            # Just log the error and continue with sample files
-            logger.warning(f"MongoDB error, using sample files: {str(mongo_error)}")
+            logger.warning("MongoDB error while listing files: %s", mongo_error)
 
-        # Return sample files if MongoDB is not available or no real files found
-        return {"status": "success", "files": sample_files}
+        merged.sort(key=lambda x: str(x.get("upload_date") or ""), reverse=True)
+
+        activities: List[Dict] = []
+        try:
+            activities = list_activities(user_id, limit=50)
+        except Exception as e:
+            logger.warning("Activity list error: %s", e)
+
+        show_demo = os.getenv("ESHIKSHA_DEMO_USER_FILES", "").lower() in ("1", "true", "yes")
+        if not merged and show_demo:
+            merged = _demo_sample_files()
+
+        return {"status": "success", "files": merged, "activities": activities}
 
     except Exception as e:
-        # Log the error but don't fail - return empty files list
         logger.error(f"Error getting user files: {str(e)}")
-        return {"status": "success", "files": []}
+        return {"status": "success", "files": [], "activities": []}
 
 # Get file by ID
 @router.get("/{file_id}")
@@ -176,6 +191,22 @@ async def get_file_by_id(
 
         # Get user ID
         user_id = current_user["uid"]
+
+        if file_id.startswith("local-"):
+            rec = get_local_file(user_id, file_id)
+            if rec:
+                return {
+                    "status": "success",
+                    "file": {
+                        "file_id": rec["file_id"],
+                        "filename": rec["filename"],
+                        "content_type": rec.get("content_type", "application/octet-stream"),
+                        "size": rec.get("size", 0),
+                        "upload_date": rec.get("upload_date"),
+                        "metadata": rec.get("metadata") or {},
+                    },
+                }
+            raise HTTPException(status_code=404, detail="File not found")
 
         # Check if it's a sample file
         if file_id.startswith("sample-"):
@@ -266,6 +297,8 @@ async def get_file_by_id(
 
         return {"status": "success", "file": file_info}
 
+    except HTTPException:
+        raise
     except Exception as e:
         # Log the error but don't fail - return a generic file
         logger.error(f"Error getting file by ID: {str(e)}")
@@ -303,6 +336,18 @@ async def download_file(
 
         # Get user ID
         user_id = current_user["uid"]
+
+        if file_id.startswith("local-"):
+            rec = get_local_file(user_id, file_id)
+            if rec:
+                apath = absolute_path_for_record(rec)
+                if os.path.isfile(apath):
+                    return FileResponse(
+                        apath,
+                        filename=rec["filename"],
+                        media_type=rec.get("content_type") or "application/octet-stream",
+                    )
+            raise HTTPException(status_code=404, detail="File not found")
 
         # Generate sample file content (used for both sample files and fallbacks)
         def generate_sample_content(file_id):
@@ -414,6 +459,8 @@ async def download_file(
             }
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         # Log the error but don't fail - return a generic file
         logger.error(f"Error downloading file: {str(e)}")
@@ -542,6 +589,11 @@ async def delete_file(
         # Get user ID
         user_id = current_user["uid"]
 
+        if file_id.startswith("local-"):
+            if delete_local_file(user_id, file_id):
+                return {"status": "success", "message": "File deleted successfully", "file_id": file_id}
+            raise HTTPException(status_code=404, detail="File not found")
+
         # Check if it's a sample file
         if file_id.startswith("sample-"):
             # For sample files, just pretend we deleted it
@@ -591,6 +643,8 @@ async def delete_file(
                 "file_id": file_id
             }
 
+    except HTTPException:
+        raise
     except Exception as e:
         # Log the error but don't fail - return success anyway
         logger.error(f"Error deleting file: {str(e)}")

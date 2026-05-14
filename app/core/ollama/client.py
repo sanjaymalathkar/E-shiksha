@@ -50,7 +50,7 @@ class OllamaClient:
 
     def generate(self,
                  prompt: str,
-                 model: str = "deepseek-r1:1.5b",
+                 model: str = "llama3.2:3b",
                  system: Optional[str] = None,
                  temperature: float = 0.7,
                  max_tokens: int = 2048) -> Dict[str, Any]:
@@ -227,7 +227,7 @@ The educational content provides a solid foundation for mastering the subject ma
     def process_multiple_files(self,
                               file_contents: List[Dict[str, str]],
                               task_description: str,
-                              model: str = "deepseek-r1:1.5b") -> Dict[str, Any]:
+                              model: str = "llama3.2:3b") -> Dict[str, Any]:
         """
         Process multiple files with a single prompt
 

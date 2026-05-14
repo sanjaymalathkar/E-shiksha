@@ -1,8 +1,13 @@
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Dict, Any
+import os
+import glob
+import json
+import logging
 
 router = APIRouter(prefix="/api/mock-test", tags=["mock-test"])
+logger = logging.getLogger(__name__)
 
 # --- Ollama-based Mock Test Generation ---
 from app.core.ollama_local import run_ollama, run_ollama_json
@@ -25,6 +30,30 @@ MOCK_TEST_QUESTIONS = [
     {"id": 14, "type": "puzzle", "difficulty": "easy", "question": "What is the next number in the series: 1, 1, 2, 3, 5, ?", "answer": "8"},
 ]
 
+def _keyword_based_questions(source_text: str):
+    import re
+    from collections import Counter
+
+    words = re.findall(r"\b[A-Za-z]{4,}\b", source_text.lower())
+    stop = {"this", "that", "with", "from", "have", "they", "will", "what", "when", "where", "which", "their", "there", "about", "your", "into", "using"}
+    filtered = [w for w in words if w not in stop]
+    topics = [w.title() for w, _ in Counter(filtered).most_common(8)] or ["Content"]
+    while len(topics) < 4:
+        topics.append(f"Topic{len(topics)+1}")
+
+    questions: List[MockTestQuestion] = []
+    for i in range(10):
+        correct = topics[i % len(topics)]
+        options = [correct, topics[(i+1) % len(topics)], topics[(i+2) % len(topics)], topics[(i+3) % len(topics)]]
+        questions.append(MockTestQuestion(
+            id=i + 1,
+            type="mcq",
+            difficulty="medium",
+            question=f"Which of the following appears as a key topic in the uploaded content set #{(i % len(topics)) + 1}?",
+            options=options
+        ))
+    return questions
+
 # --- Pydantic Models ---
 class MockTestQuestion(BaseModel):
     id: int
@@ -44,36 +73,56 @@ class MockTestEvaluation(BaseModel):
 
 # --- API Endpoints ---
 @router.get("/questions", response_model=List[MockTestQuestion])
-def get_mock_test_questions(topics: str = None):
+async def get_mock_test_questions(topics: str = None):
     """
     Generate adaptive mock test questions using Ollama locally.
     Questions are designed to assess logical reasoning, problem-solving, comprehension, and memory recall.
     If topics are provided, questions will be focused on those topics.
     """
-    # Create a more detailed prompt for generating questions
-    prompt = """
-    Generate a personalized mock test with 10-15 questions to assess a student's cognitive abilities.
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    output_dir = os.path.join(base_dir, "data", "output")
+    result_files = sorted(glob.glob(os.path.join(output_dir, "folder_results_*.json")), key=os.path.getctime, reverse=True)
+    if not result_files:
+        return [MockTestQuestion(**q) for q in MOCK_TEST_QUESTIONS[:12]]
 
-    The test should include:
-    1. Logical reasoning questions (pattern recognition, deductive reasoning)
-    2. Problem-solving questions (mathematical or situational puzzles)
-    3. Comprehension questions (understanding and analyzing information)
-    4. Memory recall questions (testing information retention)
+    try:
+        with open(result_files[0], "r", encoding="utf-8") as f:
+            latest_results = json.load(f)
+        text_parts = []
+        for item in latest_results:
+            t = (item or {}).get("extracted_text", "")
+            if t and "Error:" not in t:
+                text_parts.append(t[:4000])
+        source_text = "\n\n".join(text_parts)[:18000]
+    except Exception as e:
+        logger.error(f"Error loading latest extracted content for mock test: {e}")
+        source_text = ""
+    if not source_text.strip():
+        return [MockTestQuestion(**q) for q in MOCK_TEST_QUESTIONS[:12]]
 
-    Include a balanced mix of:
-    - Easy questions (30%)
-    - Medium questions (40%)
-    - Hard questions (30%)
+    prompt = f"""
+    Generate a personalized mock test with 10-15 questions STRICTLY from the provided uploaded content.
+    Do not use outside knowledge.
+    If something is not in content, do not ask about it.
 
-    For each question, provide:
-    - A unique ID number
-    - Question type (mcq, short, puzzle)
-    - Difficulty level (easy, medium, hard)
-    - The question text
-    - For MCQs: an array of 4 options
-    - The correct answer
+    Include:
+    1. Conceptual understanding
+    2. Application/problem-solving
+    3. Recall/comprehension
 
-    Format the response as a JSON array of question objects.
+    Mix difficulty: easy/medium/hard.
+    For each question provide:
+    - id
+    - type (mcq, short, puzzle)
+    - difficulty
+    - question
+    - options (for mcq only, 4 options)
+    - answer
+
+    Return valid JSON array only.
+
+    Uploaded content:
+    {source_text}
     """
 
     # Add topic focus if provided
@@ -89,7 +138,7 @@ def get_mock_test_questions(topics: str = None):
 
     # Generate questions using Ollama
     try:
-        questions = run_ollama_json(prompt, model="llama3")
+        questions = await run_ollama_json(prompt, model="llama3.2:3b")
 
         # Validate the response
         if isinstance(questions, list) and all('question' in q for q in questions):
@@ -112,15 +161,18 @@ def get_mock_test_questions(topics: str = None):
                 remaining = 10 - len(questions)
                 questions.extend(MOCK_TEST_QUESTIONS[:remaining])
 
-            return [MockTestQuestion(**q) for q in questions]
+            parsed_questions = [MockTestQuestion(**q) for q in questions]
+            if parsed_questions and "main topic of the uploaded document" in parsed_questions[0].question.lower():
+                return _keyword_based_questions(source_text)
+            return parsed_questions
     except Exception as e:
         logger.error(f"Error generating questions with Ollama: {e}")
 
-    # Fallback to static questions if Ollama fails
-    return [MockTestQuestion(**q) for q in MOCK_TEST_QUESTIONS[:12]]
+    # Fallback to uploaded-content-based questions if Ollama fails
+    return _keyword_based_questions(source_text)
 
 @router.post("/evaluate", response_model=MockTestEvaluation)
-def evaluate_mock_test(submission: MockTestSubmission):
+async def evaluate_mock_test(submission: MockTestSubmission):
     """
     Evaluate the mock test submission using Ollama locally.
     Provides a comprehensive analysis of the student's cognitive abilities,
@@ -166,7 +218,7 @@ def evaluate_mock_test(submission: MockTestSubmission):
 
     try:
         # Use Ollama to evaluate the answers
-        result = run_ollama_json(prompt, model="llama3")
+        result = await run_ollama_json(prompt, model="llama3.2:3b")
 
         # Validate the response
         if all(k in result for k in ("score", "daily_learning_capacity", "recommended_topics_per_day", "analysis")):

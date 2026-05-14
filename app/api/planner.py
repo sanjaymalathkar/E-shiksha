@@ -78,6 +78,9 @@ async def get_daily_content():
         # Get the absolute path to the data/output directory
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         output_dir = os.path.join(base_dir, 'data', 'output')
+
+        if not os.path.isdir(output_dir):
+            raise HTTPException(status_code=404, detail="No content found")
         
         # Get all daily content files
         pattern = os.path.join(output_dir, 'daily_content_*.json')
@@ -105,5 +108,7 @@ async def get_daily_content():
                 }
             }
                 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

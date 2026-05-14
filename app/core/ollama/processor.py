@@ -57,7 +57,7 @@ def extract_text_from_files(file_paths: List[str]) -> str:
 def process_files_with_ollama(
     file_paths: List[str],
     task_description: str,
-    model: str = "deepseek-r1:1.5b",
+    model: str = "llama3.2:3b",
     exam_type: Optional[str] = None
 ) -> Dict[str, Any]:
     """
@@ -134,7 +134,7 @@ def process_files_with_ollama(
 def generate_test_plan_with_ollama(
     file_paths: List[str],
     exam_type: Optional[str] = None,
-    model: str = "deepseek-r1:1.5b"
+    model: str = "llama3.2:3b"
 ) -> Dict[str, Any]:
     """
     Generate a test plan from multiple files using Ollama
@@ -168,7 +168,7 @@ def generate_test_plan_with_ollama(
 def generate_daily_content_with_ollama(
     file_paths: List[str],
     exam_type: Optional[str] = None,
-    model: str = "deepseek-r1:1.5b"
+    model: str = "llama3.2:3b"
 ) -> Dict[str, Any]:
     """
     Generate daily study content from multiple files using Ollama

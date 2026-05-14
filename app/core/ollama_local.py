@@ -2,10 +2,11 @@ import subprocess
 import json
 import asyncio
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
-async def run_ollama(prompt: str, model: str = "llama3") -> str:
+async def run_ollama(prompt: str, model: str = "llama3.2:3b") -> str:
     """
     Run an Ollama model locally using subprocess and return the output as a string.
     Args:
@@ -16,8 +17,9 @@ async def run_ollama(prompt: str, model: str = "llama3") -> str:
     """
     try:
         # For async operation, we'll use asyncio.create_subprocess_exec
+        ollama_bin = os.getenv("OLLAMA_BIN", "ollama")
         process = await asyncio.create_subprocess_exec(
-            "ollama", "run", model, prompt,
+            ollama_bin, "run", model, prompt,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -56,33 +58,53 @@ async def run_ollama(prompt: str, model: str = "llama3") -> str:
         }
         """
 
-async def run_ollama_json(prompt: str, model: str = "llama3") -> dict:
+async def run_ollama_json(prompt: str, model: str = "llama3.2:3b") -> dict:
     """
     Run Ollama and parse the output as JSON.
     """
     output = await run_ollama(prompt, model)
     try:
         return json.loads(output)
+    except Exception:
+        pass
+
+    # Try to recover JSON from fenced/extra text responses
+    try:
+        cleaned = output.strip()
+        if "```json" in cleaned:
+            cleaned = cleaned.split("```json", 1)[1].split("```", 1)[0].strip()
+            return json.loads(cleaned)
+
+        first_array = cleaned.find("[")
+        last_array = cleaned.rfind("]")
+        if first_array != -1 and last_array != -1 and last_array > first_array:
+            return json.loads(cleaned[first_array:last_array + 1])
+
+        first_obj = cleaned.find("{")
+        last_obj = cleaned.rfind("}")
+        if first_obj != -1 and last_obj != -1 and last_obj > first_obj:
+            return json.loads(cleaned[first_obj:last_obj + 1])
     except Exception as e:
         logger.error(f"Error parsing Ollama output as JSON: {str(e)}")
-        # Return a fallback response for testing
-        return [
-            {
-                "id": 1,
-                "type": "mcq",
-                "difficulty": "medium",
-                "question": "What is the main topic of the uploaded document?",
-                "options": ["General Knowledge", "Science", "Mathematics", "History"],
-                "answer": "General Knowledge",
-                "explanation": "This is a fallback question due to an error with Ollama."
-            },
-            {
-                "id": 2,
-                "type": "mcq",
-                "difficulty": "easy",
-                "question": "Which of the following is a common application of this subject?",
-                "options": ["Data Analysis", "Web Development", "Machine Learning", "All of the above"],
-                "answer": "All of the above",
-                "explanation": "This is a fallback question due to an error with Ollama."
-            }
-        ]
+
+    # Return a fallback response for testing
+    return [
+        {
+            "id": 1,
+            "type": "mcq",
+            "difficulty": "medium",
+            "question": "What is the main topic of the uploaded document?",
+            "options": ["General Knowledge", "Science", "Mathematics", "History"],
+            "answer": "General Knowledge",
+            "explanation": "This is a fallback question due to an error with Ollama."
+        },
+        {
+            "id": 2,
+            "type": "mcq",
+            "difficulty": "easy",
+            "question": "Which of the following is a common application of this subject?",
+            "options": ["Data Analysis", "Web Development", "Machine Learning", "All of the above"],
+            "answer": "All of the above",
+            "explanation": "This is a fallback question due to an error with Ollama."
+        }
+    ]

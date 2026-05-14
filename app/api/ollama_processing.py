@@ -71,7 +71,7 @@ async def process_files(
     files: List[UploadFile] = File(...),
     task_description: str = Form(...),
     exam_type: Optional[str] = Form(None),
-    model: str = Form("deepseek-r1:1.5b")
+    model: str = Form("llama3.2:3b")
 ):
     """
     Process multiple files using Ollama
@@ -128,7 +128,7 @@ async def process_files(
 async def generate_test_plan(
     files: List[UploadFile] = File(...),
     exam_type: Optional[str] = Form(None),
-    model: str = Form("deepseek-r1:1.5b")
+    model: str = Form("llama3.2:3b")
 ):
     """
     Generate a test plan from multiple files using Ollama
@@ -184,7 +184,7 @@ async def generate_test_plan(
 async def generate_daily_content(
     files: List[UploadFile] = File(...),
     exam_type: Optional[str] = Form(None),
-    model: str = Form("deepseek-r1:1.5b")
+    model: str = Form("llama3.2:3b")
 ):
     """
     Generate daily study content from multiple files using Ollama
@@ -269,7 +269,7 @@ async def generate_pdf(
     files: List[UploadFile] = File(...),
     exam_type: Optional[str] = Form(None),
     title: Optional[str] = Form(None),
-    model: str = Form("deepseek-r1:1.5b")
+    model: str = Form("llama3.2:3b")
 ):
     """
     Process files with Ollama using Deepseek model and generate a downloadable PDF
@@ -444,7 +444,7 @@ async def generate_pdf(
 async def generate_daily_content_pdf(
     files: List[UploadFile] = File(...),
     exam_type: Optional[str] = Form(None),
-    model: str = Form("deepseek-r1:1.5b")
+    model: str = Form("llama3.2:3b")
 ):
     """
     Generate daily study content from multiple files and return as PDF
@@ -526,7 +526,7 @@ async def generate_daily_content_pdf(
 async def generate_test_plan_pdf(
     files: List[UploadFile] = File(...),
     exam_type: Optional[str] = Form(None),
-    model: str = Form("deepseek-r1:1.5b")
+    model: str = Form("llama3.2:3b")
 ):
     """
     Generate a test plan from multiple files and return as PDF

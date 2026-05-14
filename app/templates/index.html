@@ -548,6 +548,10 @@ firebase.initializeApp(firebaseConfig);
                         </svg>
                         <span id="profile-phone">Loading phone...</span>
                     </p>
+                    <div id="profile-db-panel" class="hidden mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Stored in database</p>
+                        <pre id="profile-stored-json" class="text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900/80 rounded p-3 overflow-x-auto max-h-48 whitespace-pre-wrap"></pre>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1030,7 +1034,8 @@ firebase.initializeApp(firebaseConfig);
     document.addEventListener('DOMContentLoaded', function() {
         fetchExamTypes();
         setDefaultExamDate();
-        fetchUserFiles(); // Fetch user files from MongoDB
+        fetchUserFiles();
+        fetchStoredProfileRecord();
         fetchLeaderboardData(); // Fetch attendance leaderboard data
 
         // Add event listeners
@@ -1079,7 +1084,31 @@ firebase.initializeApp(firebaseConfig);
         }
     });
 
-    // Fetch user files from MongoDB
+    function renderLearningJourneyActivities(activities) {
+        const tbody = document.getElementById('activity-table-body');
+        if (!tbody || !activities || !activities.length) return;
+
+        const rows = activities.map((a) => {
+            const d = new Date(a.date);
+            const ds = isNaN(d.getTime()) ? '—' : d.toLocaleString(undefined, {
+                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            const st = (a.status || '').toLowerCase() === 'completed'
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-gray-600 dark:text-gray-400';
+            const esc = (s) => String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+            return `<tr class="border-b border-gray-200 dark:border-gray-700">
+                <td class="py-2 px-4 text-gray-800 dark:text-gray-300">${ds}</td>
+                <td class="py-2 px-4 text-gray-800 dark:text-gray-300">${esc(a.activity)}</td>
+                <td class="py-2 px-4 text-gray-800 dark:text-gray-300">${esc(a.details)}</td>
+                <td class="py-2 px-4 ${st}">${esc(a.status)}</td>
+            </tr>`;
+        }).join('');
+        tbody.innerHTML = rows;
+    }
+
+    // Fetch user files (local registry + optional MongoDB GridFS)
     async function fetchUserFiles() {
         try {
             // Show loading state
@@ -1105,14 +1134,18 @@ firebase.initializeApp(firebaseConfig);
                 console.log('Using session authentication instead of Firebase');
             }
 
-            // Fetch user files from API
-            const response = await fetch('/api/user/files', { headers });
+            // Fetch user files from API (session cookie + optional Firebase header)
+            const response = await fetch('/api/user/files', { headers, credentials: 'same-origin' });
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
+
+            if (data.activities && data.activities.length) {
+                renderLearningJourneyActivities(data.activities);
+            }
 
             // Check if files exist
             if (!data.files || data.files.length === 0) {
@@ -1132,27 +1165,30 @@ firebase.initializeApp(firebaseConfig);
 
             // Display files
             data.files.forEach(file => {
+                const ct = String(file.content_type || '');
                 // Format date
                 const uploadDate = new Date(file.upload_date);
-                const formattedDate = uploadDate.toLocaleDateString(undefined, {
+                const formattedDate = isNaN(uploadDate.getTime())
+                    ? '—'
+                    : uploadDate.toLocaleDateString(undefined, {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric'
                 });
 
                 // Format file size
-                const fileSize = formatFileSize(file.size);
+                const fileSize = formatFileSize(file.size != null ? file.size : 0);
 
                 // Determine file icon based on content type
                 let fileIcon = `<svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>`;
 
-                if (file.content_type.includes('image')) {
+                if (ct.includes('image')) {
                     fileIcon = `<svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>`;
-                } else if (file.content_type.includes('pdf')) {
+                } else if (ct.includes('pdf')) {
                     fileIcon = `<svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                     </svg>`;
@@ -1167,23 +1203,19 @@ firebase.initializeApp(firebaseConfig);
                             ${fileIcon}
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-medium text-gray-900 dark:text-white truncate" title="${file.filename}">
-                                ${file.filename}
-                            </h3>
+                            <h3 class="text-sm font-medium text-gray-900 dark:text-white truncate file-card-name"></h3>
                             <div class="flex flex-wrap text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 <span class="mr-3">${fileSize}</span>
                                 <span>${formattedDate}</span>
                             </div>
                         </div>
-                        <div class="ml-2 flex-shrink-0 flex">
-                            <a href="/api/user/files/${file.file_id}/download" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 mr-2" title="Download">
+                        <div class="ml-2 flex-shrink-0 flex items-center">
+                            <a href="/api/user/files/${encodeURIComponent(file.file_id)}/download" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 mr-2" title="Download" download>
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                                 </svg>
                             </a>
-                            <button class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                    title="Delete"
-                                    onclick="deleteFile('${file.file_id}', '${file.filename}')">
+                            <button type="button" class="delete-file-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                 </svg>
@@ -1191,6 +1223,12 @@ firebase.initializeApp(firebaseConfig);
                         </div>
                     </div>
                 `;
+                const nameEl = fileCard.querySelector('.file-card-name');
+                nameEl.textContent = file.filename;
+                nameEl.title = file.filename;
+                fileCard.querySelector('.delete-file-btn').addEventListener('click', () => {
+                    deleteFile(file.file_id, file.filename);
+                });
 
                 filesContainer.appendChild(fileCard);
             });
@@ -1218,6 +1256,25 @@ firebase.initializeApp(firebaseConfig);
         const i = Math.floor(Math.log(bytes) / Math.log(k));
 
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    async function fetchStoredProfileRecord() {
+        try {
+            const r = await fetch('/api/user/stored-profile', { credentials: 'same-origin' });
+            if (!r.ok) return;
+            const rec = await r.json();
+            const panel = document.getElementById('profile-db-panel');
+            const pre = document.getElementById('profile-stored-json');
+            if (!panel || !pre) return;
+            if (!rec || (rec.mongodb == null && rec.sql == null)) {
+                panel.classList.add('hidden');
+                return;
+            }
+            panel.classList.remove('hidden');
+            pre.textContent = JSON.stringify(rec, null, 2);
+        } catch (e) {
+            console.warn('stored-profile', e);
+        }
     }
 
     // Fetch attendance leaderboard data
@@ -1519,9 +1576,10 @@ firebase.initializeApp(firebaseConfig);
             }
 
             // Delete file
-            const response = await fetch(`/api/user/files/${fileId}`, {
+            const response = await fetch(`/api/user/files/${encodeURIComponent(fileId)}`, {
                 method: 'DELETE',
-                headers
+                headers,
+                credentials: 'same-origin'
             });
 
             if (!response.ok) {
@@ -1910,7 +1968,8 @@ firebase.initializeApp(firebaseConfig);
         try {
             const response = await fetch('/api/folder/upload', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                credentials: 'same-origin'
             });
 
             if (!response.ok) {
@@ -2109,6 +2168,7 @@ firebase.initializeApp(firebaseConfig);
         }
 
         const result = data.result;
+        const n = result.processed_files != null ? result.processed_files : '';
         const date = new Date().toLocaleString();
         const statusClass = data.status === 'success' ? 'text-green-600' : 'text-red-600';
 
@@ -2122,8 +2182,8 @@ firebase.initializeApp(firebaseConfig);
                     </div>
                 </td>
                 <td class="py-2 px-4 border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-300">
-                    <span class="badge exam-badge">${result.exam_type || 'GATE'}</span>
-                    <span class="ml-2">${result.processed_files} files</span>
+                    <span class="badge exam-badge">${result.exam_type || '—'}</span>
+                    <span class="ml-2">${n !== '' ? n + ' files' : 'Batch complete'}</span>
                 </td>
                 <td class="py-2 px-4 border-b border-gray-200 dark:border-gray-700 ${statusClass}">
                     <span class="px-2 py-1 rounded-full bg-opacity-10 ${data.status === 'success' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}">${data.status}</span>
@@ -2131,7 +2191,6 @@ firebase.initializeApp(firebaseConfig);
             </tr>
         `;
 
-        // Add animation to show the new activity row
         activityTableBody.innerHTML = html;
         setTimeout(() => {
             const activityRow = activityTableBody.querySelector('.activity-row');
@@ -2612,65 +2671,27 @@ firebase.initializeApp(firebaseConfig);
 
         // Process user message and generate response
         function processMessage(message) {
-            // Show typing indicator
-            const typingIndicator = showTypingIndicator();
-
-            // Convert message to lowercase for easier matching
-            const lowerMessage = message.toLowerCase();
-
-            // Simulate processing delay
-            setTimeout(() => {
-                // Hide typing indicator
+            showTypingIndicator();
+            fetch('/api/chatbot/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            })
+            .then(async (response) => {
                 hideTypingIndicator();
-
-                // Check for exam mentions
-                for (const [examKey, examInfo] of Object.entries(examData)) {
-                    if (lowerMessage.includes(examKey) || lowerMessage.includes(examInfo.name.toLowerCase())) {
-                        handleExamSelection(examKey);
-                        return;
-                    }
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Unable to answer from uploaded content.');
                 }
-
-                // Check for specific queries
-                if (lowerMessage.includes('syllabus') || lowerMessage.includes('subjects')) {
-                    addBotMessage("I can provide syllabus information for various exams. Please specify which exam you're interested in (JEE, GMAT, UPSC, CAT, GATE, or NEET).");
-                } else if (lowerMessage.includes('tips') || lowerMessage.includes('advice') || lowerMessage.includes('strategy')) {
-                    addBotMessage("I can provide preparation tips for various exams. Please specify which exam you're preparing for.");
-                } else if (lowerMessage.includes('books') || lowerMessage.includes('resources') || lowerMessage.includes('material')) {
-                    addBotMessage("I can recommend study materials for different exams. Which exam are you preparing for?");
-                } else if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-                    addBotMessage("Hello! I'm your E-Shiksha Exam Assistant. I can help with information about competitive exams like JEE, GMAT, UPSC, CAT, GATE, and NEET. What would you like to know?");
-                } else if (lowerMessage.includes('thank')) {
-                    addBotMessage("You're welcome! Feel free to ask if you have any other questions about competitive exams.");
-                } else {
-                    // General response for unrecognized queries
-                    addBotMessage("I'm specialized in providing information about competitive exams like JEE, GMAT, UPSC, CAT, GATE, and NEET. Could you please specify which exam you're interested in or what specific information you need?");
-
-                    // Add exam options
-                    const optionsContainer = document.createElement('div');
-                    optionsContainer.className = 'chatbot-options';
-
-                    const examOptions = ['JEE', 'GMAT', 'UPSC', 'CAT', 'GATE', 'NEET'];
-                    examOptions.forEach(exam => {
-                        const option = document.createElement('div');
-                        option.className = 'chatbot-option';
-                        option.textContent = exam;
-                        option.addEventListener('click', () => {
-                            handleExamSelection(exam.toLowerCase());
-                        });
-                        optionsContainer.appendChild(option);
-                    });
-
-                    const optionsMessage = document.createElement('div');
-                    optionsMessage.className = 'chatbot-message bot';
-                    optionsMessage.appendChild(document.createTextNode('Select an exam to learn more:'));
-                    optionsMessage.appendChild(optionsContainer);
-                    chatbotBody.appendChild(optionsMessage);
-
-                    // Scroll to bottom
-                    chatbotBody.scrollTop = chatbotBody.scrollHeight;
-                }
-            }, 1500); // Simulate thinking time
+                return response.json();
+            })
+            .then((data) => {
+                addBotMessage((data && data.response) ? data.response : 'Not found in uploaded content.');
+            })
+            .catch((error) => {
+                hideTypingIndicator();
+                addBotMessage(error.message || 'Unable to answer from uploaded content.');
+            });
         }
 
         // Handle exam selection

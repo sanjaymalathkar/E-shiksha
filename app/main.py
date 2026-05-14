@@ -94,6 +94,7 @@ from app.api.direct_user_create import router as direct_user_create_router
 from app.api.direct_user_login import router as direct_user_login_router
 from app.api.user_tracking import router as user_tracking_router
 from app.api.chatbot import router as chatbot_router
+from app.api.mock_test import router as mock_test_router
 
 # Include routers
 app.include_router(upload_router)
@@ -117,6 +118,7 @@ app.include_router(direct_user_create_router)
 app.include_router(direct_user_login_router)
 app.include_router(user_tracking_router)
 app.include_router(chatbot_router)
+app.include_router(mock_test_router)
 
 # Middleware to add language context to all templates
 @app.middleware("http")

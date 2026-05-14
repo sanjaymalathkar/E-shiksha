@@ -11,6 +11,7 @@ from datetime import datetime
 import os
 import shutil
 import uuid
+import json
 from bson.binary import Binary
 import io
 import base64
@@ -32,6 +33,69 @@ router = APIRouter(
     tags=["user"],
     responses={404: {"description": "Not found"}},
 )
+
+@router.get("/stored-profile")
+async def get_stored_profile(request: Request):
+    """
+    Return user rows actually stored in MongoDB (`users` collection) and/or SQL (`users` table).
+    Password hashes are never returned.
+    """
+    result: Dict[str, Any] = {"mongodb": None, "sql": None}
+
+    user_id = request.session.get("user_id") if hasattr(request, "session") else None
+    email = request.session.get("email") if hasattr(request, "session") else None
+
+    # MongoDB app users (e.g. direct login / firebase_uid)
+    try:
+        from app.database.mongodb import get_db as mongo_get_db
+
+        db = mongo_get_db()
+        if db is not None:
+            coll = db["users"]
+            doc = None
+            if user_id:
+                doc = coll.find_one({"firebase_uid": user_id})
+            if doc is None and email:
+                doc = coll.find_one({"email": email})
+            if doc:
+                safe = json.loads(json.dumps(doc, default=str))
+                safe.pop("password_hash", None)
+                result["mongodb"] = safe
+    except Exception as e:
+        logger.warning("stored-profile MongoDB: %s", e)
+
+    # SQLAlchemy User table
+    try:
+        from app.core.database import SessionLocal, User
+
+        session = SessionLocal()
+        try:
+            row = None
+            if email:
+                row = session.query(User).filter(User.email == email).first()
+            if row is None and user_id:
+                sid = str(user_id)
+                if sid.isdigit():
+                    row = session.query(User).filter(User.id == int(sid)).first()
+                if row is None:
+                    row = session.query(User).filter(User.username == sid).first()
+            if row:
+                result["sql"] = {
+                    "id": row.id,
+                    "username": row.username,
+                    "email": row.email,
+                    "full_name": row.full_name,
+                    "role": row.role,
+                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                    "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+                }
+        finally:
+            session.close()
+    except Exception as e:
+        logger.warning("stored-profile SQL: %s", e)
+
+    return result
+
 
 @router.get("/me")
 async def get_current_user(request: Request):
