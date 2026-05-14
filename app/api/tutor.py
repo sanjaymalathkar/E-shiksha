@@ -348,9 +348,10 @@ async def generate_plan():
 
     topics  = ACTIVE_SESSION["topics"]
     profile = ACTIVE_SESSION["student_profile"]
+    chunks  = ACTIVE_SESSION["chunks"]   # pass chunks so events get rich PDF content
 
     # Run the planner in a thread (pure Python, no I/O)
-    plan = await asyncio.to_thread(generate_study_plan, topics, profile)
+    plan = await asyncio.to_thread(generate_study_plan, topics, profile, chunks)
 
     # Replace old plan, reset completed task counter for new plan
     ACTIVE_SESSION["study_plan"] = plan
@@ -405,19 +406,58 @@ async def tutor_chat(req: TutorChatRequest = Body(...)):
     """
     Chat using ACTIVE_SESSION chunks — the latest uploaded file only.
 
-    - General questions (summarize, main topic, etc.) → first-N chunks + top-2 TF-IDF.
-    - Specific questions → TF-IDF retrieval with similarity threshold.
-    - Saves Q&A in ACTIVE_SESSION["chat_history"].
+    Special cases handled:
+    1. "Important topics" / "list topics" → return extracted topic list directly.
+    2. General questions (summarize, main topic) → first-N chunks + top-2 TF-IDF.
+    3. Specific questions → TF-IDF retrieval with similarity threshold.
+
+    The chatbot is ALWAYS active when a file is uploaded (ACTIVE_SESSION has chunks).
+    After upload, file_id + chunks are set, so the guard below passes immediately.
     """
     question = (req.message or "").strip()
     if not question:
         raise HTTPException(400, "Question is required.")
 
-    # Guard: no file uploaded
+    # Guard: no file uploaded yet
+    # This check uses ACTIVE_SESSION which is set by /upload — so after upload it always passes.
     if not ACTIVE_SESSION["file_id"] or not ACTIVE_SESSION["chunks"]:
         return {"response": ai_tutor.NO_FILE_MESSAGE, "sources": []}
 
     mode = req.mode or "normal"
+
+    # ── Special case: "important topics" / "list topics" ──────────────────────
+    # Return the extracted topic list from ACTIVE_SESSION directly (no Ollama needed).
+    # Triggered by phrases like "important topics", "list topics", "topics covered", etc.
+    _TOPIC_PHRASES = (
+        "important topics", "list topics", "what topics", "topics covered",
+        "topics in this", "topics in pdf", "show topics", "all topics",
+        "what are the topics", "key topics", "main topics in",
+        "list the topics", "chapters covered",
+    )
+    q_lower = question.lower()
+    if any(p in q_lower for p in _TOPIC_PHRASES) or mode == "important_points":
+        topics = ACTIVE_SESSION["topics"]
+        if topics:
+            topic_lines = "\n".join(
+                f"- **{t['title']}** ({t.get('difficulty','Medium')})"
+                for t in topics
+            )
+            response = (
+                f"## 📌 Topics in *{ACTIVE_SESSION['filename']}*\n\n"
+                f"{topic_lines}\n\n"
+                f"*Total: {len(topics)} topics detected. Ask me to explain any topic!*"
+            )
+        else:
+            response = (
+                "No specific topic headings were detected in the uploaded material. "
+                "Try asking: 'Summarize the uploaded PDF' to get an overview."
+            )
+        ACTIVE_SESSION["chat_history"].append({"question": question, "answer": response})
+        _award_points("ask_ai_tutor", 2)
+        logger.info("[Chat] Important-topics shortcut | file=%s | topics=%d",
+                    ACTIVE_SESSION["filename"], len(topics))
+        print(f"[Chat] 📌 Topics shortcut | {len(topics)} topics returned")
+        return {"response": response, "sources": [], "ranking": dict(ACTIVE_SESSION["ranking"])}
 
     # Smart context: general vs specific detection
     top_chunks, top_sources, best_sim, is_general = retriever.get_context_for_question(
@@ -975,3 +1015,34 @@ async def update_plan_from_test():
         "plan":    plan,
         "message": f"Added {added} revision event(s) for: {', '.join(weak_topics)}.",
     }
+
+
+
+# ---------------------------------------------------------------------------
+# P. Quiz route aliases (for /generate-quiz, /get-quiz, /submit-quiz)
+#    These are clean route names that mirror the mock-test routes.
+#    The frontend can call either /generate-quiz OR /generate-mock-test.
+# ---------------------------------------------------------------------------
+
+@router.post("/generate-quiz")
+async def generate_quiz():
+    """Alias for /generate-mock-test — generates 10 MCQs from uploaded PDF."""
+    return await generate_mock_test()
+
+
+@router.get("/get-quiz")
+async def get_quiz():
+    """Alias for /get-mock-test — returns current quiz questions (no answers)."""
+    return await get_mock_test()
+
+
+class QuizSubmitRequest(BaseModel):
+    answers: Dict[str, str]   # {"q1": "A", "q2": "B", ...}
+
+
+@router.post("/submit-quiz")
+async def submit_quiz(req: QuizSubmitRequest = Body(...)):
+    """Alias for /submit-mock-test — grades quiz answers and returns results."""
+    # Reuse the MockSubmitRequest model by forwarding
+    mock_req = MockSubmitRequest(answers=req.answers)
+    return await submit_mock_test(mock_req)

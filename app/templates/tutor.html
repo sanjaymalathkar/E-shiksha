@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}AI Tutor — E-Shiksha{% endblock %}
+{% block title %}Shiksha-Sathi — AI Tutor Dashboard{% endblock %}
 
 {# ============================================================
    tutor.html  —  Single-file learning workflow
@@ -8,14 +8,58 @@
 
 {% block head %}
 <style>
-/* ── Layout ── */
-.tutor-layout { display: flex; gap: 0; min-height: calc(100vh - 120px); }
-.tutor-main   { flex: 1; min-width: 0; padding-right: 16px; }
-.tutor-sidebar{
-  width: 340px; flex-shrink: 0;
+/* ═══════════════════════════════════════════════════
+   Shiksha-Sathi — Modern e-learning dashboard layout
+   3 columns: left-nav | main-content | ai-chatbot
+   ═══════════════════════════════════════════════════ */
+
+/* ── Page wrapper ── */
+body { background: #f1f5f9; }
+
+/* ── 3-column layout ── */
+.tutor-layout {
+  display: flex; gap: 16px;
+  min-height: calc(100vh - 80px);
+  align-items: flex-start;
+}
+
+/* ── LEFT SIDEBAR: section navigation ── */
+.ss-sidenav {
+  width: 200px; flex-shrink: 0;
+  position: sticky; top: 80px;
+  background: #1e1b4b;             /* deep indigo */
+  border-radius: 20px;
+  padding: 20px 0; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,.18);
+}
+.ss-sidenav .brand {
+  text-align: center; padding: 0 16px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  color: white; font-weight: 800; font-size: 1rem;
+}
+.ss-sidenav .brand .emoji { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+.ss-nav-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 18px; color: rgba(255,255,255,.7);
+  font-size: 0.83rem; font-weight: 600; cursor: pointer;
+  transition: all .2s; border-left: 3px solid transparent;
+  text-decoration: none;
+}
+.ss-nav-link:hover, .ss-nav-link.active {
+  background: rgba(255,255,255,.1);
+  color: white; border-left-color: #10b981;  /* emerald accent */
+}
+.ss-nav-link .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+/* ── MAIN CONTENT AREA ── */
+.tutor-main { flex: 1; min-width: 0; }
+
+/* ── RIGHT SIDEBAR: AI chatbot ── */
+.tutor-sidebar {
+  width: 320px; flex-shrink: 0;
   position: sticky; top: 80px; height: calc(100vh - 100px);
   display: flex; flex-direction: column;
-  background: white; border-radius: 16px;
+  background: white; border-radius: 20px;
   box-shadow: 0 4px 24px rgba(0,0,0,.1); overflow: hidden;
 }
 .dark .tutor-sidebar { background: #1f2937; }
@@ -35,13 +79,39 @@
 
 /* ── Cards ── */
 .tutor-card {
-  background: white; border-radius: 16px; padding: 24px;
-  box-shadow: 0 2px 12px rgba(0,0,0,.06); margin-bottom: 20px;
+  background: white; border-radius: 20px; padding: 22px;
+  box-shadow: 0 2px 16px rgba(0,0,0,.06); margin-bottom: 18px;
+  border: 1px solid #e2e8f0;
+  transition: box-shadow .2s;
 }
-.dark .tutor-card { background: #1f2937; }
-.tutor-card h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 16px;
-  color: #1f2937; }
-.dark .tutor-card h2 { color: #f9fafb; }
+.tutor-card:hover { box-shadow: 0 4px 24px rgba(0,0,0,.1); }
+.dark .tutor-card { background: #1e293b; border-color: #334155; }
+.tutor-card h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 14px;
+  color: #1e293b; }
+.dark .tutor-card h2 { color: #f1f5f9; }
+
+/* ── Day-detail modal ── */
+#day-modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  z-index: 9999; display: none;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+#day-modal.open { display: flex; }
+#day-modal-box {
+  background: white; border-radius: 24px; padding: 28px;
+  max-width: 640px; width: 100%; max-height: 85vh; overflow-y: auto;
+  position: relative;
+}
+.dark #day-modal-box { background: #1e293b; color: #f1f5f9; }
+.tts-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px; border: none;
+  background: #ede9fe; color: #5b21b6; font-size: 0.8rem;
+  font-weight: 600; cursor: pointer; transition: background .2s;
+}
+.tts-btn:hover { background: #ddd6fe; }
+.tts-btn.speaking { background: #dc2626; color: white; }
 
 /* ── Upload zone ── */
 .drop-zone {
@@ -128,16 +198,25 @@
 {% endblock %}
 
 {% block content %}
+<!-- Day-detail modal (shown when clicking a planner event) -->
+<div id="day-modal" onclick="closeDayModal(event)">
+  <div id="day-modal-box">
+    <button onclick="closeDayModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
 <div class="mb-4 flex items-center justify-between">
-  <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
-    📚 AI Tutor — Single-File Learning Workflow
+  <h1 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+    📚 <span class="text-emerald-700 dark:text-emerald-400">Shiksha-Sathi</span>
+    <span class="text-slate-400 text-base font-normal">— AI Tutor Dashboard</span>
   </h1>
   <div class="flex gap-2">
     <button onclick="regeneratePlan()" class="btn-secondary text-sm" id="regen-btn" style="display:none">
       🔄 Regenerate Plan
     </button>
     <button onclick="clearSession()" class="btn-secondary text-sm">
-      🗑️ Clear &amp; Upload New File
+      🗑️ Clear &amp; Upload New
     </button>
   </div>
 </div>
@@ -151,7 +230,44 @@
 </div>
 
 <div class="tutor-layout">
-  <!-- ════ LEFT: main workflow ════ -->
+
+  <!-- ════ LEFT SIDEBAR: section navigation ════ -->
+  <nav class="ss-sidenav">
+    <div class="brand">
+      <span class="emoji">📚</span>
+      Shiksha-Sathi
+    </div>
+    <!-- Nav items scroll to matching card on the page -->
+    <a class="ss-nav-link active" href="#card-upload" onclick="scrollTo('card-upload')">
+      <span class="icon">📤</span> Upload
+    </a>
+    <a class="ss-nav-link" href="#card-analysis" onclick="scrollTo('card-analysis')">
+      <span class="icon">🔍</span> Analysis
+    </a>
+    <a class="ss-nav-link" href="#card-plan" onclick="scrollTo('card-plan')">
+      <span class="icon">📅</span> Planner
+    </a>
+    <a class="ss-nav-link" href="#card-mock-test" onclick="scrollTo('card-mock-test')">
+      <span class="icon">📝</span> Quiz
+    </a>
+    <a class="ss-nav-link" href="#card-attendance" onclick="scrollTo('card-attendance')">
+      <span class="icon">📋</span> Attendance
+    </a>
+    <a class="ss-nav-link" href="#card-ranking" onclick="scrollTo('card-ranking')">
+      <span class="icon">🏆</span> Ranking
+    </a>
+    <a class="ss-nav-link" href="#card-profile-details" onclick="scrollTo('card-profile-details')">
+      <span class="icon">👤</span> Profile
+    </a>
+    <!-- File status at bottom of sidebar -->
+    <div style="padding:14px 18px;margin-top:8px;border-top:1px solid rgba(255,255,255,.1)">
+      <div class="text-xs text-slate-400 mb-1">Active File</div>
+      <div id="sidenav-file" class="text-xs text-emerald-400 font-semibold truncate">None uploaded</div>
+      <div id="sidenav-step" class="text-xs text-slate-400 mt-1">Step 1 of 4</div>
+    </div>
+  </nav>
+
+  <!-- ════ MAIN CONTENT ════ -->
   <div class="tutor-main">
 
     <!-- STEP 1: Upload -->
@@ -480,16 +596,19 @@
 
   <!-- ════ RIGHT: Sidebar Chatbot (always visible on /tutor page) ════ -->
   <div class="tutor-sidebar" id="tutor-sidebar">
-    <!-- Header shows active file name -->
-    <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:14px 16px;color:white;">
-      <div class="font-bold text-base">🤖 E-Shiksha AI Tutor</div>
-      <div id="chat-file-label" class="text-xs mt-1 opacity-80">No file uploaded yet</div>
+    <!-- Header: shows brand + active file -->
+    <div style="background:linear-gradient(135deg,#1e1b4b,#065f46);padding:14px 16px;color:white;">
+      <div class="font-bold text-base flex items-center gap-2">
+        🤖 <span>Shiksha-Sathi AI Tutor</span>
+      </div>
+      <div id="chat-file-label" class="text-xs mt-1 opacity-75">Upload a file to activate</div>
     </div>
 
-    <!-- Chat messages area -->
+    <!-- Chat messages area — initial hint cleared after upload -->
     <div id="chat-body" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;">
-      <div class="text-xs text-gray-400 dark:text-gray-500 text-center mt-4">
-        Upload a file to start chatting with the AI tutor.
+      <div id="chat-initial-hint" class="text-xs text-slate-400 text-center mt-6 px-3">
+        📄 Upload a PDF or TXT file to activate the AI tutor.<br>
+        Then ask anything — topics, summaries, explanations!
       </div>
     </div>
 
@@ -537,11 +656,20 @@ let activeFilename= null;
 let hasProfile    = false;
 
 // ── Step helpers ────────────────────────────────────────────
+const _STEP_LABELS = ['', 'Upload your PDF', 'Fill Learning Profile', 'Study Plan & Quiz', 'Chat & Learn'];
 function setStep(n) {
   for (let i = 1; i <= 4; i++) {
     const el = document.getElementById('stp' + i);
-    el.className = 'step-item ' + (i < n ? 'done' : (i === n ? 'active' : ''));
+    if (el) el.className = 'step-item ' + (i < n ? 'done' : (i === n ? 'active' : ''));
   }
+  const sl = document.getElementById('sidenav-step');
+  if (sl) sl.textContent = `Step ${n} of 4 — ${_STEP_LABELS[n] || ''}`;
+}
+
+// ── Scroll to a card section ─────────────────────────────────
+function scrollTo(cardId) {
+  const el = document.getElementById(cardId);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function show(id)  { document.getElementById(id).classList.remove('hidden'); }
@@ -609,8 +737,20 @@ async function uploadFile() {
       pillBox.innerHTML += `<span class="topic-pill ${cls}">${t.title}</span>`;
     });
 
-    // Update chatbot label
-    document.getElementById('chat-file-label').textContent = '📄 Chatting with: ' + data.filename;
+    // ── FIX: clear chatbot initial hint and activate the AI tutor ──────────
+    // After upload, ACTIVE_SESSION["chunks"] is populated on the backend.
+    // The chatbot is immediately ready — remove the "upload a file" hint.
+    const hint = document.getElementById('chat-initial-hint');
+    if (hint) hint.remove();
+    // Show a welcome message so the student knows chatbot is active
+    appendMsg('✅ File uploaded! I\'m ready. Ask me anything from the uploaded material. Try: "What are the important topics?" or "Summarize this PDF."', 'bot');
+
+    // Update chatbot header label
+    document.getElementById('chat-file-label').textContent = '📄 ' + data.filename;
+
+    // Update left sidebar
+    document.getElementById('sidenav-file').textContent = data.filename;
+    document.getElementById('sidenav-step').textContent = 'Step 2 of 4 — Fill Profile';
 
     // Update ranking from upload response
     if (data.ranking) renderRanking(data.ranking);
@@ -751,11 +891,12 @@ function renderCalendar(plan) {
     card.className = 'cal-event';
     card.style.background = colour;
     card.style.color       = 'white';
+    card.style.cursor      = 'pointer';    // indicate clickable
 
     // Each event needs a stable id for the complete-task route
     if (!ev.id) ev.id = 'event_' + (idx + 1);
 
-    // Format date nicely
+    // Format date
     const d  = new Date(ev.date + 'T00:00:00');
     const ds = d.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short' });
 
@@ -770,11 +911,15 @@ function renderCalendar(plan) {
       <div class="flex items-center justify-between mt-2">
         <span class="ev-badge">⏱ ${ev.duration_hours}h · ${ev.difficulty}</span>
         <button id="btn-${escHtml(ev.id)}" style="${doneStyle}"
-                onclick="completeTask('${escHtml(ev.id)}', this)"
+                onclick="event.stopPropagation(); completeTask('${escHtml(ev.id)}', this)"
                 ${ev.completed ? 'disabled' : ''}>
           ${ev.completed ? '✅ Done' : 'Mark Done'}
         </button>
-      </div>`;
+      </div>
+      <div class="text-xs mt-1 opacity-70">📖 Click for details &amp; TTS</div>`;
+
+    // Click card → open day-detail modal
+    card.addEventListener('click', () => openDayModal(ev));
     grid.appendChild(card);
   });
 }
@@ -856,9 +1001,13 @@ async function clearSession() {
   document.getElementById('analysis-summary').innerHTML = '';
   document.getElementById('topics-display').innerHTML   = '';
   document.getElementById('calendar-grid').innerHTML    = '';
+  // Restore the chatbot initial hint after clearing
   document.getElementById('chat-body').innerHTML =
-    '<div class="text-xs text-gray-400 text-center mt-4">Upload a file to start chatting.</div>';
-  document.getElementById('chat-file-label').textContent = 'No file uploaded yet';
+    '<div id="chat-initial-hint" class="text-xs text-slate-400 text-center mt-6 px-3">📄 Upload a PDF or TXT file to activate the AI tutor.<br>Then ask anything — topics, summaries, explanations!</div>';
+  document.getElementById('chat-file-label').textContent = 'Upload a file to activate';
+  // Reset left sidebar
+  document.getElementById('sidenav-file').textContent = 'None uploaded';
+  document.getElementById('sidenav-step').textContent = 'Step 1 of 4';
   document.getElementById('plan-meta').textContent = '';
   document.getElementById('regen-btn').style.display = 'none';
   msg('upload-msg', '');
@@ -1078,6 +1227,128 @@ async function saveProfileDetails() {
   }
 }
 
+// ── Day-detail modal + Text-to-Speech ─────────────────────────
+let _ttsUtterance = null;
+
+/**
+ * Open the planner day-detail modal.
+ * Shows topic title, date, description, paragraph from PDF,
+ * key points, duration, difficulty, and a TTS (read aloud) button.
+ */
+function openDayModal(ev) {
+  const d   = new Date(ev.date + 'T00:00:00');
+  const ds  = d.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const kpHtml = (ev.key_points && ev.key_points.length)
+    ? '<ul class="list-disc pl-5 space-y-1">' +
+      ev.key_points.map(k => `<li class="text-sm text-gray-700 dark:text-gray-300">${escHtml(k)}</li>`).join('') +
+      '</ul>'
+    : '<p class="text-sm text-gray-500">No key points extracted.</p>';
+
+  const paraHtml = ev.paragraph
+    ? `<p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">${escHtml(ev.paragraph)}</p>`
+    : '<p class="text-sm text-gray-400">No PDF content available for this day.</p>';
+
+  // Build TTS text (title + description + key points combined)
+  const ttsText = [
+    ev.title,
+    ev.description,
+    ...(ev.key_points || [])
+  ].join('. ');
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="flex items-center gap-3 mb-4">
+      <div class="text-3xl">📅</div>
+      <div>
+        <div class="text-xs text-indigo-600 font-semibold uppercase tracking-wide">${escHtml(ev.task_type || 'Study')}</div>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">${escHtml(ev.title)}</h2>
+        <div class="text-xs text-gray-400">${ds}</div>
+      </div>
+    </div>
+
+    <div class="flex gap-2 mb-4 flex-wrap">
+      <span class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-semibold">⏱ ${ev.duration_hours}h</span>
+      <span class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-semibold">${ev.difficulty}</span>
+      <span class="text-xs px-3 py-1 rounded-full font-semibold text-white" style="background:${ev.colour||'#4f46e5'}">${ev.task_type}</span>
+      <!-- TTS button: reads the day content aloud using browser SpeechSynthesis -->
+      <button class="tts-btn" id="tts-btn" onclick="toggleTTS(${JSON.stringify(ttsText).replace(/'/g,'&apos;')})">
+        🔊 Read Aloud
+      </button>
+    </div>
+
+    <div class="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
+      <div class="text-xs font-bold text-indigo-700 dark:text-indigo-300 mb-1">📌 Today's Focus</div>
+      <p class="text-sm text-gray-700 dark:text-gray-300">${escHtml(ev.description)}</p>
+    </div>
+
+    ${ev.summary ? `
+    <div class="mb-4">
+      <div class="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">📝 Quick Summary</div>
+      <p class="text-sm text-gray-700 dark:text-gray-300 italic">${escHtml(ev.summary)}</p>
+    </div>` : ''}
+
+    <div class="mb-4">
+      <div class="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">⭐ Key Points</div>
+      ${kpHtml}
+    </div>
+
+    <details class="mb-4">
+      <summary class="cursor-pointer text-xs font-bold text-gray-500 hover:text-gray-700 uppercase tracking-wide">
+        📖 PDF Content Extract
+      </summary>
+      <div class="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl max-h-48 overflow-y-auto">
+        ${paraHtml}
+      </div>
+    </details>
+
+    <div class="flex gap-2">
+      <button class="btn-primary text-sm py-2 px-4"
+              onclick="completeTaskFromModal('${escHtml(ev.id || '')}'); closeDayModal()">
+        ✅ Mark as Done
+      </button>
+      <button class="btn-secondary text-sm py-2 px-4" onclick="closeDayModal()">
+        Close
+      </button>
+    </div>`;
+
+  document.getElementById('day-modal').classList.add('open');
+}
+
+function closeDayModal(e) {
+  if (e && e.target !== document.getElementById('day-modal')) return;
+  stopTTS();
+  document.getElementById('day-modal').classList.remove('open');
+}
+
+// ── Text-to-Speech using browser SpeechSynthesis API ──────────
+function toggleTTS(text) {
+  const btn = document.getElementById('tts-btn');
+  if (_ttsUtterance && window.speechSynthesis.speaking) {
+    stopTTS();
+    return;
+  }
+  _ttsUtterance = new SpeechSynthesisUtterance(text);
+  _ttsUtterance.rate = 0.9;
+  _ttsUtterance.pitch = 1;
+  _ttsUtterance.lang = 'en-IN';   // Indian English accent
+  _ttsUtterance.onstart = () => { if (btn) { btn.textContent = '⏹ Stop'; btn.classList.add('speaking'); } };
+  _ttsUtterance.onend   = () => { if (btn) { btn.textContent = '🔊 Read Aloud'; btn.classList.remove('speaking'); } };
+  window.speechSynthesis.speak(_ttsUtterance);
+  console.log('[TTS] Speaking:', text.slice(0, 80) + '…');
+}
+
+function stopTTS() {
+  window.speechSynthesis.cancel();
+  _ttsUtterance = null;
+  const btn = document.getElementById('tts-btn');
+  if (btn) { btn.textContent = '🔊 Read Aloud'; btn.classList.remove('speaking'); }
+}
+
+// Wrapper so modal can mark task done and close
+function completeTaskFromModal(eventId) {
+  const btn = document.getElementById('btn-' + eventId);
+  if (btn) completeTask(eventId, btn);
+}
+
 // ── Mock Test Functions ────────────────────────────────────────
 
 // Reset mock test UI to idle state
@@ -1291,7 +1562,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (data.has_file) {
       activeFileId   = data.file_id;
       activeFilename = data.filename;
-      document.getElementById('chat-file-label').textContent = '📄 Chatting with: ' + data.filename;
+
+      // ── Restore chatbot (clear initial hint, show active state) ──
+      const hint = document.getElementById('chat-initial-hint');
+      if (hint) hint.remove();
+      document.getElementById('chat-file-label').textContent = '📄 ' + data.filename;
+
+      // ── Restore left sidebar ──
+      document.getElementById('sidenav-file').textContent = data.filename;
+
       show('card-analysis');
       document.getElementById('analysis-summary').innerHTML =
         `<strong>Active file:</strong> ${data.filename} — ${data.chunks} chunks, ${data.topics} topics.`;

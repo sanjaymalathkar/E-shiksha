@@ -7,12 +7,18 @@ and the student's learning profile.
 100% offline — no Ollama required.
 Logic adapts pace, revisions, and task types to the student profile.
 
+Each plan event now includes:
+  - paragraph   : raw text extract from the relevant PDF chunk
+  - summary     : first 200 chars of the paragraph (quick overview)
+  - key_points  : up to 4 extracted key sentences from the paragraph
+
 Public API:
-    generate_study_plan(topics, student_profile) -> List[Dict]
+    generate_study_plan(topics, student_profile, chunks=None) -> List[Dict]
 """
 
+import re
 from datetime import date, timedelta
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 # Pace multiplier: how many topics the student can cover per day (relative)
 _PACE = {"Beginner": 0.7, "Medium": 1.0, "Advanced": 1.4}
@@ -35,6 +41,36 @@ _TASK_COLOURS = {
 }
 
 
+def _get_paragraph_for_topic(topic: Dict, chunks: List[str]) -> str:
+    """
+    Retrieve the most relevant text paragraph for a topic from the PDF chunks.
+    Uses chunk_indexes stored in the topic dict; falls back to summary field.
+    """
+    if not chunks:
+        return topic.get("summary", "")
+    idx_list = topic.get("chunk_indexes", [0])
+    texts = []
+    for idx in idx_list:
+        if 0 <= idx < len(chunks):
+            texts.append(chunks[idx].strip())
+    return "\n".join(texts)[:1200] if texts else topic.get("summary", "")
+
+
+def _extract_key_points(paragraph: str, n: int = 4) -> List[str]:
+    """
+    Extract up to `n` key sentences from a paragraph.
+    Prefers sentences containing definition/importance keywords.
+    Falls back to the first `n` sentences.
+    """
+    _KW = ("is", "are", "defined", "means", "refers", "used for",
+           "important", "key", "formula", "theorem", "consist", "represent")
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", paragraph) if len(s.strip()) > 20]
+    # Prefer keyword-rich sentences
+    preferred = [s for s in sentences if any(k in s.lower() for k in _KW)]
+    combined  = preferred + [s for s in sentences if s not in preferred]
+    return combined[:n]
+
+
 def _pick_task_type(day_idx: int, total_days: int, level: str) -> str:
     """Decide what kind of study task to assign for a given day offset."""
     if total_days > 3 and day_idx == total_days - 1:
@@ -51,6 +87,7 @@ def _pick_task_type(day_idx: int, total_days: int, level: str) -> str:
 def generate_study_plan(
     topics: List[Dict[str, Any]],
     student_profile: Dict[str, Any],
+    chunks: Optional[List[str]] = None,   # PDF chunks for rich content
 ) -> List[Dict[str, Any]]:
     """
     Build a list of calendar events from topics + student profile.
@@ -153,7 +190,31 @@ def generate_study_plan(
         ref_idx    = min(max(topic_idx - 1, 0), len(topics) - 1)
         difficulty = topics[ref_idx]["difficulty"] if topics else "Medium"
 
+        # ── Enrich event with PDF content (paragraph, summary, key_points) ──
+        # For Study days: fetch paragraph from the first topic's chunk.
+        # For Revision/Quiz/Mock days: combine summaries of covered topics.
+        paragraph   = ""
+        summary_txt = ""
+        key_points: List[str] = []
+
+        if chunks is not None and task_type == "Study":
+            ref_topic = topics[ref_idx] if topics else {}
+            paragraph = _get_paragraph_for_topic(ref_topic, chunks)
+            summary_txt = paragraph[:200].strip()
+            if len(paragraph) > 200:
+                summary_txt += "…"
+            key_points = _extract_key_points(paragraph, n=4)
+        elif chunks is not None:
+            # For non-study days, pull summaries from covered topics
+            covered_topics = [t for t in topics if t["title"] in day_topics]
+            paras = [_get_paragraph_for_topic(t, chunks) for t in covered_topics[:2]]
+            paragraph   = "\n\n".join(paras)
+            summary_txt = paragraph[:200].strip() + ("…" if len(paragraph) > 200 else "")
+            key_points  = _extract_key_points(paragraph, n=3)
+
+        event_id = f"event_{len(events) + 1}"
         events.append({
+            "id":             event_id,
             "date":           current_date.isoformat(),
             "title":          f"{task_type}: {day_topics[0] if day_topics else 'Study'}",
             "description":    description,
@@ -162,6 +223,11 @@ def generate_study_plan(
             "task_type":      task_type,
             "difficulty":     difficulty,
             "colour":         _TASK_COLOURS.get(task_type, "#4f46e5"),
+            # Rich content fields for the planner day-detail modal
+            "paragraph":      paragraph,
+            "summary":        summary_txt,
+            "key_points":     key_points,
+            "completed":      False,
         })
 
     # --- Top Score extra: answer-writing practice in last 20% of plan --------
