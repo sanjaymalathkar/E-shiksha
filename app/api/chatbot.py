@@ -118,37 +118,60 @@ async def clear_study_material():
 @router.post("/query", response_model=ChatbotResponse)
 async def query_chatbot(request: ChatbotRequest = Body(...)):
     """
-    Strict RAG flow:
+    Smart RAG flow with general-question support:
       1. Reject if nothing has been uploaded.
-      2. Retrieve top chunks via TF-IDF + cosine similarity.
-      3. Reject if best similarity is below threshold.
-      4. Build the strict E-Shiksha tutor prompt with the chosen response mode.
+      2. Detect whether the question is general/summary-type or specific.
+      3. For general questions: use first 3 document chunks + top 2 TF-IDF chunks.
+         For specific questions: use top TF-IDF chunks + similarity threshold guard.
+      4. Build the improved E-Shiksha tutor prompt with the chosen response mode.
       5. Dispatch to the AI backend selected by AI_MODE
          (default 'ollama' -> local llama3.2:3b; 'online' -> Gemini if a key
          is configured). Fall back gracefully if the backend is unavailable.
-      6. Validate the answer against the retrieved context to catch any
-         out-of-context drift; replace with NOT_IN_MATERIAL_MESSAGE if so.
+      6. Validate the answer against the retrieved context; replace with
+         NOT_IN_MATERIAL_MESSAGE if it fails (threshold is relaxed for general Qs).
     """
     question = (request.message or "").strip()
     if not question:
         raise HTTPException(status_code=400, detail="Question is required.")
 
+    mode = request.mode or "normal"
+
     # 1. Nothing uploaded yet.
     if not retriever.has_content():
         return {"response": ai_tutor.NO_FILE_MESSAGE, "sources": []}
 
-    # 2. Retrieve top relevant chunks (top 4 by default).
-    top_chunks, top_sources, best_sim = retriever.retrieve(question, top_k=4)
+    # 2+3. Smart context retrieval — handles both general and specific questions.
+    top_chunks, top_sources, best_sim, is_general = retriever.get_context_for_question(
+        question, mode=mode, top_k=5
+    )
 
-    # 3. Hallucination guard: if even the best match is weak, refuse.
-    if not top_chunks or best_sim < retriever.SIMILARITY_THRESHOLD:
+    # Debug log (visible in server console during hackathon testing).
+    logger.info(
+        "[Chat] question_type=%s | chunks_selected=%d | top_sim=%.3f | mode=%s",
+        "GENERAL" if is_general else "SPECIFIC",
+        len(top_chunks),
+        best_sim,
+        mode,
+    )
+    print(
+        f"[Chat] question_type={'GENERAL' if is_general else 'SPECIFIC'} | "
+        f"chunks_selected={len(top_chunks)} | top_sim={best_sim:.3f} | mode={mode}"
+    )
+
+    if not top_chunks:
+        return {"response": ai_tutor.NO_FILE_MESSAGE, "sources": []}
+
+    # Hallucination guard for SPECIFIC questions only.
+    # General / summary questions must not be rejected solely on low similarity
+    # because the question has no keywords from the PDF.
+    if not is_general and best_sim < retriever.SIMILARITY_THRESHOLD:
         return {
             "response": ai_tutor.NOT_IN_MATERIAL_MESSAGE,
             "sources": [],
         }
 
-    # 4. Build prompt with the strict tutor rules + chosen response mode.
-    prompt = ai_tutor.build_prompt(top_chunks, question, request.mode or "normal")
+    # 4. Build prompt with the improved tutor rules + chosen response mode.
+    prompt = ai_tutor.build_prompt(top_chunks, question, mode)
 
     # 5. Dispatch to the configured backend in a thread (network I/O).
     answer_text, unavailable_msg = await asyncio.to_thread(
@@ -158,7 +181,8 @@ async def query_chatbot(request: ChatbotRequest = Body(...)):
         return {"response": unavailable_msg, "sources": []}
 
     # 6. Validate that the model stayed inside the retrieved context.
-    is_valid, reason = ai_tutor.validate_answer(answer_text, top_chunks)
+    #    Pass is_general so the validator uses a relaxed overlap threshold.
+    is_valid, reason = ai_tutor.validate_answer(answer_text, top_chunks, is_general=is_general)
     if not is_valid:
         logger.info("Answer rejected by validator: %s", reason)
         return {"response": ai_tutor.NOT_IN_MATERIAL_MESSAGE, "sources": []}

@@ -95,6 +95,7 @@ from app.api.direct_user_login import router as direct_user_login_router
 from app.api.user_tracking import router as user_tracking_router
 from app.api.chatbot import router as chatbot_router
 from app.api.mock_test import router as mock_test_router
+from app.api.tutor import router as tutor_router   # Unified AI Tutor workflow
 
 # Include routers
 app.include_router(upload_router)
@@ -119,6 +120,7 @@ app.include_router(direct_user_login_router)
 app.include_router(user_tracking_router)
 app.include_router(chatbot_router)
 app.include_router(mock_test_router)
+app.include_router(tutor_router)          # Unified AI Tutor workflow
 
 # Middleware to add language context to all templates
 @app.middleware("http")
@@ -148,76 +150,43 @@ async def landing_pages(page_name: str):
 # All other page routes have been removed to use only the landing page
 
 @app.get("/app")
-async def app_index(request: Request):
-    """Serve the main application after login"""
-    language = get_language(request)
+async def app_index():
+    """
+    Legacy /app route — redirect to the unified AI Tutor dashboard.
+    This merges the old Dashboard and AI Tutor into one page.
+    """
+    return RedirectResponse(url="/tutor", status_code=302)
 
-    # Get user data from session if available
+@app.get("/tutor")
+async def tutor_page(request: Request):
+    """
+    Serve the unified AI Tutor workflow page:
+    Upload → Analyse → Profile → Calendar Study Plan → Chatbot
+    """
+    language = get_language(request)
     try:
         user_data = {
             "username": request.session.get("username", ""),
-            "email": request.session.get("email", ""),
-            "phone": request.session.get("phone", ""),
-            "user_id": request.session.get("user_id", "")
+            "email":    request.session.get("email", ""),
+            "phone":    request.session.get("phone", ""),
+            "user_id":  request.session.get("user_id", ""),
         }
-    except Exception as e:
-        logger.error(f"Error accessing session: {str(e)}")
-        user_data = {
-            "username": "",
-            "email": "",
-            "phone": "",
-            "user_id": ""
-        }
-
+    except Exception:
+        user_data = {"username": "", "email": "", "phone": "", "user_id": ""}
     return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "language": language,
-            "user": user_data
-        }
+        "tutor.html",
+        {"request": request, "language": language, "user": user_data}
     )
+
 
 @app.get("/planner")
-async def planner(request: Request):
-    """Serve the study planner page"""
-    language = get_language(request)
-
-    # Get topics from query parameters if available
-    topics_param = request.query_params.get("topics", "[]")
-    try:
-        topics = eval(topics_param)  # Convert string to list
-        if not isinstance(topics, list):
-            topics = []
-    except:
-        topics = []
-
-    # Get user data from session if available
-    try:
-        user_data = {
-            "username": request.session.get("username", ""),
-            "email": request.session.get("email", ""),
-            "phone": request.session.get("phone", ""),
-            "user_id": request.session.get("user_id", "")
-        }
-    except Exception as e:
-        logger.error(f"Error accessing session: {str(e)}")
-        user_data = {
-            "username": "",
-            "email": "",
-            "phone": "",
-            "user_id": ""
-        }
-
-    return templates.TemplateResponse(
-        "planner.html",
-        {
-            "request": request,
-            "language": language,
-            "user": user_data,
-            "topics": topics
-        }
-    )
+async def planner():
+    """
+    Planner is now part of the unified AI Tutor dashboard.
+    Redirect here so old bookmarks and nav links still work.
+    The planner auto-generates after file upload on the /tutor page.
+    """
+    return RedirectResponse(url="/tutor#card-plan", status_code=302)
 
 @app.get("/daily-report")
 async def daily_report(request: Request):
@@ -357,37 +326,16 @@ async def logout():
     response.delete_cookie(key="user_id")
     return response
 
-# Mock Test route - Domain Selection
+# Mock Test — now integrated into the unified /tutor dashboard.
+# Redirect so old nav links still work.
 @app.get("/mock-test")
-async def mock_test(request: Request):
-    """Serve the domain selection page for mock tests"""
-    language = get_language(request)
-
-    # Get user data from session if available
-    try:
-        user_data = {
-            "username": request.session.get("username", ""),
-            "email": request.session.get("email", ""),
-            "phone": request.session.get("phone", ""),
-            "user_id": request.session.get("user_id", "")
-        }
-    except Exception as e:
-        logger.error(f"Error accessing session: {str(e)}")
-        user_data = {
-            "username": "",
-            "email": "",
-            "phone": "",
-            "user_id": ""
-        }
-
-    return templates.TemplateResponse(
-        "domain_select.html",
-        {
-            "request": request,
-            "language": language,
-            "user": user_data
-        }
-    )
+async def mock_test():
+    """
+    Mock Test is now part of the unified AI Tutor dashboard.
+    It generates questions from the uploaded PDF (not hardcoded JEE/GATE/KCET).
+    Redirect to /tutor so users land on the correct page.
+    """
+    return RedirectResponse(url="/tutor#card-mock-test", status_code=302)
 
 # Domain Test route - Actual Test
 @app.get("/domain-test/{domain}")

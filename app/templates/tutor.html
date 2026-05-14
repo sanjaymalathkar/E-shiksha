@@ -1,0 +1,1334 @@
+{% extends "base.html" %}
+{% block title %}AI Tutor — E-Shiksha{% endblock %}
+
+{# ============================================================
+   tutor.html  —  Single-file learning workflow
+   Upload PDF → Analyse → Profile → Calendar → Chatbot
+   ============================================================ #}
+
+{% block head %}
+<style>
+/* ── Layout ── */
+.tutor-layout { display: flex; gap: 0; min-height: calc(100vh - 120px); }
+.tutor-main   { flex: 1; min-width: 0; padding-right: 16px; }
+.tutor-sidebar{
+  width: 340px; flex-shrink: 0;
+  position: sticky; top: 80px; height: calc(100vh - 100px);
+  display: flex; flex-direction: column;
+  background: white; border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.1); overflow: hidden;
+}
+.dark .tutor-sidebar { background: #1f2937; }
+
+/* ── Step indicator ── */
+.step-bar { display: flex; gap: 0; margin-bottom: 24px; border-radius: 12px; overflow: hidden; }
+.step-item {
+  flex: 1; padding: 10px 4px; text-align: center; font-size: 0.78rem;
+  font-weight: 600; background: #e5e7eb; color: #6b7280;
+  border-right: 2px solid white; cursor: default; transition: all .3s;
+}
+.dark .step-item { background: #374151; color: #9ca3af; border-color: #1f2937; }
+.step-item.active   { background: #4f46e5; color: white; }
+.step-item.done     { background: #059669; color: white; }
+.step-item:last-child { border-right: none; }
+.step-num { display: block; font-size: 1.1rem; }
+
+/* ── Cards ── */
+.tutor-card {
+  background: white; border-radius: 16px; padding: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06); margin-bottom: 20px;
+}
+.dark .tutor-card { background: #1f2937; }
+.tutor-card h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 16px;
+  color: #1f2937; }
+.dark .tutor-card h2 { color: #f9fafb; }
+
+/* ── Upload zone ── */
+.drop-zone {
+  border: 2.5px dashed #a5b4fc; border-radius: 12px; padding: 40px 20px;
+  text-align: center; cursor: pointer; transition: all .3s; background: #f5f3ff;
+}
+.dark .drop-zone { background: #1e1b4b; border-color: #6366f1; }
+.drop-zone.drag-over { background: #ede9fe; border-color: #6366f1; }
+.drop-zone input[type=file] { display: none; }
+
+/* ── Buttons ── */
+.btn-primary {
+  background: linear-gradient(135deg,#4f46e5,#7c3aed); color: white;
+  padding: 10px 24px; border: none; border-radius: 10px; cursor: pointer;
+  font-weight: 600; font-size: 0.9rem; transition: opacity .2s;
+}
+.btn-primary:hover { opacity: .9; }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.btn-secondary {
+  background: #e5e7eb; color: #374151; padding: 10px 20px; border: none;
+  border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.9rem;
+}
+.dark .btn-secondary { background: #374151; color: #d1d5db; }
+
+/* ── Topic pills ── */
+.topic-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px; font-size: 0.78rem;
+  font-weight: 600; margin: 3px;
+}
+.pill-easy   { background:#d1fae5; color:#065f46; }
+.pill-medium { background:#fef3c7; color:#92400e; }
+.pill-hard   { background:#fee2e2; color:#991b1b; }
+.dark .pill-easy   { background:#064e3b; color:#6ee7b7; }
+.dark .pill-medium { background:#78350f; color:#fcd34d; }
+.dark .pill-hard   { background:#7f1d1d; color:#fca5a5; }
+
+/* ── Profile form ── */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 600;
+  color: #374151; margin-bottom: 6px; }
+.dark .form-group label { color: #d1d5db; }
+.form-group select, .form-group input {
+  width: 100%; padding: 9px 12px; border-radius: 9px;
+  border: 1.5px solid #d1d5db; background: white; font-size: 0.9rem;
+  color: #1f2937; transition: border-color .2s;
+}
+.dark .form-group select, .dark .form-group input {
+  background: #374151; border-color: #4b5563; color: #f9fafb;
+}
+.form-group select:focus, .form-group input:focus {
+  outline: none; border-color: #6366f1;
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media(max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* ── Mock Test ── */
+.mcq-option { display:flex; align-items:center; gap:10px; padding:9px 14px;
+  border:1.5px solid #d1d5db; border-radius:10px; cursor:pointer; transition:all .2s; margin-bottom:6px; }
+.mcq-option:hover { border-color:#6366f1; background:#f5f3ff; }
+.mcq-option input[type=radio] { accent-color:#4f46e5; width:16px; height:16px; flex-shrink:0; }
+.mcq-option.correct-ans { border-color:#059669!important; background:#f0fdf4!important; }
+.mcq-option.wrong-ans   { border-color:#dc2626!important; background:#fef2f2!important; }
+.dark .mcq-option { border-color:#4b5563; }
+.dark .mcq-option:hover { border-color:#818cf8; background:#1e1b4b; }
+.review-item-correct { border-left:4px solid #059669; padding-left:8px; }
+.review-item-wrong   { border-left:4px solid #dc2626; padding-left:8px; }
+
+/* ── Calendar ── */
+.cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.cal-event {
+  border-radius: 12px; padding: 12px; position: relative; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.cal-event .ev-date { font-size: 0.72rem; font-weight: 700; opacity: .85; margin-bottom: 4px; }
+.cal-event .ev-title { font-size: 0.88rem; font-weight: 700; margin-bottom: 4px; }
+.cal-event .ev-desc { font-size: 0.76rem; opacity: .9; line-height: 1.4; }
+.cal-event .ev-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 0.68rem; font-weight: 700; background: rgba(255,255,255,.3);
+  margin-top: 6px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
+    📚 AI Tutor — Single-File Learning Workflow
+  </h1>
+  <div class="flex gap-2">
+    <button onclick="regeneratePlan()" class="btn-secondary text-sm" id="regen-btn" style="display:none">
+      🔄 Regenerate Plan
+    </button>
+    <button onclick="clearSession()" class="btn-secondary text-sm">
+      🗑️ Clear &amp; Upload New File
+    </button>
+  </div>
+</div>
+
+<!-- Step indicator -->
+<div class="step-bar" id="step-bar">
+  <div class="step-item active" id="stp1"><span class="step-num">1</span>Upload</div>
+  <div class="step-item"        id="stp2"><span class="step-num">2</span>Profile</div>
+  <div class="step-item"        id="stp3"><span class="step-num">3</span>Plan</div>
+  <div class="step-item"        id="stp4"><span class="step-num">4</span>Chat</div>
+</div>
+
+<div class="tutor-layout">
+  <!-- ════ LEFT: main workflow ════ -->
+  <div class="tutor-main">
+
+    <!-- STEP 1: Upload -->
+    <div class="tutor-card" id="card-upload">
+      <h2>📤 Step 1 — Upload Study Material</h2>
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-pick').click()">
+        <input type="file" id="file-pick" accept=".pdf,.txt">
+        <div class="text-4xl mb-3">📄</div>
+        <p class="font-semibold text-indigo-700 dark:text-indigo-300">Click or drag &amp; drop a PDF / TXT file</p>
+        <p class="text-sm text-gray-500 mt-1" id="file-chosen">No file chosen</p>
+      </div>
+      <div class="mt-4 flex items-center gap-3">
+        <button class="btn-primary" id="upload-btn" onclick="uploadFile()">
+          ⬆️ Upload &amp; Analyse
+        </button>
+        <span id="upload-msg" class="text-sm text-gray-500"></span>
+      </div>
+    </div>
+
+    <!-- STEP 2: Analysis Summary + Profile (hidden until file uploaded) -->
+    <div class="tutor-card hidden" id="card-analysis">
+      <h2>✅ File Analysed</h2>
+      <div id="analysis-summary" class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl text-sm"></div>
+      <div id="topics-display" class="mb-2"></div>
+    </div>
+
+    <div class="tutor-card hidden" id="card-profile">
+      <h2>👤 Step 2 — Learning Profile</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        Answer 7 quick questions so the calendar adapts to you.
+      </p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>📊 Learning Level</label>
+          <select id="p-level">
+            <option>Beginner</option><option selected>Medium</option><option>Advanced</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>⏱️ Daily Study Hours</label>
+          <input type="number" id="p-hours" min="0.5" max="12" step="0.5" value="2">
+        </div>
+        <div class="form-group">
+          <label>📅 Exam Date</label>
+          <input type="date" id="p-exam">
+        </div>
+        <div class="form-group">
+          <label>🌙 Lighter Study Days</label>
+          <select id="p-light">
+            <option>No light days</option>
+            <option>Sunday</option>
+            <option>Saturday and Sunday</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>🎯 Target</label>
+          <select id="p-target">
+            <option>Pass</option>
+            <option selected>Score Good Marks</option>
+            <option>Top Score</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>📖 Learning Style</label>
+          <select id="p-style">
+            <option>Theory first</option>
+            <option>Examples first</option>
+            <option>Quiz first</option>
+            <option selected>Mixed</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>💪 Confidence in Subject (1 = Low … 5 = High)</label>
+        <input type="range" id="p-conf" min="1" max="5" value="3"
+               oninput="document.getElementById('conf-val').textContent=this.value">
+        <span id="conf-val" class="text-indigo-600 font-bold ml-2">3</span> / 5
+      </div>
+      <div class="flex gap-3 mt-2">
+        <button class="btn-primary" onclick="saveProfile()">📋 Save &amp; Generate Plan</button>
+        <span id="profile-msg" class="text-sm text-gray-500 self-center"></span>
+      </div>
+    </div>
+
+    <!-- STEP 3: Calendar Plan (hidden until generated) -->
+    <div class="tutor-card hidden" id="card-plan">
+      <div class="flex items-center justify-between mb-4">
+        <h2 style="margin:0">📅 Step 3 — Your Study Calendar</h2>
+        <span id="plan-meta" class="text-sm text-indigo-600 dark:text-indigo-400 font-semibold"></span>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex flex-wrap gap-2 mb-4 text-xs font-semibold">
+        <span style="background:#4f46e5;color:#fff;padding:3px 10px;border-radius:10px">Study</span>
+        <span style="background:#7c3aed;color:#fff;padding:3px 10px;border-radius:10px">Revision</span>
+        <span style="background:#0891b2;color:#fff;padding:3px 10px;border-radius:10px">Quiz</span>
+        <span style="background:#dc2626;color:#fff;padding:3px 10px;border-radius:10px">Mock Test</span>
+        <span style="background:#d97706;color:#fff;padding:3px 10px;border-radius:10px">Answer Writing</span>
+        <span style="background:#059669;color:#fff;padding:3px 10px;border-radius:10px">Final Revision</span>
+      </div>
+
+      <div class="cal-grid" id="calendar-grid">
+        <!-- Events rendered by JS -->
+      </div>
+    </div>
+
+    <!-- ════ MOCK TEST CARD ════ -->
+    <div class="tutor-card hidden" id="card-mock-test">
+      <div class="flex items-center justify-between mb-3">
+        <h2 style="margin:0">📝 Mock Test from Uploaded PDF</h2>
+        <span id="mock-file-label" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold"></span>
+      </div>
+
+      <!-- State 1: No test generated yet -->
+      <div id="mock-state-idle">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Generate 10 unique MCQ questions from your uploaded study material.<br>
+          Questions are based <strong>only</strong> on the uploaded PDF — no outside knowledge.
+        </p>
+        <button class="btn-primary" onclick="generateMockTest()" id="mock-gen-btn">
+          🧪 Generate Mock Test from PDF
+        </button>
+        <span id="mock-gen-msg" class="text-sm text-gray-500 ml-3"></span>
+      </div>
+
+      <!-- State 2: Questions ready — take the test -->
+      <div id="mock-state-test" class="hidden">
+        <div class="flex items-center justify-between mb-3">
+          <span id="mock-q-count" class="text-sm font-semibold text-indigo-600"></span>
+          <button onclick="resetMockTest()" class="btn-secondary text-xs py-1 px-3">🔄 Regenerate</button>
+        </div>
+        <div id="mock-questions-container" class="space-y-5 mb-5">
+          <!-- MCQs rendered here by JS -->
+        </div>
+        <button class="btn-primary" onclick="submitMockTest()" id="mock-submit-btn">
+          ✅ Submit Answers
+        </button>
+        <span id="mock-submit-msg" class="text-sm text-gray-500 ml-3"></span>
+      </div>
+
+      <!-- State 3: Result display -->
+      <div id="mock-state-result" class="hidden">
+        <!-- Score banner -->
+        <div class="flex items-center gap-4 mb-5 p-4 rounded-2xl"
+             style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">
+          <div class="text-center text-white">
+            <div id="mock-score-big" class="text-5xl font-black">0</div>
+            <div class="text-xs opacity-80">/ <span id="mock-total-big">10</span></div>
+          </div>
+          <div class="text-white">
+            <div id="mock-pct" class="text-2xl font-bold">0%</div>
+            <div class="text-sm opacity-80" id="mock-grade-label">Keep Practising</div>
+          </div>
+        </div>
+
+        <!-- Weak topics -->
+        <div id="mock-weak-section" class="mb-4 hidden">
+          <h4 class="font-bold text-red-600 dark:text-red-400 mb-2">⚠️ Weak Topics (Revise these)</h4>
+          <div id="mock-weak-topics" class="flex flex-wrap gap-2"></div>
+          <button onclick="addWeakToPlanner()" id="mock-update-plan-btn"
+                  class="mt-3 btn-secondary text-sm py-1.5 px-3">
+            📅 Add Revision Tasks to Planner
+          </button>
+          <span id="mock-plan-update-msg" class="text-xs text-gray-500 ml-2"></span>
+        </div>
+
+        <!-- Suggestion -->
+        <div id="mock-suggestion"
+             class="p-3 mb-4 rounded-xl text-sm font-medium"
+             style="background:#ede9fe;color:#5b21b6"></div>
+
+        <!-- Answer Review (collapsible) -->
+        <details class="mb-4">
+          <summary class="cursor-pointer font-bold text-gray-700 dark:text-gray-300 mb-3">
+            📖 View Answer Review
+          </summary>
+          <div id="mock-review-list" class="space-y-3 mt-3"></div>
+        </details>
+
+        <button onclick="resetMockTest()" class="btn-secondary text-sm">
+          🔄 Take Another Test
+        </button>
+      </div>
+    </div>
+
+    <!-- ════ ATTENDANCE CARD ════ -->
+    <div class="tutor-card" id="card-attendance">
+      <div class="flex items-center justify-between mb-4">
+        <h2 style="margin:0">📋 Attendance</h2>
+        <span id="att-pct-badge" class="text-sm font-bold text-white px-3 py-1 rounded-full"
+              style="background:#059669">0%</span>
+      </div>
+
+      <!-- Today status + mark button -->
+      <div class="flex items-center gap-3 mb-4">
+        <div id="att-today-status"
+             class="flex-1 text-center py-3 rounded-xl text-sm font-semibold"
+             style="background:#f1f5f9;color:#64748b">
+          Not marked today
+        </div>
+        <button onclick="markAttendance()" id="att-mark-btn"
+                class="btn-primary whitespace-nowrap text-sm py-2 px-4">
+          ✅ Mark Present
+        </button>
+      </div>
+
+      <!-- Stats row -->
+      <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+        <div class="p-3 rounded-xl" style="background:#f0fdf4">
+          <div id="att-present" class="text-2xl font-bold text-green-700">0</div>
+          <div class="text-xs text-green-600">Present</div>
+        </div>
+        <div class="p-3 rounded-xl" style="background:#fff7ed">
+          <div id="att-streak" class="text-2xl font-bold text-orange-600">0</div>
+          <div class="text-xs text-orange-500">🔥 Streak</div>
+        </div>
+        <div class="p-3 rounded-xl" style="background:#f5f3ff">
+          <div id="att-total" class="text-2xl font-bold text-indigo-700">0</div>
+          <div class="text-xs text-indigo-500">Total Days</div>
+        </div>
+      </div>
+
+      <!-- History list -->
+      <div id="att-history" class="space-y-1 max-h-36 overflow-y-auto text-xs text-gray-600 dark:text-gray-400">
+        <p class="text-center text-gray-400">No attendance history yet.</p>
+      </div>
+    </div>
+
+    <!-- ════ RANKING / MOTIVATION CARD ════ -->
+    <div class="tutor-card" id="card-ranking">
+      <h2>🏆 Ranking &amp; Motivation</h2>
+
+      <!-- Rank display -->
+      <div class="flex items-center gap-4 mb-4">
+        <div id="rank-badge-icon" class="text-4xl">🥉</div>
+        <div>
+          <div id="rank-level" class="text-lg font-bold text-gray-800 dark:text-white">Beginner Learner</div>
+          <div id="rank-badge" class="text-sm text-indigo-600 font-semibold">🎖️ Starter</div>
+        </div>
+        <div class="ml-auto text-right">
+          <div id="rank-points" class="text-3xl font-black text-indigo-600">0</div>
+          <div class="text-xs text-gray-500">points</div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="mb-3">
+        <div class="flex justify-between text-xs mb-1">
+          <span class="text-gray-500">Progress to next rank</span>
+          <span id="rank-next-label" class="text-indigo-600 font-semibold">50 pts to Silver</span>
+        </div>
+        <div style="background:#e5e7eb;border-radius:8px;height:10px;overflow:hidden">
+          <div id="rank-progress-bar" style="background:linear-gradient(90deg,#4f46e5,#7c3aed);height:100%;width:0%;transition:width .5s"></div>
+        </div>
+      </div>
+
+      <!-- Task progress -->
+      <div class="flex justify-between text-sm mb-3">
+        <span class="text-gray-600 dark:text-gray-400">Tasks completed</span>
+        <span class="font-bold text-gray-800 dark:text-white">
+          <span id="prog-done">0</span> / <span id="prog-total">0</span>
+        </span>
+      </div>
+
+      <!-- Motivation message -->
+      <div id="rank-motivation"
+           class="p-3 rounded-xl text-sm font-medium text-center"
+           style="background:#ede9fe;color:#5b21b6">
+        Great start! Upload your study material to begin.
+      </div>
+    </div>
+
+    <!-- ════ PROFILE CARD ════ -->
+    <div class="tutor-card" id="card-profile-details">
+      <div class="flex items-center justify-between mb-4">
+        <h2 style="margin:0">👤 My Profile</h2>
+        <button onclick="toggleProfileEdit()" id="prof-edit-btn" class="btn-secondary text-sm py-1.5 px-3">
+          ✏️ Edit
+        </button>
+      </div>
+
+      <!-- Display view -->
+      <div id="prof-display" class="grid grid-cols-2 gap-3 text-sm"></div>
+
+      <!-- Edit form (hidden by default) -->
+      <div id="prof-edit-form" class="hidden">
+        <div class="form-grid">
+          <div class="form-group"><label>Full Name</label>
+            <input type="text" id="pf-name" placeholder="Your name"></div>
+          <div class="form-group"><label>Email</label>
+            <input type="email" id="pf-email" placeholder="Email"></div>
+          <div class="form-group"><label>Phone</label>
+            <input type="tel" id="pf-phone" placeholder="Phone"></div>
+          <div class="form-group"><label>Class / Semester</label>
+            <input type="text" id="pf-class" placeholder="e.g. Sem 3"></div>
+          <div class="form-group"><label>Department</label>
+            <input type="text" id="pf-dept" placeholder="e.g. CS"></div>
+          <div class="form-group"><label>College</label>
+            <input type="text" id="pf-college" placeholder="College name"></div>
+          <div class="form-group"><label>Preferred Language</label>
+            <select id="pf-lang">
+              <option>English</option><option>Hindi</option>
+              <option>Kannada</option><option>Tamil</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Exam Target</label>
+            <input type="text" id="pf-target" placeholder="e.g. GATE 2026"></div>
+        </div>
+        <div class="form-group">
+          <label>Learning Goal</label>
+          <input type="text" id="pf-goal" placeholder="e.g. Score 90+ in all subjects">
+        </div>
+        <div class="form-group">
+          <label>Daily Study Hours</label>
+          <input type="number" id="pf-hours" min="0.5" max="12" step="0.5" value="2">
+        </div>
+        <div class="flex gap-3 mt-2">
+          <button onclick="saveProfileDetails()" class="btn-primary text-sm py-2 px-4">💾 Save Profile</button>
+          <button onclick="toggleProfileEdit()" class="btn-secondary text-sm py-2 px-4">Cancel</button>
+          <span id="prof-save-msg" class="text-sm self-center text-gray-500"></span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end tutor-main -->
+
+  <!-- ════ RIGHT: Sidebar Chatbot (always visible on /tutor page) ════ -->
+  <div class="tutor-sidebar" id="tutor-sidebar">
+    <!-- Header shows active file name -->
+    <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:14px 16px;color:white;">
+      <div class="font-bold text-base">🤖 E-Shiksha AI Tutor</div>
+      <div id="chat-file-label" class="text-xs mt-1 opacity-80">No file uploaded yet</div>
+    </div>
+
+    <!-- Chat messages area -->
+    <div id="chat-body" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <div class="text-xs text-gray-400 dark:text-gray-500 text-center mt-4">
+        Upload a file to start chatting with the AI tutor.
+      </div>
+    </div>
+
+    <!-- Response mode dropdown -->
+    <div style="padding:8px 12px;border-top:1px solid #e5e7eb;" class="dark:border-gray-700">
+      <select id="chat-mode" class="w-full text-xs border border-gray-200 rounded-lg p-1.5
+          dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        <option value="normal">💬 Normal Answer</option>
+        <option value="simple">🟢 Explain Simply</option>
+        <option value="example">💡 Explain with Example</option>
+        <option value="exam">📝 Give Exam Answer</option>
+        <option value="summary">📋 Summarize</option>
+        <option value="important_points">⭐ Important Points</option>
+      </select>
+    </div>
+
+    <!-- Input bar -->
+    <div style="padding:10px 12px;border-top:1px solid #e5e7eb;display:flex;gap:8px;"
+         class="dark:border-gray-700">
+      <input type="text" id="chat-input" placeholder="Ask from the uploaded PDF…"
+        style="flex:1;padding:8px 12px;border:1.5px solid #d1d5db;border-radius:20px;
+               font-size:0.82rem;outline:none;"
+        class="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+        onkeydown="if(event.key==='Enter')sendChat()">
+      <button onclick="sendChat()" id="chat-send-btn"
+        style="background:#4f46e5;color:white;border:none;border-radius:50%;width:36px;
+               height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-paper-plane" style="font-size:0.8rem"></i>
+      </button>
+    </div>
+  </div><!-- end tutor-sidebar -->
+
+</div><!-- end tutor-layout -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ============================================================
+   tutor.html — Client-side workflow controller
+   ============================================================ */
+
+// ── State ──────────────────────────────────────────────────
+let activeFileId  = null;
+let activeFilename= null;
+let hasProfile    = false;
+
+// ── Step helpers ────────────────────────────────────────────
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('stp' + i);
+    el.className = 'step-item ' + (i < n ? 'done' : (i === n ? 'active' : ''));
+  }
+}
+
+function show(id)  { document.getElementById(id).classList.remove('hidden'); }
+function hide(id)  { document.getElementById(id).classList.add('hidden'); }
+function msg(id, text, color='gray') {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.style.color = color === 'red' ? '#dc2626' : (color === 'green' ? '#059669' : '#6b7280');
+}
+
+// ── Drop zone ───────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+const filePick = document.getElementById('file-pick');
+
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) { filePick.files = e.dataTransfer.files; updateChosen(f.name); }
+});
+filePick.addEventListener('change', () => {
+  if (filePick.files[0]) updateChosen(filePick.files[0].name);
+});
+function updateChosen(name) {
+  document.getElementById('file-chosen').textContent = name;
+}
+
+// ── A. Upload ────────────────────────────────────────────────
+async function uploadFile() {
+  const f = filePick.files[0];
+  if (!f) { msg('upload-msg', 'Please choose a file first.', 'red'); return; }
+
+  msg('upload-msg', '⏳ Uploading and analysing…');
+  document.getElementById('upload-btn').disabled = true;
+
+  const fd = new FormData();
+  fd.append('file', f);
+
+  try {
+    const r = await fetch('/api/tutor/upload', { method: 'POST', body: fd });
+    const data = await r.json();
+
+    if (!r.ok) { msg('upload-msg', '❌ ' + (data.detail || 'Upload failed.'), 'red'); return; }
+
+    // Save state
+    activeFileId   = data.file_id;
+    activeFilename = data.filename;
+    hasProfile     = false;
+
+    // Show analysis summary
+    const summary = `
+      <strong>✅ ${data.filename}</strong><br>
+      📝 Text extracted: <b>${data.text_length.toLocaleString()}</b> chars &nbsp;|&nbsp;
+      📦 Chunks: <b>${data.chunks}</b> &nbsp;|&nbsp;
+      📌 Topics found: <b>${data.topics}</b>`;
+    document.getElementById('analysis-summary').innerHTML = summary;
+
+    // Render topic pills
+    const pillBox = document.getElementById('topics-display');
+    pillBox.innerHTML = '<p class="text-xs font-semibold text-gray-500 mb-2">Topics detected:</p>';
+    (data.topic_list || []).forEach(t => {
+      const cls = t.difficulty === 'Easy' ? 'pill-easy'
+                : t.difficulty === 'Hard' ? 'pill-hard' : 'pill-medium';
+      pillBox.innerHTML += `<span class="topic-pill ${cls}">${t.title}</span>`;
+    });
+
+    // Update chatbot label
+    document.getElementById('chat-file-label').textContent = '📄 Chatting with: ' + data.filename;
+
+    // Update ranking from upload response
+    if (data.ranking) renderRanking(data.ranking);
+
+    // Clear old calendar, mock test UI
+    document.getElementById('calendar-grid').innerHTML = '';
+    hide('card-plan');
+    document.getElementById('regen-btn').style.display = 'none';
+    resetMockTestUI();
+
+    // Show analysis + profile form + mock test section
+    show('card-analysis');
+    show('card-profile');
+    show('card-mock-test');
+    document.getElementById('mock-file-label').textContent = '📄 ' + data.filename;
+
+    // Set default exam date (14 days from today)
+    const d = new Date(); d.setDate(d.getDate() + 14);
+    document.getElementById('p-exam').value = d.toISOString().slice(0, 10);
+
+    msg('upload-msg', '✅ File analysed! Fill the profile below to generate your planner.', 'green');
+    setStep(2);
+
+    // ── AUTO-GENERATE PLAN with default profile so Planner is ready immediately ──
+    // User can always change the profile and click "Save & Generate Plan" to update.
+    try {
+      const defaultProfile = {
+        learning_level: 'Medium',
+        daily_hours:    2,
+        exam_date:      d.toISOString().slice(0, 10),
+        light_days:     'Sunday',
+        target:         'Score Good Marks',
+        learning_style: 'Mixed',
+        confidence:     3,
+      };
+      // Save default profile silently
+      await fetch('/api/tutor/save-profile', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(defaultProfile),
+      });
+      // Generate plan silently
+      const pr = await fetch('/api/tutor/generate-plan', { method: 'POST' });
+      if (pr.ok) {
+        const pd = await pr.json();
+        renderCalendar(pd.plan);
+        show('card-plan');
+        document.getElementById('regen-btn').style.display = '';
+        document.getElementById('plan-meta').textContent =
+          `${pd.days} days | ${data.filename} | (default profile)`;
+        if (pd.ranking)  renderRanking(pd.ranking);
+        if (pd.progress) renderProgress(pd.progress);
+        hasProfile = true;
+        setStep(3);
+      }
+    } catch (_) {
+      /* auto-plan failed silently; user can click Save & Generate Plan manually */
+    }
+  } catch (err) {
+    msg('upload-msg', '❌ Error: ' + err.message, 'red');
+  } finally {
+    document.getElementById('upload-btn').disabled = false;
+  }
+}
+
+// ── B. Save Profile + Generate Plan ─────────────────────────
+async function saveProfile() {
+  if (!activeFileId) { alert('Please upload a file first.'); return; }
+
+  msg('profile-msg', '⏳ Saving profile…');
+
+  const profile = {
+    learning_level: document.getElementById('p-level').value,
+    daily_hours:    parseFloat(document.getElementById('p-hours').value) || 2,
+    exam_date:      document.getElementById('p-exam').value,
+    light_days:     document.getElementById('p-light').value,
+    target:         document.getElementById('p-target').value,
+    learning_style: document.getElementById('p-style').value,
+    confidence:     parseInt(document.getElementById('p-conf').value),
+  };
+
+  try {
+    // Save profile
+    const pr = await fetch('/api/tutor/save-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    });
+    if (!pr.ok) { msg('profile-msg', '❌ Could not save profile.', 'red'); return; }
+    hasProfile = true;
+
+    // Generate plan
+    msg('profile-msg', '⏳ Generating calendar plan…');
+    await generatePlan();
+    setStep(3);
+  } catch (err) {
+    msg('profile-msg', '❌ ' + err.message, 'red');
+  }
+}
+
+// ── C. Generate / Regenerate Plan ───────────────────────────
+async function generatePlan() {
+  try {
+    const r = await fetch('/api/tutor/generate-plan', { method: 'POST' });
+    const data = await r.json();
+    if (!r.ok) { alert(data.detail || 'Could not generate plan.'); return; }
+    renderCalendar(data.plan);
+    show('card-plan');
+    document.getElementById('regen-btn').style.display = '';
+    document.getElementById('plan-meta').textContent = `${data.days} days | ${activeFilename}`;
+    msg('profile-msg', '✅ Plan generated!', 'green');
+    setStep(3);
+  } catch (err) {
+    alert('Error generating plan: ' + err.message);
+  }
+}
+
+async function regeneratePlan() {
+  if (!activeFileId) { alert('Please upload a file first.'); return; }
+  if (!hasProfile)   { alert('Please fill in the profile first.'); return; }
+  // Optionally re-save profile with current values first
+  await saveProfile();
+}
+
+// ── D. Render Calendar ───────────────────────────────────────
+function renderCalendar(plan) {
+  const grid = document.getElementById('calendar-grid');
+  grid.innerHTML = '';   // Clear old events before rendering new ones
+
+  if (!plan || !plan.length) {
+    grid.innerHTML = '<p class="text-gray-500 col-span-full">No plan generated yet.</p>';
+    return;
+  }
+
+  plan.forEach((ev, idx) => {
+    const colour   = ev.colour || '#4f46e5';
+    const card     = document.createElement('div');
+    card.className = 'cal-event';
+    card.style.background = colour;
+    card.style.color       = 'white';
+
+    // Each event needs a stable id for the complete-task route
+    if (!ev.id) ev.id = 'event_' + (idx + 1);
+
+    // Format date nicely
+    const d  = new Date(ev.date + 'T00:00:00');
+    const ds = d.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short' });
+
+    const doneStyle = ev.completed
+      ? 'background:rgba(255,255,255,.25);color:white;border:none;border-radius:8px;padding:4px 10px;font-size:.72rem;cursor:default;font-weight:700'
+      : 'background:rgba(255,255,255,.2);color:white;border:1.5px solid rgba(255,255,255,.5);border-radius:8px;padding:4px 10px;font-size:.72rem;cursor:pointer;font-weight:600';
+
+    card.innerHTML = `
+      <div class="ev-date">${ds}</div>
+      <div class="ev-title">${escHtml(ev.title)}</div>
+      <div class="ev-desc">${escHtml(ev.description)}</div>
+      <div class="flex items-center justify-between mt-2">
+        <span class="ev-badge">⏱ ${ev.duration_hours}h · ${ev.difficulty}</span>
+        <button id="btn-${escHtml(ev.id)}" style="${doneStyle}"
+                onclick="completeTask('${escHtml(ev.id)}', this)"
+                ${ev.completed ? 'disabled' : ''}>
+          ${ev.completed ? '✅ Done' : 'Mark Done'}
+        </button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── E. Chat ──────────────────────────────────────────────────
+function appendMsg(text, role) {
+  const body  = document.getElementById('chat-body');
+  const wrap  = document.createElement('div');
+  wrap.style.cssText = role === 'user'
+    ? 'align-self:flex-end;max-width:85%;background:#4f46e5;color:white;padding:8px 13px;border-radius:16px 16px 4px 16px;font-size:0.82rem;'
+    : 'align-self:flex-start;max-width:90%;background:#f3f4f6;color:#1f2937;padding:10px 13px;border-radius:16px 16px 16px 4px;font-size:0.82rem;white-space:pre-wrap;';
+  if (role === 'bot') {
+    // Render markdown-lite: ** bold **, bullet lines
+    wrap.innerHTML = text
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^## (.+)$/gm, '<b style="font-size:0.88rem">$1</b>')
+      .replace(/^- (.+)$/gm, '• $1')
+      .replace(/\n/g, '<br>');
+  } else {
+    wrap.textContent = text;
+  }
+  body.appendChild(wrap);
+  body.scrollTop = body.scrollHeight;
+}
+
+async function sendChat() {
+  const inp  = document.getElementById('chat-input');
+  const q    = inp.value.trim();
+  if (!q) return;
+  inp.value  = '';
+
+  appendMsg(q, 'user');
+
+  // Typing indicator
+  const typing = document.createElement('div');
+  typing.id = 'typing-ind';
+  typing.style.cssText = 'color:#9ca3af;font-size:0.78rem;padding:4px 8px;';
+  typing.textContent = '⏳ Thinking…';
+  document.getElementById('chat-body').appendChild(typing);
+  document.getElementById('chat-body').scrollTop = 9999;
+
+  const mode = document.getElementById('chat-mode').value;
+
+  try {
+    const r = await fetch('/api/tutor/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: q, mode }),
+    });
+    const data = await r.json();
+    typing.remove();
+    appendMsg(data.response || 'No response.', 'bot');
+    // Refresh ranking (chat awards +2 points)
+    if (data.ranking) renderRanking(data.ranking);
+    // Mark step 4 active
+    setStep(4);
+  } catch (err) {
+    typing.remove();
+    appendMsg('❌ Error: ' + err.message, 'bot');
+  }
+}
+
+// ── F. Clear ─────────────────────────────────────────────────
+async function clearSession() {
+  if (!confirm('Clear all uploaded data, plan and chat history?')) return;
+  await fetch('/api/tutor/clear', { method: 'POST' });
+
+  // Reset UI
+  activeFileId   = null;
+  activeFilename = null;
+  hasProfile     = false;
+
+  filePick.value = '';
+  document.getElementById('file-chosen').textContent = 'No file chosen';
+  document.getElementById('analysis-summary').innerHTML = '';
+  document.getElementById('topics-display').innerHTML   = '';
+  document.getElementById('calendar-grid').innerHTML    = '';
+  document.getElementById('chat-body').innerHTML =
+    '<div class="text-xs text-gray-400 text-center mt-4">Upload a file to start chatting.</div>';
+  document.getElementById('chat-file-label').textContent = 'No file uploaded yet';
+  document.getElementById('plan-meta').textContent = '';
+  document.getElementById('regen-btn').style.display = 'none';
+  msg('upload-msg', '');
+  msg('profile-msg', '');
+
+  hide('card-analysis');
+  hide('card-profile');
+  hide('card-plan');
+  setStep(1);
+}
+
+// ── G. Attendance ─────────────────────────────────────────────
+async function markAttendance() {
+  document.getElementById('att-mark-btn').disabled = true;
+  try {
+    const r    = await fetch('/api/tutor/mark-attendance', { method: 'POST' });
+    const data = await r.json();
+    renderAttendanceUI(data);
+    if (data.ranking) renderRanking(data.ranking);
+    if (data.status === 'already_marked')
+      alert('Attendance already marked for today!');
+  } catch (err) {
+    alert('Error marking attendance: ' + err.message);
+  } finally {
+    document.getElementById('att-mark-btn').disabled = false;
+  }
+}
+
+async function loadAttendance() {
+  try {
+    const r = await fetch('/api/tutor/attendance-status');
+    const d = await r.json();
+    renderAttendanceUI(d);
+  } catch (_) {}
+}
+
+function renderAttendanceUI(d) {
+  const pct   = d.attendance_percentage ?? 0;
+  const today = d.today_marked;
+
+  // Badge colour
+  const badge = document.getElementById('att-pct-badge');
+  badge.textContent = pct + '%';
+  badge.style.background = pct >= 75 ? '#059669' : pct >= 50 ? '#d97706' : '#dc2626';
+
+  // Today status
+  const ts = document.getElementById('att-today-status');
+  if (today) {
+    ts.textContent = '✅ Present today';
+    ts.style.background = '#f0fdf4';
+    ts.style.color = '#166534';
+    document.getElementById('att-mark-btn').disabled = true;
+    document.getElementById('att-mark-btn').textContent = '✓ Marked';
+  } else {
+    ts.textContent = 'Not marked today — click "Mark Present"';
+    ts.style.background = '#fef9c3';
+    ts.style.color = '#854d0e';
+    document.getElementById('att-mark-btn').disabled  = false;
+    document.getElementById('att-mark-btn').textContent = '✅ Mark Present';
+  }
+
+  // Stats
+  document.getElementById('att-present').textContent = d.present_days  ?? 0;
+  document.getElementById('att-streak').textContent  = d.streak        ?? 0;
+  document.getElementById('att-total').textContent   = d.total_days    ?? 0;
+
+  // History
+  const hist = d.history || [];
+  const box  = document.getElementById('att-history');
+  if (!hist.length) {
+    box.innerHTML = '<p class="text-center text-gray-400">No attendance history yet.</p>';
+  } else {
+    box.innerHTML = hist.map(h =>
+      `<div class="flex justify-between px-2 py-1 rounded" style="background:#f8fafc">
+         <span>${h.date}</span>
+         <span class="font-semibold" style="color:#059669">${h.status}</span>
+         <span class="text-gray-400">${h.timestamp || ''}</span>
+       </div>`
+    ).join('');
+  }
+}
+
+// ── H. Ranking ────────────────────────────────────────────────
+async function loadRanking() {
+  try {
+    const r = await fetch('/api/tutor/ranking');
+    const d = await r.json();
+    if (d.ranking)  renderRanking(d.ranking);
+    if (d.progress) renderProgress(d.progress);
+  } catch (_) {}
+}
+
+function renderRanking(r) {
+  document.getElementById('rank-points').textContent = r.points ?? 0;
+  document.getElementById('rank-level').textContent  = r.level  ?? 'Beginner Learner';
+  document.getElementById('rank-badge').textContent  = '🎖️ ' + (r.badge ?? 'Starter');
+  document.getElementById('rank-motivation').textContent = r.motivation ?? '';
+
+  // Rank icon
+  const icons = { Bronze:'🥉', Silver:'🥈', Gold:'🥇', Platinum:'💎' };
+  document.getElementById('rank-badge-icon').textContent = icons[r.rank] || '🥉';
+
+  // Progress bar towards next rank
+  const thresholds = [0, 50, 100, 200, 300];
+  const pts  = r.points ?? 0;
+  let   nxt  = thresholds.find(t => t > pts) ?? 300;
+  let   prev = thresholds.filter(t => t <= pts).pop() ?? 0;
+  const pct  = Math.min(100, Math.round((pts - prev) / Math.max(1, nxt - prev) * 100));
+  document.getElementById('rank-progress-bar').style.width = pct + '%';
+  document.getElementById('rank-next-label').textContent =
+    pts >= 200 ? 'Max rank reached! 🏆' : `${nxt - pts} pts to next rank`;
+}
+
+function renderProgress(p) {
+  document.getElementById('prog-done').textContent  = p.completed_tasks ?? 0;
+  document.getElementById('prog-total').textContent = p.total_tasks      ?? 0;
+}
+
+// ── I. Complete Calendar Task ─────────────────────────────────
+async function completeTask(eventId, btnEl) {
+  try {
+    const r = await fetch('/api/tutor/complete-task', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_id: eventId }),
+    });
+    const d = await r.json();
+    if (d.status === 'already_done') { alert('Already completed!'); return; }
+    // Update button appearance
+    btnEl.textContent = '✅ Done';
+    btnEl.disabled    = true;
+    btnEl.style.background = '#059669';
+    // Refresh ranking and progress
+    if (d.ranking)  renderRanking(d.ranking);
+    if (d.progress) renderProgress(d.progress);
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// ── J. Profile ────────────────────────────────────────────────
+let profileEditOpen = false;
+
+async function loadProfileDetails() {
+  try {
+    const r = await fetch('/api/tutor/profile');
+    const d = await r.json();
+    if (d.profile) renderProfileDisplay(d.profile);
+  } catch (_) {}
+}
+
+function renderProfileDisplay(p) {
+  const fields = [
+    ['👤 Name',      p.full_name         || 'Not provided'],
+    ['📧 Email',     p.email             || 'Not provided'],
+    ['📞 Phone',     p.phone             || 'Not provided'],
+    ['🎓 Class',     p.class_or_semester || 'Not provided'],
+    ['🏛 Department',p.department        || 'Not provided'],
+    ['🏫 College',   p.college           || 'Not provided'],
+    ['🌐 Language',  p.preferred_language|| 'English'],
+    ['🎯 Target',    p.exam_target       || 'Not provided'],
+    ['💡 Goal',      p.learning_goal     || 'Not provided'],
+    ['⏱ Study Hrs', p.daily_study_hours  || 2],
+  ];
+  document.getElementById('prof-display').innerHTML = fields.map(([k, v]) =>
+    `<div class="p-2 rounded-lg" style="background:#f8fafc">
+       <div class="text-xs text-gray-400">${k}</div>
+       <div class="font-semibold text-gray-800 dark:text-white text-sm">${escHtml(String(v))}</div>
+     </div>`
+  ).join('');
+  // Pre-fill edit form
+  const set = (id, val) => { const el=document.getElementById(id); if(el) el.value=val||''; };
+  set('pf-name',    p.full_name);
+  set('pf-email',   p.email);
+  set('pf-phone',   p.phone);
+  set('pf-class',   p.class_or_semester);
+  set('pf-dept',    p.department);
+  set('pf-college', p.college);
+  set('pf-lang',    p.preferred_language);
+  set('pf-target',  p.exam_target);
+  set('pf-goal',    p.learning_goal);
+  set('pf-hours',   p.daily_study_hours);
+}
+
+function toggleProfileEdit() {
+  profileEditOpen = !profileEditOpen;
+  document.getElementById('prof-display').classList.toggle('hidden', profileEditOpen);
+  document.getElementById('prof-edit-form').classList.toggle('hidden', !profileEditOpen);
+  document.getElementById('prof-edit-btn').textContent = profileEditOpen ? '✖ Cancel' : '✏️ Edit';
+}
+
+async function saveProfileDetails() {
+  const payload = {
+    full_name:          document.getElementById('pf-name').value,
+    email:              document.getElementById('pf-email').value,
+    phone:              document.getElementById('pf-phone').value,
+    class_or_semester:  document.getElementById('pf-class').value,
+    department:         document.getElementById('pf-dept').value,
+    college:            document.getElementById('pf-college').value,
+    preferred_language: document.getElementById('pf-lang').value,
+    exam_target:        document.getElementById('pf-target').value,
+    learning_goal:      document.getElementById('pf-goal').value,
+    daily_study_hours:  parseFloat(document.getElementById('pf-hours').value) || 2,
+  };
+  try {
+    const r = await fetch('/api/tutor/update-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (d.profile) renderProfileDisplay(d.profile);
+    msg('prof-save-msg', '✅ Saved!', 'green');
+    setTimeout(() => { toggleProfileEdit(); msg('prof-save-msg',''); }, 1200);
+  } catch (err) {
+    msg('prof-save-msg', '❌ Error: ' + err.message, 'red');
+  }
+}
+
+// ── Mock Test Functions ────────────────────────────────────────
+
+// Reset mock test UI to idle state
+function resetMockTestUI() {
+  show('mock-state-idle');
+  hide('mock-state-test');
+  hide('mock-state-result');
+  document.getElementById('mock-questions-container').innerHTML = '';
+  msg('mock-gen-msg', '');
+  msg('mock-submit-msg', '');
+}
+
+function resetMockTest() {
+  resetMockTestUI();
+}
+
+// Generate mock test from uploaded PDF
+async function generateMockTest() {
+  const btn = document.getElementById('mock-gen-btn');
+  btn.disabled = true;
+  msg('mock-gen-msg', '⏳ Generating questions from PDF… (may take 30–60s with Ollama)', 'gray');
+
+  try {
+    const r    = await fetch('/api/tutor/generate-mock-test', { method: 'POST' });
+    const data = await r.json();
+
+    if (!r.ok) {
+      msg('mock-gen-msg', '❌ ' + (data.detail || 'Generation failed.'), 'red');
+      return;
+    }
+
+    msg('mock-gen-msg', `✅ ${data.total} questions ready!`, 'green');
+    renderMockQuestions(data.questions);
+  } catch (err) {
+    msg('mock-gen-msg', '❌ Error: ' + err.message, 'red');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Render MCQ questions for the student to answer
+function renderMockQuestions(questions) {
+  if (!questions || !questions.length) {
+    msg('mock-gen-msg', '⚠️ No questions returned. Try again.', 'red');
+    return;
+  }
+
+  hide('mock-state-idle');
+  show('mock-state-test');
+  hide('mock-state-result');
+
+  document.getElementById('mock-q-count').textContent =
+    `${questions.length} Questions — from ${activeFilename || 'uploaded file'}`;
+
+  const container = document.getElementById('mock-questions-container');
+  container.innerHTML = '';
+
+  questions.forEach((q, idx) => {
+    const div = document.createElement('div');
+    div.className = 'p-4 border border-gray-200 dark:border-gray-700 rounded-xl';
+
+    const opts = q.options || {};
+    const optHtml = Object.entries(opts).map(([letter, text]) => `
+      <label class="mcq-option">
+        <input type="radio" name="${escHtml(q.id)}" value="${letter}" class="option-radio">
+        <span class="text-sm"><strong>${letter}.</strong> ${escHtml(String(text))}</span>
+      </label>`).join('');
+
+    div.innerHTML = `
+      <p class="font-semibold text-gray-800 dark:text-white mb-3 text-sm">
+        Q${idx + 1}. ${escHtml(q.question)}
+      </p>
+      <div class="pl-2">${optHtml}</div>
+      <div class="text-xs text-gray-400 mt-1">Topic: ${escHtml(q.topic || 'General')}</div>`;
+    container.appendChild(div);
+  });
+}
+
+// Collect answers and submit mock test
+async function submitMockTest() {
+  const radios = document.querySelectorAll('.option-radio:checked');
+  const answers = {};
+  radios.forEach(r => { answers[r.name] = r.value; });
+
+  const questions = document.querySelectorAll('#mock-questions-container > div');
+  if (Object.keys(answers).length < questions.length) {
+    alert(`Please answer all ${questions.length} questions before submitting.`);
+    return;
+  }
+
+  document.getElementById('mock-submit-btn').disabled = true;
+  msg('mock-submit-msg', '⏳ Grading…');
+
+  try {
+    const r    = await fetch('/api/tutor/submit-mock-test', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ answers }),
+    });
+    const data = await r.json();
+    if (!r.ok) { msg('mock-submit-msg', '❌ ' + (data.detail || 'Submit failed.'), 'red'); return; }
+
+    // Update ranking
+    if (data.ranking)  renderRanking(data.ranking);
+    if (data.progress) renderProgress(data.progress);
+
+    // Show result section
+    renderMockResult(data);
+  } catch (err) {
+    msg('mock-submit-msg', '❌ ' + err.message, 'red');
+  } finally {
+    document.getElementById('mock-submit-btn').disabled = false;
+  }
+}
+
+// Display score, weak topics, answer review
+function renderMockResult(data) {
+  hide('mock-state-test');
+  hide('mock-state-idle');
+  show('mock-state-result');
+
+  const score = data.score ?? 0, total = data.total ?? 10;
+  const pct   = data.percentage ?? 0;
+
+  document.getElementById('mock-score-big').textContent = score;
+  document.getElementById('mock-total-big').textContent = total;
+  document.getElementById('mock-pct').textContent       = pct + '%';
+
+  const grades = [
+    [80, '🏆 Excellent!', '#059669'],
+    [60, '👍 Good Job!',  '#d97706'],
+    [40, '📖 Keep Going!','#0891b2'],
+    [-1, '💪 Revise More','#dc2626'],
+  ];
+  const [, label, colour] = grades.find(([t]) => pct >= t);
+  document.getElementById('mock-grade-label').textContent = label;
+  document.getElementById('mock-grade-label').style.color = colour;
+
+  // Weak topics
+  const weakDiv = document.getElementById('mock-weak-section');
+  const weakTopics = data.weak_topics || [];
+  if (weakTopics.length) {
+    weakDiv.classList.remove('hidden');
+    document.getElementById('mock-weak-topics').innerHTML = weakTopics.map(t =>
+      `<span class="topic-pill pill-hard">${escHtml(t)}</span>`
+    ).join('');
+  } else {
+    weakDiv.classList.add('hidden');
+  }
+
+  document.getElementById('mock-suggestion').textContent = data.suggestion || '';
+
+  // Answer review
+  const reviewEl = document.getElementById('mock-review-list');
+  reviewEl.innerHTML = (data.review || []).map((r, i) => `
+    <div class="${r.is_correct ? 'review-item-correct' : 'review-item-wrong'} mb-3 p-3 rounded-lg"
+         style="background:${r.is_correct ? '#f0fdf4' : '#fef2f2'}">
+      <p class="text-sm font-semibold text-gray-800 mb-1">Q${i+1}. ${escHtml(r.question)}</p>
+      <p class="text-xs">Your answer: <strong>${escHtml(r.selected||'—')}</strong>
+        &nbsp;|&nbsp; Correct: <strong class="text-green-700">${escHtml(r.correct_answer)}</strong>
+        &nbsp;|&nbsp; ${r.is_correct ? '✅' : '❌'}
+      </p>
+      ${r.explanation ? `<p class="text-xs text-gray-600 mt-1">💡 ${escHtml(r.explanation)}</p>` : ''}
+    </div>`).join('');
+}
+
+// Add weak topic revision tasks to the Planner
+async function addWeakToPlanner() {
+  const btn = document.getElementById('mock-update-plan-btn');
+  btn.disabled = true;
+  document.getElementById('mock-plan-update-msg').textContent = '⏳ Updating planner…';
+
+  try {
+    const r    = await fetch('/api/tutor/update-plan-from-test', { method: 'POST' });
+    const data = await r.json();
+    if (!r.ok) {
+      document.getElementById('mock-plan-update-msg').textContent = '❌ ' + (data.detail || 'Error');
+      return;
+    }
+    // Refresh planner display
+    if (data.plan) {
+      renderCalendar(data.plan);
+      show('card-plan');
+      document.getElementById('plan-meta').textContent =
+        `${data.plan.length} days | ${activeFilename} (+ ${data.added} revision tasks)`;
+    }
+    document.getElementById('mock-plan-update-msg').textContent =
+      `✅ ${data.message}`;
+  } catch (err) {
+    document.getElementById('mock-plan-update-msg').textContent = '❌ ' + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── On load: restore full session state ───────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  // Always load attendance, ranking, profile on every page open
+  loadAttendance();
+  loadRanking();
+  loadProfileDetails();
+
+  try {
+    const r    = await fetch('/api/tutor/status');
+    const data = await r.json();
+
+    // Restore ranking/progress from status
+    if (data.ranking)  renderRanking(data.ranking);
+    if (data.progress) renderProgress(data.progress);
+
+    if (data.has_file) {
+      activeFileId   = data.file_id;
+      activeFilename = data.filename;
+      document.getElementById('chat-file-label').textContent = '📄 Chatting with: ' + data.filename;
+      show('card-analysis');
+      document.getElementById('analysis-summary').innerHTML =
+        `<strong>Active file:</strong> ${data.filename} — ${data.chunks} chunks, ${data.topics} topics.`;
+      show('card-profile');
+
+      // Restore mock test section
+      show('card-mock-test');
+      document.getElementById('mock-file-label').textContent = '📄 ' + data.filename;
+      if (data.has_mock_test) {
+        // Load existing questions for display
+        const mr = await fetch('/api/tutor/get-mock-test');
+        const md = await mr.json();
+        if (md.questions && md.questions.length) {
+          renderMockQuestions(md.questions);
+        }
+      }
+
+      if (data.has_profile || data.plan_items > 0) {
+        hasProfile = true;
+        if (data.plan_items > 0) {
+          const pr = await fetch('/api/tutor/get-plan');
+          const pd = await pr.json();
+          renderCalendar(pd.plan);
+          show('card-plan');
+          document.getElementById('regen-btn').style.display = '';
+          document.getElementById('plan-meta').textContent = `${data.plan_items} days | ${data.filename}`;
+          setStep(3);
+        } else {
+          setStep(2);
+        }
+      } else {
+        setStep(2);
+      }
+    }
+  } catch (_) { /* fresh start — no existing session */ }
+});
+</script>
+{% endblock %}
+
+

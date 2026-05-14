@@ -10,11 +10,13 @@ Why TF-IDF + cosine similarity?
   - good enough for hackathon-scale single-document Q&A
 
 Public API:
-    add_file(file_name, chunks)   add a new uploaded file
-    retrieve(question, top_k)     get most relevant chunks + score
-    has_content()                 has anything been uploaded?
-    clear()                       wipe everything (for /clear route)
-    list_files()                  filenames currently in the index
+    add_file(file_name, chunks)                  add a new uploaded file
+    retrieve(question, top_k)                    get most relevant chunks + score
+    has_content()                                has anything been uploaded?
+    clear()                                      wipe everything (for /clear route)
+    list_files()                                 filenames currently in the index
+    is_general_pdf_question(question, mode)      detect summary/overview questions
+    get_context_for_question(question, mode)     smart context builder
 """
 
 import logging
@@ -143,3 +145,141 @@ def retrieve(question: str, top_k: int = 4) -> Tuple[List[str], List[str], float
     top_sources = [sources[i] for i in top_idx]
     best = float(sims[top_idx[0]])
     return top_chunks, top_sources, best
+
+
+# ---------------------------------------------------------------------------
+# General / summary question detection
+# ---------------------------------------------------------------------------
+
+# Phrases that signal the student is asking about the PDF as a whole,
+# not about a specific keyword found in the text.
+_GENERAL_PHRASES: Tuple[str, ...] = (
+    "main topic",
+    "this pdf",
+    "this document",
+    "uploaded material",
+    "uploaded document",
+    "this chapter",
+    "this file",
+    "summarize",
+    "summarise",
+    "summary",
+    "important points",
+    "key points",
+    "key takeaways",
+    "explain this",
+    "explain in simple",
+    "simple words",
+    "exam answer",
+    "give exam answer",
+    "overview",
+    "what is this about",
+    "what is this file",
+    "notes",
+    "short notes",
+    "what does this pdf",
+    "what does the pdf",
+    "what does the document",
+    "topics covered",
+    "what are the main",
+)
+
+# These response modes always imply a general / whole-document question.
+_GENERAL_MODES: Tuple[str, ...] = ("summary", "summarize", "summarise")
+
+
+def is_general_pdf_question(question: str, mode: str = None) -> bool:  # type: ignore[assignment]
+    """
+    Return True when the question is about the PDF as a whole rather than
+    a specific keyword.
+
+    Detection logic:
+      1. If `mode` is a summary/overview mode, return True immediately.
+      2. If the lowercased question contains any of the _GENERAL_PHRASES.
+
+    Args:
+        question: The student's raw question string.
+        mode:     Optional response-mode string from the request (e.g. "summary").
+    """
+    if mode and mode.strip().lower() in _GENERAL_MODES:
+        return True
+    q_lower = (question or "").lower()
+    return any(phrase in q_lower for phrase in _GENERAL_PHRASES)
+
+
+# ---------------------------------------------------------------------------
+# Smart context builder
+# ---------------------------------------------------------------------------
+
+def get_context_for_question(
+    question: str,
+    mode: str = None,  # type: ignore[assignment]
+    top_k: int = 5,
+) -> Tuple[List[str], List[str], float, bool]:
+    """
+    Build the best context for a student question, handling both general
+    (summary/overview) questions and specific keyword questions correctly.
+
+    Returns a 4-tuple:
+        chunks       - ordered list of context chunk strings
+        sources      - parallel list of source file names
+        best_sim     - highest TF-IDF cosine similarity score found
+        is_general   - True when the general-question path was taken
+
+    Debug output is printed to stdout so it is visible in the server log
+    during hackathon testing.
+    """
+    chunks: List[str] = _store["chunks"]   # type: ignore[assignment]
+    sources: List[str] = _store["sources"] # type: ignore[assignment]
+
+    total_chunks = len(chunks)
+    print(f"[Retriever] Total chunks loaded: {total_chunks}")
+
+    if not has_content():
+        print("[Retriever] No content uploaded.")
+        return [], [], 0.0, False
+
+    general = is_general_pdf_question(question, mode)
+    print(f"[Retriever] Question type: {'GENERAL' if general else 'SPECIFIC'}")
+
+    if general:
+        # --- General / summary path -------------------------------------------
+        # Use the first 3 chunks (introduction / beginning of the document) …
+        n_head = min(3, total_chunks)
+        head_chunks = chunks[:n_head]
+        head_sources = sources[:n_head]
+
+        # … plus up to 2 additional chunks from TF-IDF retrieval.
+        tfidf_chunks, tfidf_sources, best_sim = retrieve(question, top_k=2)
+
+        # Merge, de-duplicating by content identity.
+        seen_content: set = set()
+        merged_chunks: List[str] = []
+        merged_sources: List[str] = []
+
+        for c, s in list(zip(head_chunks, head_sources)) + list(zip(tfidf_chunks, tfidf_sources)):
+            key = c[:120]  # first 120 chars as a cheap identity key
+            if key not in seen_content:
+                seen_content.add(key)
+                merged_chunks.append(c)
+                merged_sources.append(s)
+
+        # For summary/important-points modes grab a few extra chunks for richer context.
+        mode_lower = (mode or "").strip().lower()
+        if mode_lower in ("summary", "summarize", "summarise", "important points", "important_points"):
+            extra_end = min(6, total_chunks)
+            for c, s in zip(chunks[n_head:extra_end], sources[n_head:extra_end]):
+                key = c[:120]
+                if key not in seen_content:
+                    seen_content.add(key)
+                    merged_chunks.append(c)
+                    merged_sources.append(s)
+
+        print(f"[Retriever] General path: selected {len(merged_chunks)} chunks, top TF-IDF sim={best_sim:.3f}")
+        return merged_chunks, merged_sources, best_sim, True
+
+    else:
+        # --- Specific / keyword path ------------------------------------------
+        top_chunks, top_sources, best_sim = retrieve(question, top_k=top_k)
+        print(f"[Retriever] Specific path: selected {len(top_chunks)} chunks, top sim={best_sim:.3f}")
+        return top_chunks, top_sources, best_sim, False

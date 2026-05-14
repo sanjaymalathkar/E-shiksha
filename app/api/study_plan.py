@@ -110,7 +110,7 @@ async def generate_study_plan_with_ollama(plan_request: StudyPlanRequest) -> Dic
     
     try:
         # Generate the study plan using Ollama
-        result = run_ollama_json(prompt, model="llama3")
+        result = await run_ollama_json(prompt, model="llama3.2:3b")
         
         # Validate the response
         if not isinstance(result, dict):

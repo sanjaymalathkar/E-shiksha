@@ -74,14 +74,22 @@ RESPONSE_MODES = {
         "Give Exam Answer. Use this exact structure with markdown headings:\n"
         "## Definition\n(one or two sentences from the context)\n"
         "## Key Points\n(4-6 short bullets)\n"
+        "## Explanation\n(2-3 sentences expanding on the key points)\n"
         "## Example\n(only if the context contains one, else write: "
         f"\"{NO_EXAMPLE_MESSAGE}\")\n"
         "## Conclusion\n(one short closing sentence)"
     ),
     "summary": (
-        "Summarize. Output 5 to 7 short bullet points only. "
-        "Each bullet must be one short line. No introduction, no conclusion, "
-        "no paragraphs."
+        "Summarize the uploaded study material. "
+        "Output 5 to 8 short bullet points covering the main topics and key ideas. "
+        "Each bullet must be one short, clear line. "
+        "No introduction sentence, no conclusion paragraph. Use bullet points only."
+    ),
+    "important_points": (
+        "Extract Important Points. "
+        "List the 6-10 most important facts, definitions, or concepts from the context. "
+        "Use bullet points. Each point must be short and exam-focused. "
+        "Bold the key term in each bullet where applicable."
     ),
 }
 
@@ -102,36 +110,37 @@ def normalize_mode(mode: Optional[str]) -> str:
         "exam_answer": "exam",
         "exam": "exam",
         "summarize": "summary",
+        "summarise": "summary",
         "summary": "summary",
+        "important_points": "important_points",
+        "important": "important_points",
+        "key_points": "important_points",
+        "keypoints": "important_points",
     }
     return aliases.get(m, "normal")
 
 
 # ---- Prompt template -------------------------------------------------------
-# Strict tutor-style prompt. The rules force the model to stay grounded in
-# `context`. The "tutor behaviour" block makes answers feel like a real
-# teacher talking to a student, not a generic LLM dump.
+# Improved tutor-style prompt. Rules force the model to stay grounded in
+# `context` while also correctly handling summary / overview questions.
 PROMPT_TEMPLATE = """You are E-Shiksha, an offline AI tutor for students.
 
-Your only job is to help the student understand the uploaded study material.
+Answer only using the uploaded study material context provided below.
 
-Strict rules:
-1. Use ONLY the given context from the uploaded file. Do not use outside knowledge.
+Rules:
+1. Use only the provided context. Do not use outside knowledge.
 2. Do not guess. Do not invent facts. Do not hallucinate.
-3. If the answer is not present in the context, reply EXACTLY:
+3. If the question is specific and the answer is not present in context, say EXACTLY:
    "I could not find this information in the uploaded study material."
-4. Do not answer questions that are unrelated to the uploaded material.
-
-Tutor behaviour:
-5. Talk like a friendly school/college teacher, not a generic AI.
-6. Keep the answer SHORT and CLEAR. No long paragraphs.
-7. Use markdown headings (## Heading) and bullet points (- item) so the
-   answer is easy to scan.
-8. Be exam-focused: highlight definitions, key points, and small examples
-   that a student would write in an exam.
-9. After the answer, ALWAYS add one short follow-up question on a new line
-   that starts with the prefix "Follow-up:". Example:
-   Follow-up: Do you want this in simple explanation, example, or exam answer format?
+4. If the question asks for a summary, main topic, important points, or overview,
+   summarize the provided context — do not say the information is missing.
+5. Explain in simple, student-friendly English.
+6. Make answers exam-focused: highlight definitions, key points, and examples.
+7. Use bullet points and markdown headings (## Heading) for clarity.
+8. Keep the answer clear and useful.
+9. After the answer, ALWAYS add one short follow-up question on a new line starting with:
+   "Follow-up:"
+   Example: Follow-up: Do you want a simple explanation, example, or exam answer format?
 
 Follow the Response Mode below exactly for the layout.
 
@@ -188,10 +197,18 @@ def validate_answer(
     answer: str,
     context_chunks: List[str],
     min_overlap: float = 0.18,
+    is_general: bool = False,
 ) -> Tuple[bool, str]:
     """
     Heuristic guard that catches answers the model produced without using
     the retrieved context.
+
+    Args:
+        answer:         The generated answer text.
+        context_chunks: The chunks passed to the model as context.
+        min_overlap:    Minimum token-overlap fraction required for a specific question.
+        is_general:     When True (summary / overview questions) the overlap threshold
+                        is relaxed so the model's synthesised summary is not rejected.
 
     Returns:
         (is_valid, reason)
@@ -221,7 +238,11 @@ def validate_answer(
     if not ans_tokens:
         return True, "too-short-to-judge"
     overlap = len(ans_tokens & ctx_tokens) / max(1, len(ans_tokens))
-    if overlap < min_overlap:
+
+    # For general/summary questions the model paraphrases across many chunks,
+    # so the naive overlap ratio is naturally lower.  Use a relaxed threshold.
+    effective_threshold = 0.08 if is_general else min_overlap
+    if overlap < effective_threshold:
         return False, f"low-overlap:{overlap:.2f}"
     return True, "ok"
 
